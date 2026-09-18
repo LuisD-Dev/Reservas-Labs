@@ -1,3 +1,4 @@
+using SistemaReservas.API.Data;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -5,6 +6,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+builder.Services.AddSingleton<DatabaseConnection>();
 
 var app = builder.Build();
 
@@ -19,5 +22,19 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapGet("/db-test", async (DatabaseConnection database) =>
+{
+    try
+    {
+        using var connection = database.CreateConnection();
 
+        await connection.OpenAsync();
+
+        return Results.Ok("Conexión con SQL Server exitosa.");
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(ex.Message);
+    }
+});
 app.Run();
