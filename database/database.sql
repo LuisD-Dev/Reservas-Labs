@@ -1,0 +1,5 @@
+CREATE DATABASE LaboratorioOBLD;
+GO
+
+USE LaboratorioOBLD;
+GO
