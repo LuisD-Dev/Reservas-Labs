@@ -1,4 +1,5 @@
 using SistemaReservas.API.Data;
+using SistemaReservas.API.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -8,6 +9,7 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 builder.Services.AddSingleton<DatabaseConnection>();
+builder.Services.AddScoped<AuthService>();
 
 var app = builder.Build();
 
