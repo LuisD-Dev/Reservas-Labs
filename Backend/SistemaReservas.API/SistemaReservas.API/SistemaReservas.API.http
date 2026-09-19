@@ -4,3 +4,32 @@ GET {{SistemaReservas.API_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+### HU1 - #22 Login: credenciales correctas (esperado 200)
+POST {{SistemaReservas.API_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "1234"
+}
+
+### HU1 - #22 Login: contraseña incorrecta (esperado 401; la 5.ª vez seguida, 423)
+POST {{SistemaReservas.API_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "incorrecta"
+}
+
+### HU1 - #22 Login: usuario inexistente (esperado 401 con el mismo mensaje)
+POST {{SistemaReservas.API_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "noexiste",
+  "password": "1234"
+}
+
+###
