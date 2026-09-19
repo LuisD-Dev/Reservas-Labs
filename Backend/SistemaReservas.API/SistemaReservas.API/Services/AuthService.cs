@@ -11,6 +11,10 @@ namespace SistemaReservas.API.Services
         private readonly DatabaseConnection _database;
         private readonly PasswordHasher<Usuario> _passwordHasher = new();
 
+        // HU1 - #21 Bloqueo temporal: 5 intentos fallidos => 5 minutos bloqueado
+        private const int MaxIntentosFallidos = 5;
+        private static readonly TimeSpan DuracionBloqueo = TimeSpan.FromMinutes(5);
+
         public AuthService(DatabaseConnection database)
         {
             _database = database;
@@ -37,15 +41,30 @@ namespace SistemaReservas.API.Services
                 return new LoginResult(LoginEstado.CredencialesInvalidas);
             }
 
+            // HU1 - #21 Si el usuario sigue bloqueado, se rechaza sin revisar la contraseña.
+            if (usuario.BloqueadoHasta is not null && usuario.BloqueadoHasta > DateTime.UtcNow)
+            {
+                return new LoginResult(LoginEstado.Bloqueado, BloqueadoHasta: usuario.BloqueadoHasta);
+            }
+
             if (!VerificarPassword(usuario, request.Password))
             {
                 // HU1 - #20 Implementar intentos fallidos: llevar contador
-                await RegistrarIntentoFallidoAsync(connection, usuario.Id);
+                var intentos = await RegistrarIntentoFallidoAsync(connection, usuario.Id);
+
+                // HU1 - #21 Al llegar al 5.º intento fallido se bloquea el acceso.
+                if (intentos >= MaxIntentosFallidos)
+                {
+                    var bloqueadoHasta = DateTime.UtcNow.Add(DuracionBloqueo);
+                    await BloquearUsuarioAsync(connection, usuario.Id, bloqueadoHasta);
+                    return new LoginResult(LoginEstado.Bloqueado, BloqueadoHasta: bloqueadoHasta);
+                }
+
                 return new LoginResult(LoginEstado.CredencialesInvalidas);
             }
 
-            // Login exitoso: el contador vuelve a cero.
-            if (usuario.IntentosFallidos > 0)
+            // Login exitoso: el contador vuelve a cero y se limpia cualquier bloqueo vencido.
+            if (usuario.IntentosFallidos > 0 || usuario.BloqueadoHasta is not null)
             {
                 await ReiniciarIntentosAsync(connection, usuario.Id);
             }
@@ -83,10 +102,27 @@ namespace SistemaReservas.API.Services
         private static async Task ReiniciarIntentosAsync(SqlConnection connection, int usuarioId)
         {
             const string sql = @"UPDATE Usuarios
-                                 SET IntentosFallidos = 0
+                                 SET IntentosFallidos = 0,
+                                     BloqueadoHasta = NULL
                                  WHERE Id = @Id";
 
             using var command = new SqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@Id", usuarioId);
+
+            await command.ExecuteNonQueryAsync();
+        }
+
+        // Guarda hasta cuándo queda bloqueado y reinicia el contador
+        // para que, al vencer el bloqueo, tenga otros 5 intentos.
+        private static async Task BloquearUsuarioAsync(SqlConnection connection, int usuarioId, DateTime bloqueadoHasta)
+        {
+            const string sql = @"UPDATE Usuarios
+                                 SET BloqueadoHasta = @BloqueadoHasta,
+                                     IntentosFallidos = 0
+                                 WHERE Id = @Id";
+
+            using var command = new SqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@BloqueadoHasta", bloqueadoHasta);
             command.Parameters.AddWithValue("@Id", usuarioId);
 
             await command.ExecuteNonQueryAsync();
