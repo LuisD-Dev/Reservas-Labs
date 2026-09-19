@@ -32,9 +32,22 @@ namespace SistemaReservas.API.Services
 
             // Mismo resultado si el usuario no existe o si la contraseña es incorrecta,
             // para no revelar cuál de los dos datos falló.
-            if (usuario is null || !VerificarPassword(usuario, request.Password))
+            if (usuario is null)
             {
                 return new LoginResult(LoginEstado.CredencialesInvalidas);
+            }
+
+            if (!VerificarPassword(usuario, request.Password))
+            {
+                // HU1 - #20 Implementar intentos fallidos: llevar contador
+                await RegistrarIntentoFallidoAsync(connection, usuario.Id);
+                return new LoginResult(LoginEstado.CredencialesInvalidas);
+            }
+
+            // Login exitoso: el contador vuelve a cero.
+            if (usuario.IntentosFallidos > 0)
+            {
+                await ReiniciarIntentosAsync(connection, usuario.Id);
             }
 
             return new LoginResult(LoginEstado.Exitoso, usuario.Id, usuario.Nombre, usuario.Rol);
@@ -50,6 +63,33 @@ namespace SistemaReservas.API.Services
         {
             var resultado = _passwordHasher.VerifyHashedPassword(usuario, usuario.PasswordHash, password);
             return resultado != PasswordVerificationResult.Failed;
+        }
+
+        // Suma 1 al contador en la base de datos y devuelve el nuevo valor.
+        private static async Task<int> RegistrarIntentoFallidoAsync(SqlConnection connection, int usuarioId)
+        {
+            const string sql = @"UPDATE Usuarios
+                                 SET IntentosFallidos = IntentosFallidos + 1
+                                 OUTPUT INSERTED.IntentosFallidos
+                                 WHERE Id = @Id";
+
+            using var command = new SqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@Id", usuarioId);
+
+            var resultado = await command.ExecuteScalarAsync();
+            return Convert.ToInt32(resultado);
+        }
+
+        private static async Task ReiniciarIntentosAsync(SqlConnection connection, int usuarioId)
+        {
+            const string sql = @"UPDATE Usuarios
+                                 SET IntentosFallidos = 0
+                                 WHERE Id = @Id";
+
+            using var command = new SqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@Id", usuarioId);
+
+            await command.ExecuteNonQueryAsync();
         }
 
         private static async Task<Usuario?> ObtenerUsuarioAsync(SqlConnection connection, string username)
