@@ -2,8 +2,13 @@ import { useState } from 'react'
 import Login from './components/Login'
 import './App.css'
 
+function usuarioGuardado() {
+    const datos = sessionStorage.getItem('usuario')
+    return datos ? JSON.parse(datos) : null
+}
+
 function App() {
-    const [usuarioLogueado, setUsuarioLogueado] = useState(null)
+    const [usuarioLogueado, setUsuarioLogueado] = useState(usuarioGuardado)
 
     function handleCerrarSesion() {
         sessionStorage.removeItem('usuario')
