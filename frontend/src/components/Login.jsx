@@ -31,13 +31,12 @@ function Login({ onLoginExitoso }) {
             const datos = await respuesta.json();
 
             if (respuesta.ok) {
-                // Login exitoso: guarda la sesión y avisa al componente padre
+                // Login exitoso: la sesión se guarda en App.jsx (localStorage)
                 const usuarioSesion = {
                     usuarioId: datos.usuarioId,
                     nombre: datos.nombre,
                     rol: datos.rol,
                 };
-                sessionStorage.setItem("usuario", JSON.stringify(usuarioSesion));
                 onLoginExitoso?.(usuarioSesion);
             } else if (respuesta.status === 423) {
                 // Bloqueado por intentos fallidos
