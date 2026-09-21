@@ -15,7 +15,16 @@ builder.Services.AddCors(options => {
 });
 
 var app = builder.Build();
+using (var scope = app.Services.CreateScope())
+{
+    var database =
+        scope.ServiceProvider.GetRequiredService<DatabaseConnection>();
 
+    var authService =
+        scope.ServiceProvider.GetRequiredService<AuthService>();
+
+    await DatabaseSeeder.SeedAsync(database, authService);
+}
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
