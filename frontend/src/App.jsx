@@ -17,11 +17,11 @@ function App() {
 
     if (!usuarioLogueado) {
         return (
-            <Login 
+            <Login
                 onLoginExitoso={(usuario) => {
                     localStorage.setItem('usuario', JSON.stringify(usuario))
                     setUsuarioLogueado(usuario)
-                }} 
+                }}
             />
         )
     }
@@ -31,13 +31,13 @@ function App() {
             <h1>Bienvenido, {usuarioLogueado.nombre}</h1>
             <p>Rol: {usuarioLogueado.rol}</p>
 
-            {usuarioLogueado.rol === 'Admin' && (
+            {usuarioLogueado.rol === 'Administrador' && (
                 <div className="panel-admin">
                     <h3>Panel de Control del Administrador</h3>
                 </div>
             )}
 
-            {usuarioLogueado.rol === 'Cliente' && (
+            {usuarioLogueado.rol === 'Usuario' && (
                 <div className="panel-cliente">
                     <h3>Mis Reservas</h3>
                 </div>
