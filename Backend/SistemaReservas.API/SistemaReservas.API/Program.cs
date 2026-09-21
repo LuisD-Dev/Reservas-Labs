@@ -8,9 +8,14 @@ builder.Services.AddOpenApi();
 builder.Services.AddSingleton<DatabaseConnection>();
 builder.Services.AddScoped<AuthService>();
 
-builder.Services.AddCors(options => {
-    options.AddPolicy("PermitirFrontend", policy => {
-        policy.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("PermitirFrontend", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
     });
 });
 
@@ -18,6 +23,17 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
+    using (var scope = app.Services.CreateScope())
+    {
+        var database =
+            scope.ServiceProvider.GetRequiredService<DatabaseConnection>();
+
+        var authService =
+            scope.ServiceProvider.GetRequiredService<AuthService>();
+
+        await DatabaseSeeder.SeedAsync(database, authService);
+    }
+
     app.MapOpenApi();
 }
 
