@@ -1,0 +1,161 @@
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0b2240 0%, #003b71 100%);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+.login-card {
+    background: #ffffff;
+    width: 100%;
+    max-width: 400px;
+    border-radius: 12px;
+    padding: 40px 32px;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.login-logo-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+.login-utn-logo {
+    max-width: 190px; 
+    height: auto;
+    object-fit: contain;
+}
+
+.login-header h1 {
+    margin: 0;
+    font-size: 22px;
+    color: #0b2240;
+    font-weight: 700;
+}
+
+.login-subtitle {
+    margin: 6px 0 0;
+    color: #5a6b7a;
+    font-size: 13px;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.login-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+    .login-field label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #0b2240;
+    }
+
+    .login-field input {
+        padding: 10px 12px;
+        border: 1px solid #cfd8e3;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.15s ease;
+    }
+
+        .login-field input:focus {
+            outline: none;
+            border-color: #003b71;
+            box-shadow: 0 0 0 3px rgba(0, 59, 113, 0.15);
+        }
+
+        .login-field input:disabled {
+            background: #f2f4f7;
+            color: #9aa5b1;
+        }
+
+.login-password-wrapper {
+    position: relative;
+    display: flex;
+}
+
+    .login-password-wrapper input {
+        flex: 1;
+        padding-right: 42px;
+    }
+
+.login-toggle-password {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: color 0.15s ease, background 0.15s ease;
+}
+
+    .login-toggle-password:hover:not(:disabled) {
+        color: #003b71;
+        background: rgba(0, 59, 113, 0.08);
+    }
+
+    .login-toggle-password:disabled {
+        color: #cfd8e3;
+        cursor: not-allowed;
+    }
+
+.login-error {
+    margin: 0;
+    padding: 10px 12px;
+    background: #fdecec;
+    border: 1px solid #f3b7b7;
+    border-radius: 6px;
+    color: #b42318;
+    font-size: 13px;
+}
+
+.login-button {
+    padding: 12px;
+    background: #003b71;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+    .login-button:hover:not(:disabled) {
+        background: #0b2240;
+    }
+
+    .login-button:disabled {
+        background: #9aa5b1;
+        cursor: not-allowed;
+    }
+
+.login-footer {
+    margin: 24px 0 0;
+    text-align: center;
+    font-size: 11px;
+    color: #9aa5b1;
+}
