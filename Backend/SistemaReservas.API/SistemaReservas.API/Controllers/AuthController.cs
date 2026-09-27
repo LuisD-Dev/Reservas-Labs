@@ -9,10 +9,12 @@ namespace SistemaReservas.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly AuthService _authService;
+        private readonly TokenService _tokenService;
 
-        public AuthController(AuthService authService)
+        public AuthController(AuthService authService, TokenService tokenService)
         {
             _authService = authService;
+            _tokenService = tokenService;
         }
 
         // HU1 - #22 Crear endpoint Login
@@ -24,11 +26,20 @@ namespace SistemaReservas.API.Controllers
             switch (resultado.Estado)
             {
                 case LoginEstado.Exitoso:
+                    // NFR1 - #43 El login entrega un token firmado que el
+                    // frontend debe enviar en las peticiones protegidas.
+                    var (token, expiraUtc) = _tokenService.GenerarToken(
+                        resultado.UsuarioId!.Value,
+                        resultado.Nombre!,
+                        resultado.Rol!);
+
                     return Ok(new
                     {
                         usuarioId = resultado.UsuarioId,
                         nombre = resultado.Nombre,
-                        rol = resultado.Rol
+                        rol = resultado.Rol,
+                        token,
+                        expiraUtc
                     });
 
                 case LoginEstado.Bloqueado:
