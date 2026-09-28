@@ -1,8 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace SistemaReservas.API.Controllers
 {
+    // NFR1 - #44 Endpoint de ejemplo de la plantilla: requiere usuario autenticado.
     [ApiController]
+    [Authorize]
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase
     {

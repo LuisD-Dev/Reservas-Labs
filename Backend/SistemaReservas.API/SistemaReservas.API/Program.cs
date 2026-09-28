@@ -76,20 +76,25 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapGet("/db-test", async (DatabaseConnection database) =>
+// NFR1 - #44 /db-test solo existe en Development: expone detalles del
+// error de conexion que no deben verse en otros ambientes.
+if (app.Environment.IsDevelopment())
 {
-    try
+    app.MapGet("/db-test", async (DatabaseConnection database) =>
     {
-        using var connection = database.CreateConnection();
+        try
+        {
+            using var connection = database.CreateConnection();
 
-        await connection.OpenAsync();
+            await connection.OpenAsync();
 
-        return Results.Ok("Conexión con SQL Server exitosa.");
-    }
-    catch (Exception ex)
-    {
-        return Results.Problem(ex.Message);
-    }
-});
+            return Results.Ok("Conexión con SQL Server exitosa.");
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem(ex.Message);
+        }
+    });
+}
 
 app.Run();

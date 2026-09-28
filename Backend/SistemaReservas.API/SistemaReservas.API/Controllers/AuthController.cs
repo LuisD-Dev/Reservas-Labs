@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SistemaReservas.API.DTOs;
 using SistemaReservas.API.Services;
@@ -18,6 +19,8 @@ namespace SistemaReservas.API.Controllers
         }
 
         // HU1 - #22 Crear endpoint Login
+        // NFR1 - #44 El login debe quedar abierto: es donde se obtiene el token.
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
