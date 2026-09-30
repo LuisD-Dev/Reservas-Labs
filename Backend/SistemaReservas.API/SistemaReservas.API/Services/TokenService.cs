@@ -1,0 +1,52 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
+
+namespace SistemaReservas.API.Services
+{
+    // NFR1 - #43 Genera el token JWT que identifica al usuario
+    // y lleva su rol, para que el backend pueda autorizar por rol.
+    public class TokenService
+    {
+        private readonly IConfiguration _configuration;
+
+        public TokenService(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
+        public (string Token, DateTime ExpiraUtc) GenerarToken(int usuarioId, string nombre, string rol)
+        {
+            var jwt = _configuration.GetSection("Jwt");
+
+            var clave = jwt["Key"]
+                ?? throw new InvalidOperationException("Falta la configuración Jwt:Key.");
+
+            var horas = int.TryParse(jwt["ExpiraHoras"], out var valor) ? valor : 8;
+            var expiraUtc = DateTime.UtcNow.AddHours(horas);
+
+            var claims = new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, usuarioId.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, usuarioId.ToString()),
+                new Claim(ClaimTypes.Name, nombre),
+                new Claim(ClaimTypes.Role, rol),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            var credenciales = new SigningCredentials(
+                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(clave)),
+                SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: jwt["Issuer"],
+                audience: jwt["Audience"],
+                claims: claims,
+                expires: expiraUtc,
+                signingCredentials: credenciales);
+
+            return (new JwtSecurityTokenHandler().WriteToken(token), expiraUtc);
+        }
+    }
+}

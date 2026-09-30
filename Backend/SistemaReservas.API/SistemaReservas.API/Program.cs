@@ -1,3 +1,7 @@
+using System.Security.Claims;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using SistemaReservas.API.Data;
 using SistemaReservas.API.Services;
 
@@ -9,6 +13,33 @@ builder.Services.AddSingleton<DatabaseConnection>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<LaboratorioService>();
 builder.Services.AddScoped<DisponibilidadService>();
+builder.Services.AddSingleton<TokenService>();
+
+// NFR1 - #43 Autenticación con JWT
+var jwtSection = builder.Configuration.GetSection("Jwt");
+var jwtKey = jwtSection["Key"]
+    ?? throw new InvalidOperationException("Falta la configuración Jwt:Key.");
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSection["Issuer"],
+            ValidAudience = jwtSection["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            NameClaimType = ClaimTypes.Name,
+            RoleClaimType = ClaimTypes.Role,
+            ClockSkew = TimeSpan.FromSeconds(30)
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddCors(options =>
 {
@@ -47,20 +78,25 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapGet("/db-test", async (DatabaseConnection database) =>
+// NFR1 - #44 /db-test solo existe en Development: expone detalles del
+// error de conexion que no deben verse en otros ambientes.
+if (app.Environment.IsDevelopment())
 {
-    try
+    app.MapGet("/db-test", async (DatabaseConnection database) =>
     {
-        using var connection = database.CreateConnection();
+        try
+        {
+            using var connection = database.CreateConnection();
 
-        await connection.OpenAsync();
+            await connection.OpenAsync();
 
-        return Results.Ok("Conexión con SQL Server exitosa.");
-    }
-    catch (Exception ex)
-    {
-        return Results.Problem(ex.Message);
-    }
-});
+            return Results.Ok("Conexión con SQL Server exitosa.");
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem(ex.Message);
+        }
+    });
+}
 
 app.Run();
