@@ -43,3 +43,25 @@ CREATE TABLE Laboratorios
         CHECK (Estado IN ('Habilitado', 'Fuera de servicio'))
 );
 GO
+CREATE TABLE Disponibilidades
+(
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+
+    LaboratorioId INT NOT NULL,
+
+    Fecha DATE NOT NULL,
+
+    HoraInicio TIME NOT NULL,
+
+    HoraFin TIME NOT NULL,
+
+    Estado NVARCHAR(30) NOT NULL,
+
+    CONSTRAINT FK_Disponibilidades_Laboratorios
+        FOREIGN KEY (LaboratorioId)
+        REFERENCES Laboratorios(Id),
+
+    CONSTRAINT CK_Disponibilidades_Estado
+        CHECK (Estado IN ('Disponible', 'No disponible'))
+);
+GO
