@@ -8,6 +8,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddSingleton<DatabaseConnection>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<LaboratorioService>();
+builder.Services.AddScoped<DisponibilidadService>();
 
 builder.Services.AddCors(options =>
 {

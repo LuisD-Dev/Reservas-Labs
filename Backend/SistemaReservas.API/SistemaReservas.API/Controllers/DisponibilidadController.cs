@@ -1,0 +1,32 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using SistemaReservas.API.Services;
+
+namespace SistemaReservas.API.Controllers
+{
+    [ApiController]
+    [Route("api/laboratorios/{laboratorioId}/disponibilidad")]
+    public class DisponibilidadController : ControllerBase
+    {
+        private readonly DisponibilidadService _disponibilidadService;
+
+
+        public DisponibilidadController(
+            DisponibilidadService disponibilidadService)
+        {
+            _disponibilidadService = disponibilidadService;
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> ObtenerDisponibilidad(
+            int laboratorioId)
+        {
+            var disponibilidades =
+                await _disponibilidadService
+                .ObtenerDisponibilidadAsync(laboratorioId);
+
+
+            return Ok(disponibilidades);
+        }
+    }
+}
