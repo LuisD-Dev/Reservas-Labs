@@ -1,8 +1,8 @@
 import { useState } from "react";
 import "./Login.css";
+import { API_BASE_URL } from "../services/api";
 
-
-const API_URL = "http://localhost:5282/api/auth/login";
+const API_URL = `${API_BASE_URL}/api/auth/login`;
 const USUARIO_MAX_LENGTH = 50;
 const CONTRASENA_MAX_LENGTH = 100;
 const USUARIO_REGEX = /^[a-zA-Z0-9._]*$/;
@@ -43,10 +43,13 @@ function Login({ onLoginExitoso }) {
             const datos = await respuesta.json();
 
             if (respuesta.ok) {
+                // NFR1 - #46 La sesión incluye el token para las peticiones protegidas.
                 const usuarioSesion = {
                     usuarioId: datos.usuarioId,
                     nombre: datos.nombre,
                     rol: datos.rol,
+                    token: datos.token,
+                    expiraUtc: datos.expiraUtc,
                 };
                 onLoginExitoso?.(usuarioSesion);
             } else if (respuesta.status === 423) {
