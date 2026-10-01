@@ -1,19 +1,28 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
+import {
+    EVENTO_SESION_EXPIRADA,
+    cerrarSesion,
+    guardarSesion,
+    obtenerSesion,
+} from './services/api';
 import './App.css';
 import './components/Dashboard.css';
 
-function usuarioGuardado() {
-    const datos = localStorage.getItem('usuario');
-    return datos ? JSON.parse(datos) : null;
-}
-
 function App() {
-    const [usuarioLogueado, setUsuarioLogueado] = useState(usuarioGuardado);
+    // NFR1 - #46 Solo se restaura una sesión con token vigente.
+    const [usuarioLogueado, setUsuarioLogueado] = useState(obtenerSesion);
+
+    // Si la API responde 401 (token vencido o inválido), se vuelve al login.
+    useEffect(() => {
+        const alExpirar = () => setUsuarioLogueado(null);
+        window.addEventListener(EVENTO_SESION_EXPIRADA, alExpirar);
+        return () => window.removeEventListener(EVENTO_SESION_EXPIRADA, alExpirar);
+    }, []);
 
     function handleCerrarSesion() {
-        localStorage.removeItem('usuario');
+        cerrarSesion();
         setUsuarioLogueado(null);
     }
 
@@ -21,8 +30,8 @@ function App() {
         return (
             <Login
                 onLoginExitoso={(usuario) => {
-                    localStorage.setItem('usuario', JSON.stringify(usuario));
-                    setUsuarioLogueado(usuario);
+                    guardarSesion(usuario);
+                    setUsuarioLogueado(obtenerSesion());
                 }}
             />
         );
