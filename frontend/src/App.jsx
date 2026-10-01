@@ -31,7 +31,7 @@ function App() {
             <Login
                 onLoginExitoso={(usuario) => {
                     guardarSesion(usuario);
-                    setUsuarioLogueado(usuario);
+                    setUsuarioLogueado(obtenerSesion());
                 }}
             />
         );

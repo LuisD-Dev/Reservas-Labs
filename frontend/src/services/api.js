@@ -22,6 +22,19 @@ function tokenVencido(sesion) {
     return new Date(sesion.expiraUtc).getTime() <= Date.now();
 }
 
+const CLAIM_ROL = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role";
+const CLAIM_NOMBRE = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name";
+
+// NFR1 - #47 Lee los datos del token. El rol y el nombre se toman de aquí y
+// no del texto guardado, para que editar localStorage no cambie el rol.
+// Si alguien altera el token, la firma deja de ser válida y la API responde 401.
+function leerToken(token) {
+    const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const relleno = "=".repeat((4 - (base64.length % 4)) % 4);
+    const bytes = Uint8Array.from(atob(base64 + relleno), (c) => c.charCodeAt(0));
+    return JSON.parse(new TextDecoder().decode(bytes));
+}
+
 // Devuelve la sesión guardada solo si tiene token y no ha vencido.
 export function obtenerSesion() {
     try {
@@ -30,7 +43,12 @@ export function obtenerSesion() {
             cerrarSesion();
             return null;
         }
-        return sesion;
+        const datos = leerToken(sesion.token);
+        return {
+            ...sesion,
+            rol: datos.role ?? datos[CLAIM_ROL] ?? null,
+            nombre: datos.unique_name ?? datos.name ?? datos[CLAIM_NOMBRE] ?? sesion.nombre,
+        };
     } catch {
         cerrarSesion();
         return null;
