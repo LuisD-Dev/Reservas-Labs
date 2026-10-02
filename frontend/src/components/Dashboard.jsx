@@ -1,6 +1,8 @@
 import "./Dashboard.css";
+import { useState } from "react";
+import Laboratorios from "./Laboratorios";
 
-// NFR1 - #47 Cada módulo indica qué roles lo pueden ver. El backend sigue
+// Cada módulo indica qué roles lo pueden ver. El backend sigue
 // siendo quien autoriza; aquí solo se evita mostrar opciones que el
 // usuario no puede usar.
 const MODULOS = [
@@ -39,6 +41,7 @@ function modulosPorRol(rol) {
 }
 
 function Dashboard({ usuario, onCerrarSesion }) {
+    const [vista, setVista] = useState(null);
     const modulos = modulosPorRol(usuario?.rol);
     const esAdministrador = usuario?.rol === "Administrador";
 
@@ -67,32 +70,42 @@ function Dashboard({ usuario, onCerrarSesion }) {
 
             {/* Contenido principal */}
             <main className="dashboard-main">
-                <div className="welcome-banner">
-                    <h1>Bienvenido, {usuario?.nombre}</h1>
-                    <p>
-                        {esAdministrador
-                            ? "Panel de Control para la Gestión y Reserva de Laboratorios de la UTN."
-                            : "Consulta los laboratorios y administra tus reservas."}
-                    </p>
-                </div>
-
-                {/* Tarjetas de acceso rápido según el rol */}
-                {modulos.length > 0 ? (
-                    <div className="dashboard-grid">
-                        {modulos.map((modulo) => (
-                            <div
-                                key={modulo.id}
-                                className="dashboard-card"
-                                onClick={() => alert(`Módulo: ${modulo.titulo}`)}
-                            >
-                                <div className="card-icon">{modulo.icono}</div>
-                                <h3>{modulo.titulo}</h3>
-                                <p>{modulo.descripcion}</p>
-                            </div>
-                        ))}
-                    </div>
+                {vista === "laboratorios" ? (
+                    <Laboratorios onVolver={() => setVista(null)} />
                 ) : (
-                    <p>Tu usuario no tiene módulos asignados. Contacta al administrador.</p>
+                    <>
+                        <div className="welcome-banner">
+                            <h1>Bienvenido, {usuario?.nombre}</h1>
+                            <p>
+                                {esAdministrador
+                                    ? "Panel de Control para la Gestión y Reserva de Laboratorios de la UTN."
+                                    : "Consulta los laboratorios y administra tus reservas."}
+                            </p>
+                        </div>
+
+                        {/* Tarjetas de acceso rápido según el rol */}
+                        {modulos.length > 0 ? (
+                            <div className="dashboard-grid">
+                                {modulos.map((modulo) => (
+                                    <div
+                                        key={modulo.id}
+                                        className="dashboard-card"
+                                        onClick={() =>
+                                            modulo.id === "laboratorios"
+                                                ? setVista("laboratorios")
+                                                : alert(`Módulo: ${modulo.titulo}`)
+                                        }
+                                    >
+                                        <div className="card-icon">{modulo.icono}</div>
+                                        <h3>{modulo.titulo}</h3>
+                                        <p>{modulo.descripcion}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p>Tu usuario no tiene módulos asignados. Contacta al administrador.</p>
+                        )}
+                    </>
                 )}
             </main>
         </div>
