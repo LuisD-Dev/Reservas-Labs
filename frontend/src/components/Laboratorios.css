@@ -157,3 +157,25 @@
     font-size: 15px;
     color: #0b2240;
 }
+
+.labs-consultar {
+    margin-top: 16px;
+    width: 100%;
+    background-color: #003b71;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+    .labs-consultar:hover {
+        background-color: #0b2240;
+    }
+
+    .labs-consultar:focus-visible {
+        outline: 2px solid #003b71;
+        outline-offset: 2px;
+    }

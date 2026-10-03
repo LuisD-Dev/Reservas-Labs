@@ -11,7 +11,7 @@ function claseEstado(estado) {
     return "estado-otro";
 }
 
-function Laboratorios({ onVolver }) {
+function Laboratorios({ onVolver, onConsultarDisponibilidad }) {
     const [laboratorios, setLaboratorios] = useState([]);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState("");
@@ -108,6 +108,14 @@ function Laboratorios({ onVolver }) {
                                     <dd>{lab.capacidad} personas</dd>
                                 </div>
                             </dl>
+                            {onConsultarDisponibilidad && (
+                                <button
+                                    className="labs-consultar"
+                                    onClick={() => onConsultarDisponibilidad(lab.id, laboratorios)}
+                                >
+                                    Consultar disponibilidad
+                                </button>
+                            )}
                         </article>
                     ))}
                 </div>
