@@ -1,6 +1,7 @@
 import "./Dashboard.css";
 import { useState } from "react";
 import Laboratorios from "./Laboratorios";
+import Disponibilidad from "./Disponibilidad";
 
 // Cada módulo indica qué roles lo pueden ver. El backend sigue
 // siendo quien autoriza; aquí solo se evita mostrar opciones que el
@@ -42,6 +43,8 @@ function modulosPorRol(rol) {
 
 function Dashboard({ usuario, onCerrarSesion }) {
     const [vista, setVista] = useState(null);
+    // HU3 - #38 Datos para abrir la consulta de disponibilidad desde Laboratorios.
+    const [disponibilidad, setDisponibilidad] = useState(null);
     const modulos = modulosPorRol(usuario?.rol);
     const esAdministrador = usuario?.rol === "Administrador";
 
@@ -70,8 +73,20 @@ function Dashboard({ usuario, onCerrarSesion }) {
 
             {/* Contenido principal */}
             <main className="dashboard-main">
-                {vista === "laboratorios" ? (
-                    <Laboratorios onVolver={() => setVista(null)} />
+                {vista === "disponibilidad" && disponibilidad ? (
+                    <Disponibilidad
+                        laboratorios={disponibilidad.laboratorios}
+                        laboratorioInicialId={disponibilidad.laboratorioId}
+                        onVolver={() => setVista("laboratorios")}
+                    />
+                ) : vista === "laboratorios" ? (
+                    <Laboratorios
+                        onVolver={() => setVista(null)}
+                        onConsultarDisponibilidad={(laboratorioId, laboratorios) => {
+                            setDisponibilidad({ laboratorioId, laboratorios });
+                            setVista("disponibilidad");
+                        }}
+                    />
                 ) : (
                     <>
                         <div className="welcome-banner">
