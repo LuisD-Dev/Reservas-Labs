@@ -1,13 +1,18 @@
 import { useState } from "react";
 import "./Disponibilidad.css";
 import { apiFetch } from "../services/api";
-import { evaluarDisponibilidad, hoyComoTexto, validarConsulta } from "../utils/disponibilidad";
+import {
+    evaluarDisponibilidad,
+    formatearFecha,
+    hoyComoTexto,
+    validarConsulta,
+} from "../utils/disponibilidad";
 
 // HU3 - #38 Pantalla para consultar si un laboratorio está disponible en una
 // fecha y un rango de horas. Recibe la lista de laboratorios que ya cargó la
 // pantalla de Laboratorios y el laboratorio desde el que se abrió.
 
-function Disponibilidad({ laboratorios, laboratorioInicialId, onVolver, onContinuarReserva }) {
+function Disponibilidad({ laboratorios = [], laboratorioInicialId, onVolver, onContinuarReserva }) {
     const [laboratorioId, setLaboratorioId] = useState(
         laboratorioInicialId ? String(laboratorioInicialId) : ""
     );
@@ -26,6 +31,14 @@ function Disponibilidad({ laboratorios, laboratorioInicialId, onVolver, onContin
         setConsulta(null);
         setResultado(null);
         setErrorServidor("");
+    }
+
+    function limpiarErrores(...campos) {
+        setErrores((anteriores) => {
+            const siguientes = { ...anteriores };
+            campos.forEach((campo) => delete siguientes[campo]);
+            return siguientes;
+        });
     }
 
     // HU3 - #39 Consulta los horarios del laboratorio en la API y evalúa el rango.
@@ -86,8 +99,10 @@ function Disponibilidad({ laboratorios, laboratorioInicialId, onVolver, onContin
                     <select
                         id="disp-laboratorio"
                         value={laboratorioId}
+                        disabled={cargando}
                         onChange={(e) => {
                             setLaboratorioId(e.target.value);
+                            limpiarErrores("laboratorioId");
                             limpiarResultado();
                         }}
                     >
@@ -108,8 +123,10 @@ function Disponibilidad({ laboratorios, laboratorioInicialId, onVolver, onContin
                         type="date"
                         min={hoyComoTexto()}
                         value={fecha}
+                        disabled={cargando}
                         onChange={(e) => {
                             setFecha(e.target.value);
+                            limpiarErrores("fecha");
                             limpiarResultado();
                         }}
                     />
@@ -122,8 +139,14 @@ function Disponibilidad({ laboratorios, laboratorioInicialId, onVolver, onContin
                         id="disp-inicio"
                         type="time"
                         value={horaInicio}
+                        disabled={cargando}
                         onChange={(e) => {
-                            setHoraInicio(e.target.value);
+                            const nuevaHoraInicio = e.target.value;
+                            setHoraInicio(nuevaHoraInicio);
+                            limpiarErrores(
+                                "horaInicio",
+                                ...(horaFin && nuevaHoraInicio && horaFin > nuevaHoraInicio ? ["horaFin"] : [])
+                            );
                             limpiarResultado();
                         }}
                     />
@@ -136,8 +159,10 @@ function Disponibilidad({ laboratorios, laboratorioInicialId, onVolver, onContin
                         id="disp-fin"
                         type="time"
                         value={horaFin}
+                        disabled={cargando}
                         onChange={(e) => {
                             setHoraFin(e.target.value);
+                            limpiarErrores("horaFin");
                             limpiarResultado();
                         }}
                     />
@@ -158,10 +183,12 @@ function Disponibilidad({ laboratorios, laboratorioInicialId, onVolver, onContin
                 </div>
             )}
 
-            {errorServidor && (
+            {errorServidor && consulta && (
                 <div className="labs-error" role="alert">
                     <p>{errorServidor}</p>
-                    <button onClick={() => consultar(consulta)}>Reintentar</button>
+                    <button onClick={() => consultar(consulta)} disabled={cargando}>
+                        {cargando ? "Consultando..." : "Reintentar"}
+                    </button>
                 </div>
             )}
 
@@ -171,7 +198,7 @@ function Disponibilidad({ laboratorios, laboratorioInicialId, onVolver, onContin
                         {resultado.disponible ? "Disponible" : "No disponible"}
                     </div>
                     <p className="disp-detalle">
-                        {laboratorio?.nombre}, {consulta.fecha}, de {consulta.horaInicio} a {consulta.horaFin}.{" "}
+                        {laboratorio?.nombre}, {formatearFecha(consulta.fecha)}, de {consulta.horaInicio} a {consulta.horaFin}.{" "}
                         {resultado.motivo}
                     </p>
 
@@ -186,7 +213,7 @@ function Disponibilidad({ laboratorios, laboratorioInicialId, onVolver, onContin
                         </button>
                     )}
 
-                    <h3>Horarios del {consulta.fecha}</h3>
+                    <h3>Horarios del {formatearFecha(consulta.fecha)}</h3>
                     {resultado.horariosDelDia.length === 0 ? (
                         <p className="labs-mensaje">No hay horarios registrados para esta fecha.</p>
                     ) : (
