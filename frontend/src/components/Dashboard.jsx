@@ -1,36 +1,33 @@
 import "./Dashboard.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Laboratorios from "./Laboratorios";
 import Disponibilidad from "./Disponibilidad";
+import Icono from "./Iconos";
 
 // Cada módulo indica qué roles lo pueden ver. El backend sigue
 // siendo quien autoriza; aquí solo se evita mostrar opciones que el
-// usuario no puede usar.
+// usuario no puede usar. 
 const MODULOS = [
     {
         id: "laboratorios",
-        icono: "🖥️",
         titulo: "Laboratorios OBLD",
         descripcion: "Ver estado actual, equipos disponibles y horarios de los laboratorios.",
         roles: ["Administrador", "Usuario"],
     },
     {
         id: "mis-reservas",
-        icono: "🗓️",
         titulo: "Mis Reservas",
         descripcion: "Registrar, consultar o cancelar mis reservas de laboratorio.",
         roles: ["Usuario"],
     },
     {
         id: "gestion-reservas",
-        icono: "📅",
         titulo: "Gestión de Reservas",
         descripcion: "Crear, aprobar o cancelar solicitudes de espacio para lecciones y prácticas.",
         roles: ["Administrador"],
     },
     {
         id: "reportes",
-        icono: "📊",
         titulo: "Reportes y Estadísticas",
         descripcion: "Consultar el historial de uso de los laboratorios por grupos y carreras.",
         roles: ["Administrador"],
@@ -41,12 +38,41 @@ function modulosPorRol(rol) {
     return MODULOS.filter((modulo) => modulo.roles.includes(rol));
 }
 
+// Iniciales para el avatar: primera y última palabra del nombre.
+function iniciales(nombre) {
+    const partes = (nombre ?? "").trim().split(/\s+/).filter(Boolean);
+    if (partes.length === 0) return "?";
+    if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
+    return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
+}
+
 function Dashboard({ usuario, onCerrarSesion }) {
     const [vista, setVista] = useState(null);
     // HU3 - #38 Datos para abrir la consulta de disponibilidad desde Laboratorios.
     const [disponibilidad, setDisponibilidad] = useState(null);
     const modulos = modulosPorRol(usuario?.rol);
     const esAdministrador = usuario?.rol === "Administrador";
+
+    useEffect(() => {
+        window.history.replaceState({ vista: null, disponibilidad: null }, "");
+
+        const alCambiarHistorial = (evento) => {
+            setVista(evento.state?.vista ?? null);
+            setDisponibilidad(evento.state?.disponibilidad ?? null);
+        };
+
+        window.addEventListener("popstate", alCambiarHistorial);
+        return () => window.removeEventListener("popstate", alCambiarHistorial);
+    }, []);
+
+    function irA(nuevaVista, datosDisponibilidad = null) {
+        window.history.pushState(
+            { vista: nuevaVista, disponibilidad: datosDisponibilidad },
+            ""
+        );
+        setVista(nuevaVista);
+        setDisponibilidad(datosDisponibilidad);
+    }
 
     return (
         <div className="dashboard-container">
@@ -61,9 +87,14 @@ function Dashboard({ usuario, onCerrarSesion }) {
                 </div>
 
                 <div className="dashboard-user-info">
-                    <div className="user-badge">
-                        <span className="user-name">{usuario?.nombre}</span>
-                        <span className="user-role">{usuario?.rol}</span>
+                    <div className="user-profile">
+                        <div className="user-avatar" aria-hidden="true">
+                            {iniciales(usuario?.nombre)}
+                        </div>
+                        <div className="user-badge">
+                            <span className="user-name">{usuario?.nombre}</span>
+                            <span className="user-role">{usuario?.rol}</span>
+                        </div>
                     </div>
                     <button onClick={onCerrarSesion} className="btn-logout">
                         Cerrar sesión
@@ -77,15 +108,14 @@ function Dashboard({ usuario, onCerrarSesion }) {
                     <Disponibilidad
                         laboratorios={disponibilidad.laboratorios}
                         laboratorioInicialId={disponibilidad.laboratorioId}
-                        onVolver={() => setVista("laboratorios")}
+                        onVolver={() => window.history.back()}
                     />
                 ) : vista === "laboratorios" ? (
                     <Laboratorios
-                        onVolver={() => setVista(null)}
-                        onConsultarDisponibilidad={(laboratorioId, laboratorios) => {
-                            setDisponibilidad({ laboratorioId, laboratorios });
-                            setVista("disponibilidad");
-                        }}
+                        onVolver={() => window.history.back()}
+                        onConsultarDisponibilidad={(laboratorioId, laboratorios) =>
+                            irA("disponibilidad", { laboratorioId, laboratorios })
+                        }
                     />
                 ) : (
                     <>
@@ -108,11 +138,13 @@ function Dashboard({ usuario, onCerrarSesion }) {
                                         className="dashboard-card"
                                         onClick={() =>
                                             modulo.id === "laboratorios"
-                                                ? setVista("laboratorios")
+                                                ? irA("laboratorios")
                                                 : alert(`Módulo: ${modulo.titulo}`)
                                         }
                                     >
-                                        <div className="card-icon">{modulo.icono}</div>
+                                        <div className="card-icon">
+                                            <Icono nombre={modulo.id} />
+                                        </div>
                                         <h3>{modulo.titulo}</h3>
                                         <p>{modulo.descripcion}</p>
                                     </button>
