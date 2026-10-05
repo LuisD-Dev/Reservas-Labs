@@ -3,6 +3,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using SistemaReservas.API.Data;
+using SistemaReservas.API.Repositories;
 using SistemaReservas.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +11,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddSingleton<DatabaseConnection>();
+
+// NFR2 - Separar acceso a datos: los servicios reciben los repositorios por interfaz.
+builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<ILaboratorioRepository, LaboratorioRepository>();
+builder.Services.AddScoped<IDisponibilidadRepository, DisponibilidadRepository>();
+
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<LaboratorioService>();
 builder.Services.AddScoped<DisponibilidadService>();
