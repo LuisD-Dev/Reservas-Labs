@@ -43,6 +43,12 @@ export function normalizarHorario(horario) {
     };
 }
 
+// Presenta fechas ISO sin convertirlas a Date, evitando cambios de día por zona horaria.
+export function formatearFecha(fecha) {
+    const partes = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(fecha ?? ""));
+    return partes ? `${partes[3]}/${partes[2]}/${partes[1]}` : String(fecha ?? "");
+}
+
 // HU3 - #39 Decide si el laboratorio está disponible para la consulta.
 // Está disponible si ese día existe un horario "Disponible" que cubre todo
 // el rango pedido. Un laboratorio "Fuera de servicio" nunca está disponible.

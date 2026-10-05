@@ -2,7 +2,7 @@
 // en cada petición. Si la API responde 401 o el token venció, la sesión
 // se cierra y se avisa a la aplicación con el evento "sesion-expirada".
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5282";
+export const API_BASE_URL = import.meta.env?.VITE_API_URL ?? "http://localhost:5282";
 
 const CLAVE_SESION = "usuario";
 export const EVENTO_SESION_EXPIRADA = "sesion-expirada";
@@ -60,13 +60,16 @@ export async function apiFetch(ruta, opciones = {}) {
     const sesion = obtenerSesion();
     const headers = { ...(opciones.headers ?? {}) };
 
-    if (sesion?.token) {
-        headers.Authorization = `Bearer ${sesion.token}`;
+    if (!sesion) {
+        window.dispatchEvent(new Event(EVENTO_SESION_EXPIRADA));
+        return new Response(null, { status: 401, statusText: "Unauthorized" });
     }
+
+    headers.Authorization = `Bearer ${sesion.token}`;
 
     const respuesta = await fetch(`${API_BASE_URL}${ruta}`, { ...opciones, headers });
 
-    if (respuesta.status === 401 && sesion) {
+    if (respuesta.status === 401) {
         cerrarSesion();
         window.dispatchEvent(new Event(EVENTO_SESION_EXPIRADA));
     }

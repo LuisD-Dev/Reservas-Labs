@@ -12,13 +12,13 @@ function Login({ onLoginExitoso }) {
     const [contrasena, setContrasena] = useState("");
     const [mostrarContrasena, setMostrarContrasena] = useState(false);
     const [error, setError] = useState("");
-    const [bloqueado, setBloqueado] = useState(false);
     const [cargando, setCargando] = useState(false);
 
     function handleUsuarioChange(e) {
         const valor = e.target.value;
         if (USUARIO_REGEX.test(valor)) {
             setUsuario(valor);
+            setError("");
         }
     }
 
@@ -40,7 +40,7 @@ function Login({ onLoginExitoso }) {
                 body: JSON.stringify({ Username: usuario, Password: contrasena }),
             });
 
-            const datos = await respuesta.json();
+            const datos = await respuesta.json().catch(() => ({}));
 
             if (respuesta.ok) {
                 // NFR1 - #46 La sesión incluye el token para las peticiones protegidas.
@@ -52,13 +52,14 @@ function Login({ onLoginExitoso }) {
                     expiraUtc: datos.expiraUtc,
                 };
                 onLoginExitoso?.(usuarioSesion);
+            } else if (respuesta.status === 401) {
+                setError(datos.mensaje || "Usuario o contraseña incorrectos.");
             } else if (respuesta.status === 423) {
-                setBloqueado(true);
                 setError(datos.mensaje || "Cuenta bloqueada temporalmente.");
             } else {
-                setError(datos.mensaje || "Usuario o contraseña incorrectos.");
+                setError(datos.mensaje || "No se pudo iniciar sesión. Intenta de nuevo.");
             }
-        } catch (err) {
+        } catch {
             setError("No se pudo conectar con el servidor. Verifica que el backend esté corriendo.");
         } finally {
             setCargando(false);
@@ -88,7 +89,7 @@ function Login({ onLoginExitoso }) {
                             type="text"
                             value={usuario}
                             onChange={handleUsuarioChange}
-                            disabled={bloqueado || cargando}
+                            disabled={cargando}
                             autoComplete="username"
                             placeholder="Ingrese su usuario"
                             maxLength={USUARIO_MAX_LENGTH}
@@ -102,8 +103,11 @@ function Login({ onLoginExitoso }) {
                                 id="contrasena"
                                 type={mostrarContrasena ? "text" : "password"}
                                 value={contrasena}
-                                onChange={(e) => setContrasena(e.target.value)}
-                                disabled={bloqueado || cargando}
+                                onChange={(e) => {
+                                    setContrasena(e.target.value);
+                                    setError("");
+                                }}
+                                disabled={cargando}
                                 autoComplete="current-password"
                                 placeholder="Ingrese su contraseña"
                                 maxLength={CONTRASENA_MAX_LENGTH}
@@ -112,7 +116,7 @@ function Login({ onLoginExitoso }) {
                                 type="button"
                                 className="login-toggle-password"
                                 onClick={() => setMostrarContrasena((v) => !v)}
-                                disabled={bloqueado || cargando}
+                                disabled={cargando}
                                 aria-label={mostrarContrasena ? "Ocultar contraseña" : "Mostrar contraseña"}
                                 tabIndex={-1}
                             >
@@ -137,7 +141,7 @@ function Login({ onLoginExitoso }) {
                         </p>
                     )}
 
-                    <button type="submit" disabled={bloqueado || cargando} className="login-button">
+                    <button type="submit" disabled={cargando} className="login-button">
                         {cargando ? "Ingresando..." : "Iniciar sesión"}
                     </button>
                 </form>
