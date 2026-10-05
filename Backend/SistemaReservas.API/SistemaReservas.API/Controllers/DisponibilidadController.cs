@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using SistemaReservas.API.Services;
 
 namespace SistemaReservas.API.Controllers
 {
     [ApiController]
     [Route("api/laboratorios/{laboratorioId}/disponibilidad")]
+    [Authorize]
     public class DisponibilidadController : ControllerBase
     {
         private readonly DisponibilidadService _disponibilidadService;
