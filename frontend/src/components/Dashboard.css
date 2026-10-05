@@ -9,7 +9,7 @@
 .dashboard-header {
     background-color: #ffffff;
     border-bottom: 1px solid #e2e8f0;
-    padding: 16px 32px;
+    padding: 10px 32px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -23,22 +23,27 @@
 }
 
 .dashboard-logo {
-    height: 45px;
+    height: 64px;
     width: auto;
     object-fit: contain;
 }
 
-.dashboard-titles h2 {
-    margin: 0;
-    font-size: 18px;
-    color: #0b2240;
-    font-weight: 700;
+.dashboard-titles {
+    border-left: 1px solid #e2e8f0;
+    padding-left: 16px;
 }
 
-.dashboard-titles span {
-    font-size: 12px;
-    color: #64748b;
-}
+    .dashboard-titles h2 {
+        margin: 0;
+        font-size: 18px;
+        color: #0b2240;
+        font-weight: 700;
+    }
+
+    .dashboard-titles span {
+        font-size: 12px;
+        color: #64748b;
+    }
 
 .dashboard-user-info {
     display: flex;
@@ -46,29 +51,51 @@
     gap: 20px;
 }
 
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-right: 20px;
+    border-right: 1px solid #e2e8f0;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #003b71;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
 .user-badge {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: flex-start;
+    gap: 2px;
 }
 
 .user-name {
     font-size: 14px;
     font-weight: 600;
     color: #0b2240;
+    line-height: 1.2;
 }
 
 .user-role {
     font-size: 12px;
+    font-weight: 500;
     color: #003b71;
-    background: rgba(0, 59, 113, 0.1);
-    padding: 2px 8px;
-    border-radius: 12px;
-    margin-top: 2px;
+    line-height: 1.2;
 }
 
 .btn-logout {
-    background-color: #fee2e2;
+    background-color: #ffffff;
     color: #b91c1c;
     border: 1px solid #fecaca;
     padding: 8px 16px;
@@ -82,6 +109,11 @@
     .btn-logout:hover {
         background-color: #fef2f2;
         border-color: #f87171;
+    }
+
+    .btn-logout:focus-visible {
+        outline: 2px solid #003b71;
+        outline-offset: 2px;
     }
 
 .dashboard-main {
@@ -133,7 +165,14 @@
     }
 
 .card-icon {
-    font-size: 32px;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 59, 113, 0.08);
+    color: #003b71;
+    border-radius: 10px;
     margin-bottom: 16px;
 }
 
@@ -148,4 +187,19 @@
     font-size: 14px;
     color: #64748b;
     line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+    .dashboard-header {
+        padding: 10px 16px;
+    }
+
+    .dashboard-titles span,
+    .user-badge {
+        display: none;
+    }
+
+    .user-profile {
+        padding-right: 12px;
+    }
 }
