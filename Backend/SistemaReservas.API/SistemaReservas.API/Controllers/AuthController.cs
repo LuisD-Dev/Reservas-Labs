@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SistemaReservas.API.DTOs;
+using SistemaReservas.API.Reglas;
 using SistemaReservas.API.Services;
 
 namespace SistemaReservas.API.Controllers
@@ -11,11 +12,14 @@ namespace SistemaReservas.API.Controllers
     {
         private readonly AuthService _authService;
         private readonly TokenService _tokenService;
+        private readonly TimeProvider _timeProvider;
 
-        public AuthController(AuthService authService, TokenService tokenService)
+        // NFR2 - Tiempo inyectable: los segundos restantes del bloqueo usan la hora de TimeProvider.
+        public AuthController(AuthService authService, TokenService tokenService, TimeProvider timeProvider)
         {
             _authService = authService;
             _tokenService = tokenService;
+            _timeProvider = timeProvider;
         }
 
         // HU1 - #22 Crear endpoint Login
@@ -47,12 +51,13 @@ namespace SistemaReservas.API.Controllers
 
                 case LoginEstado.Bloqueado:
                     var hastaUtc = DateTime.SpecifyKind(resultado.BloqueadoHasta!.Value, DateTimeKind.Utc);
-                    var segundosRestantes = (int)Math.Ceiling((hastaUtc - DateTime.UtcNow).TotalSeconds);
+                    // NFR2 - El cálculo de los segundos restantes está en ReglasBloqueo.
+                    var segundosRestantes = ReglasBloqueo.SegundosRestantes(hastaUtc, _timeProvider.GetUtcNow().UtcDateTime);
                     return StatusCode(StatusCodes.Status423Locked, new
                     {
                         mensaje = "Demasiados intentos fallidos. Intente de nuevo en unos minutos.",
                         bloqueadoHasta = hastaUtc,
-                        segundosRestantes = Math.Max(segundosRestantes, 0)
+                        segundosRestantes
                     });
 
                 default:
