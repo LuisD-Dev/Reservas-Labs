@@ -17,12 +17,16 @@ function Laboratorios({ onVolver, onConsultarDisponibilidad }) {
     const [error, setError] = useState("");
     const [busqueda, setBusqueda] = useState("");
 
-    async function cargar() {
+    async function cargar(signal) {
         setCargando(true);
         setError("");
 
         try {
-            const respuesta = await apiFetch("/api/laboratorios");
+            const respuesta = await apiFetch("/api/laboratorios", { signal });
+
+            if (signal?.aborted) {
+                return;
+            }
 
             if (respuesta.status === 401) {
                 setError("Tu sesión venció. Inicia sesión de nuevo.");
@@ -33,15 +37,25 @@ function Laboratorios({ onVolver, onConsultarDisponibilidad }) {
             } else {
                 setLaboratorios(await respuesta.json());
             }
-        } catch {
-            setError("No se pudo conectar con el servidor. Verifica que la API esté en ejecución.");
+        } catch (errorCarga) {
+            if (errorCarga.name !== "AbortError") {
+                setError("No se pudo conectar con el servidor. Verifica que la API esté en ejecución.");
+            }
         } finally {
-            setCargando(false);
+            if (!signal?.aborted) {
+                setCargando(false);
+            }
         }
     }
 
     useEffect(() => {
-        cargar();
+        const controller = new AbortController();
+        const inicio = window.setTimeout(() => cargar(controller.signal), 0);
+
+        return () => {
+            window.clearTimeout(inicio);
+            controller.abort();
+        };
     }, []);
 
     const texto = busqueda.trim().toLowerCase();
@@ -76,7 +90,7 @@ function Laboratorios({ onVolver, onConsultarDisponibilidad }) {
             {error && (
                 <div className="labs-error" role="alert">
                     <p>{error}</p>
-                    <button onClick={cargar}>Reintentar</button>
+                    <button onClick={() => cargar()}>Reintentar</button>
                 </div>
             )}
 

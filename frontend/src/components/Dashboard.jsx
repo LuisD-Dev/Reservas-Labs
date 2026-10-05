@@ -102,8 +102,9 @@ function Dashboard({ usuario, onCerrarSesion }) {
                         {modulos.length > 0 ? (
                             <div className="dashboard-grid">
                                 {modulos.map((modulo) => (
-                                    <div
+                                    <button
                                         key={modulo.id}
+                                        type="button"
                                         className="dashboard-card"
                                         onClick={() =>
                                             modulo.id === "laboratorios"
@@ -114,7 +115,7 @@ function Dashboard({ usuario, onCerrarSesion }) {
                                         <div className="card-icon">{modulo.icono}</div>
                                         <h3>{modulo.titulo}</h3>
                                         <p>{modulo.descripcion}</p>
-                                    </div>
+                                    </button>
                                 ))}
                             </div>
                         ) : (
