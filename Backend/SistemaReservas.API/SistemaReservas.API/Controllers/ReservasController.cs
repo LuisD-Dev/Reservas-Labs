@@ -8,7 +8,8 @@ namespace SistemaReservas.API.Controllers
     public class ReservasController : ControllerBase
     {
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        // NFR1 - #44 Solo el rol Administrador puede crear reservas de prueba.
+        [Authorize(Roles = "Administrador")]
         public IActionResult CrearReserva()
         {
             return Ok(new { mensaje = "Reserva creada" });

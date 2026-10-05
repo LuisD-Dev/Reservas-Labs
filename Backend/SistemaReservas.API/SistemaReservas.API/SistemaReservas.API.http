@@ -1,5 +1,6 @@
 @SistemaReservas.API_HostAddress = http://localhost:5282
 
+### Ejemplo de la plantilla: sin token (esperado 401 desde NFR1 - #44)
 GET {{SistemaReservas.API_HostAddress}}/weatherforecast/
 Accept: application/json
 
@@ -29,6 +30,66 @@ Content-Type: application/json
 
 {
   "username": "noexiste",
+  "password": "1234"
+}
+
+# ==========================================================================
+# NFR1 - #45 Pruebas de seguridad (AB#12)
+# Ejecutar en orden: primero los dos logins, que guardan el token de cada rol.
+# Requiere el backend corriendo con: dotnet run --launch-profile http
+# ==========================================================================
+
+### NFR1-01 Login Administrador: devuelve token y rol (esperado 200)
+# @name loginAdmin
+POST {{SistemaReservas.API_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "1234"
+}
+
+### NFR1-02 Login Usuario: devuelve token y rol (esperado 200)
+# @name loginUsuario
+POST {{SistemaReservas.API_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "usuario",
+  "password": "1234"
+}
+
+### NFR1-03 Endpoint de Administrador sin token (esperado 401)
+POST {{SistemaReservas.API_HostAddress}}/api/reservas
+
+### NFR1-04 Endpoint de Administrador con token de Usuario (esperado 403)
+POST {{SistemaReservas.API_HostAddress}}/api/reservas
+Authorization: Bearer {{loginUsuario.response.body.$.token}}
+
+### NFR1-05 Endpoint de Administrador con token de Administrador (esperado 200)
+POST {{SistemaReservas.API_HostAddress}}/api/reservas
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+### NFR1-06 Token alterado o inventado (esperado 401)
+POST {{SistemaReservas.API_HostAddress}}/api/reservas
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiQWRtaW5pc3RyYWRvciJ9.firma-invalida
+
+### NFR1-07 Endpoint autenticado sin token (esperado 401)
+GET {{SistemaReservas.API_HostAddress}}/weatherforecast
+Accept: application/json
+
+### NFR1-08 Endpoint autenticado con token de Usuario (esperado 200)
+GET {{SistemaReservas.API_HostAddress}}/weatherforecast
+Accept: application/json
+Authorization: Bearer {{loginUsuario.response.body.$.token}}
+
+### NFR1-09 La respuesta del login no expone la contraseña ni su hash (esperado 200)
+# Revisar que el cuerpo solo tenga: usuarioId, nombre, rol, token, expiraUtc.
+POST {{SistemaReservas.API_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "usuario",
   "password": "1234"
 }
 
