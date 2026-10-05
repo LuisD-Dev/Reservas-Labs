@@ -12,6 +12,10 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddSingleton<DatabaseConnection>();
 
+// NFR2 - Tiempo inyectable: la hora actual se obtiene de TimeProvider
+// para poder reemplazarla en las pruebas.
+builder.Services.AddSingleton(TimeProvider.System);
+
 // NFR2 - Separar acceso a datos: los servicios reciben los repositorios por interfaz.
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<ILaboratorioRepository, LaboratorioRepository>();

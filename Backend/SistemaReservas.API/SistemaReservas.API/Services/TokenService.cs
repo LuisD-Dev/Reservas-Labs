@@ -10,10 +10,13 @@ namespace SistemaReservas.API.Services
     public class TokenService
     {
         private readonly IConfiguration _configuration;
+        private readonly TimeProvider _timeProvider;
 
-        public TokenService(IConfiguration configuration)
+        // NFR2 - Tiempo inyectable: la expiración se calcula con la hora de TimeProvider.
+        public TokenService(IConfiguration configuration, TimeProvider timeProvider)
         {
             _configuration = configuration;
+            _timeProvider = timeProvider;
         }
 
         public (string Token, DateTime ExpiraUtc) GenerarToken(int usuarioId, string nombre, string rol)
@@ -24,7 +27,7 @@ namespace SistemaReservas.API.Services
                 ?? throw new InvalidOperationException("Falta la configuración Jwt:Key.");
 
             var horas = int.TryParse(jwt["ExpiraHoras"], out var valor) ? valor : 8;
-            var expiraUtc = DateTime.UtcNow.AddHours(horas);
+            var expiraUtc = _timeProvider.GetUtcNow().UtcDateTime.AddHours(horas);
 
             var claims = new[]
             {

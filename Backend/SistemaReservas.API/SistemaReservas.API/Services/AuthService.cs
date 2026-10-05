@@ -8,6 +8,7 @@ namespace SistemaReservas.API.Services
     public class AuthService
     {
         private readonly IUsuarioRepository _usuarioRepository;
+        private readonly TimeProvider _timeProvider;
         private readonly PasswordHasher<Usuario> _passwordHasher = new();
 
         // HU1 - #21 Bloqueo temporal: 5 intentos fallidos => 5 minutos bloqueado
@@ -15,9 +16,11 @@ namespace SistemaReservas.API.Services
         private static readonly TimeSpan DuracionBloqueo = TimeSpan.FromMinutes(5);
 
         // NFR2 - Separar acceso a datos: el SQL de Usuarios está en IUsuarioRepository.
-        public AuthService(IUsuarioRepository usuarioRepository)
+        // NFR2 - Tiempo inyectable: la hora actual viene de TimeProvider.
+        public AuthService(IUsuarioRepository usuarioRepository, TimeProvider timeProvider)
         {
             _usuarioRepository = usuarioRepository;
+            _timeProvider = timeProvider;
         }
 
         // HU1 - #19 Implementar autenticación: validar usuario/password
@@ -39,7 +42,7 @@ namespace SistemaReservas.API.Services
             }
 
             // HU1 - #21 Si el usuario sigue bloqueado, se rechaza sin revisar la contraseña.
-            if (usuario.BloqueadoHasta is not null && usuario.BloqueadoHasta > DateTime.UtcNow)
+            if (usuario.BloqueadoHasta is not null && usuario.BloqueadoHasta > _timeProvider.GetUtcNow().UtcDateTime)
             {
                 return new LoginResult(LoginEstado.Bloqueado, BloqueadoHasta: usuario.BloqueadoHasta);
             }
@@ -52,7 +55,7 @@ namespace SistemaReservas.API.Services
                 // HU1 - #21 Al llegar al 5.º intento fallido se bloquea el acceso.
                 if (intentos >= MaxIntentosFallidos)
                 {
-                    var bloqueadoHasta = DateTime.UtcNow.Add(DuracionBloqueo);
+                    var bloqueadoHasta = _timeProvider.GetUtcNow().UtcDateTime.Add(DuracionBloqueo);
                     await _usuarioRepository.BloquearAsync(usuario.Id, bloqueadoHasta);
                     return new LoginResult(LoginEstado.Bloqueado, BloqueadoHasta: bloqueadoHasta);
                 }
