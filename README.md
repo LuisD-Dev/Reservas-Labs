@@ -59,31 +59,41 @@ Antes de ejecutar el proyecto se requiere:
 
 ## 1. Base de datos
 
-Abrir **SQL Server Management Studio** y ejecutar:
+Use EF Core migrations and the project's seeder for normal development. Recommended workflow:
 
-```text
-database/database.sql
+- Ensure SQL Server is running and the connection string in Backend/SistemaReservas.API/SistemaReservas.API/appsettings.json points to your instance.
+
+- To create or update the database from the model using migrations:
+
+```powershell
+cd ".\Backend\SistemaReservas.API\SistemaReservas.API"
+dotnet ef database update
 ```
 
-La base de datos utilizada es:
+- To recreate the local development database (destructive):
+
+```powershell
+dotnet ef database drop -f
+dotnet ef database update
+```
+
+- Running the backend in the Development environment will execute the EfDatabaseSeeder and insert test users and sample data if they do not already exist.
+
+For auditing or manual deployments a generated SQL script is available at Backend/SistemaReservas.API/SistemaReservas.API/initial_migration.sql. The file database/database.sql is historical documentation and is not required for normal development.
+
+The database used by the project is:
 
 ```text
 LaboratorioOBLD
 ```
 
-La conexión se encuentra en:
-
-```text
-Backend/SistemaReservas.API/SistemaReservas.API/appsettings.json
-```
-
-Configuración actual:
+Connection configuration (appsettings.json):
 
 ```json
 "DefaultConnection": "Server=localhost;Database=LaboratorioOBLD;Trusted_Connection=True;TrustServerCertificate=True;"
 ```
 
-> Si la instancia de SQL Server utiliza otro nombre, se debe modificar `Server` en la cadena de conexión.
+If your SQL Server instance uses a different name, update the Server value in the connection string.
 
 ---
 

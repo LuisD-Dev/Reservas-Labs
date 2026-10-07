@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.EntityFrameworkCore;
 using SistemaReservas.API.Data;
 using SistemaReservas.API.Repositories;
 using SistemaReservas.API.Services;
@@ -10,7 +11,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
-builder.Services.AddSingleton<DatabaseConnection>();
+
+// EF Core DbContext
+builder.Services.AddDbContext<SistemaReservasDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // NFR2 - Tiempo inyectable: la hora actual se obtiene de TimeProvider
 // para poder reemplazarla en las pruebas.
@@ -69,13 +73,12 @@ if (app.Environment.IsDevelopment())
 {
     using (var scope = app.Services.CreateScope())
     {
-        var database =
-            scope.ServiceProvider.GetRequiredService<DatabaseConnection>();
+        var context = scope.ServiceProvider.GetRequiredService<SistemaReservasDbContext>();
 
         var authService =
             scope.ServiceProvider.GetRequiredService<AuthService>();
 
-        await DatabaseSeeder.SeedAsync(database, authService);
+        await EfDatabaseSeeder.SeedAsync(context, authService);
     }
 
     app.MapOpenApi();
@@ -93,15 +96,13 @@ app.MapControllers();
 // error de conexion que no deben verse en otros ambientes.
 if (app.Environment.IsDevelopment())
 {
-    app.MapGet("/db-test", async (DatabaseConnection database) =>
+    app.MapGet("/db-test", async (SistemaReservasDbContext context) =>
     {
         try
         {
-            using var connection = database.CreateConnection();
-
-            await connection.OpenAsync();
-
-            return Results.Ok("Conexión con SQL Server exitosa.");
+            var canConnect = await context.Database.CanConnectAsync();
+            if (canConnect) return Results.Ok("Conexión con SQL Server exitosa.");
+            return Results.Problem("No se pudo conectar a la base de datos.");
         }
         catch (Exception ex)
         {

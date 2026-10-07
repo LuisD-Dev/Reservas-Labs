@@ -10,7 +10,7 @@ import Icono from "./Iconos";
 const MODULOS = [
     {
         id: "laboratorios",
-        titulo: "Laboratorios OBLD",
+        titulo: "Laboratorios",
         descripcion: "Ver estado actual, equipos disponibles y horarios de los laboratorios.",
         roles: ["Administrador", "Usuario"],
     },
