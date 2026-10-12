@@ -12,7 +12,7 @@ namespace SistemaReservas.API.Services
         private readonly TimeProvider _timeProvider;
         private readonly PasswordHasher<Usuario> _passwordHasher = new();
 
-        // NFR2 - Separar acceso a datos: el SQL de Usuarios está en IUsuarioRepository.
+        // NFR2 - Separar acceso a datos: el acceso a Usuarios está en IUsuarioRepository.
         // NFR2 - Tiempo inyectable: la hora actual viene de TimeProvider.
         public AuthService(IUsuarioRepository usuarioRepository, TimeProvider timeProvider)
         {

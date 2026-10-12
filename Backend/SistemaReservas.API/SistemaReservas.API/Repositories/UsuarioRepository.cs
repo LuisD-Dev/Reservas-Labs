@@ -1,98 +1,77 @@
-using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using SistemaReservas.API.Data;
 using SistemaReservas.API.Models;
 
 namespace SistemaReservas.API.Repositories
 {
-    // NFR2 - Separar acceso a datos: implementación con SQL Server.
-    // Las consultas son las mismas que antes estaban en AuthService.
+    // NFR2 - Separar acceso a datos: implementación con EF Core.
     public class UsuarioRepository : IUsuarioRepository
     {
-        private readonly DatabaseConnection _database;
+        private readonly SistemaReservasDbContext _context;
 
-        public UsuarioRepository(DatabaseConnection database)
+        public UsuarioRepository(SistemaReservasDbContext context)
         {
-            _database = database;
+            _context = context;
         }
 
         public async Task<Usuario?> ObtenerPorUsernameAsync(string username)
         {
-            using var connection = _database.CreateConnection();
-            await connection.OpenAsync();
-
-            const string sql = @"SELECT Id, Nombre, Username, PasswordHash, Rol, IntentosFallidos, BloqueadoHasta
-                                 FROM Usuarios
-                                 WHERE Username = @Username";
-
-            using var command = new SqlCommand(sql, connection);
-            command.Parameters.AddWithValue("@Username", username);
-
-            using var reader = await command.ExecuteReaderAsync();
-            if (!await reader.ReadAsync())
-            {
-                return null;
-            }
-
-            return new Usuario
-            {
-                Id = reader.GetInt32(0),
-                Nombre = reader.GetString(1),
-                Username = reader.GetString(2),
-                PasswordHash = reader.GetString(3),
-                Rol = reader.GetString(4),
-                IntentosFallidos = reader.GetInt32(5),
-                BloqueadoHasta = reader.IsDBNull(6) ? null : reader.GetDateTime(6)
-            };
+            return await _context.Usuarios
+                .AsNoTracking()
+                .SingleOrDefaultAsync(u => u.Username == username);
         }
 
+        // HU1 - #20 El incremento se hace en la base de datos con un solo UPDATE
+        // (IntentosFallidos = IntentosFallidos + 1), así dos intentos simultáneos
+        // no se pisan. Después se lee el valor actualizado.
         public async Task<int> RegistrarIntentoFallidoAsync(int usuarioId)
         {
-            using var connection = _database.CreateConnection();
-            await connection.OpenAsync();
+            var filas = await _context.Usuarios
+                .Where(u => u.Id == usuarioId)
+                .ExecuteUpdateAsync(s => s.SetProperty(u => u.IntentosFallidos, u => u.IntentosFallidos + 1));
 
-            const string sql = @"UPDATE Usuarios
-                                 SET IntentosFallidos = IntentosFallidos + 1
-                                 OUTPUT INSERTED.IntentosFallidos
-                                 WHERE Id = @Id";
+            if (filas == 0)
+            {
+                throw new InvalidOperationException($"Usuario {usuarioId} no encontrado.");
+            }
 
-            using var command = new SqlCommand(sql, connection);
-            command.Parameters.AddWithValue("@Id", usuarioId);
-
-            var resultado = await command.ExecuteScalarAsync();
-            return Convert.ToInt32(resultado);
+            return await _context.Usuarios
+                .AsNoTracking()
+                .Where(u => u.Id == usuarioId)
+                .Select(u => u.IntentosFallidos)
+                .SingleAsync();
         }
 
+        // Un solo UPDATE en la base de datos, igual que el incremento: no depende
+        // de que el usuario esté (o no) cargado en el contexto de EF.
         public async Task ReiniciarIntentosAsync(int usuarioId)
         {
-            using var connection = _database.CreateConnection();
-            await connection.OpenAsync();
+            var filas = await _context.Usuarios
+                .Where(u => u.Id == usuarioId)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(u => u.IntentosFallidos, 0)
+                    .SetProperty(u => u.BloqueadoHasta, (DateTime?)null));
 
-            const string sql = @"UPDATE Usuarios
-                                 SET IntentosFallidos = 0,
-                                     BloqueadoHasta = NULL
-                                 WHERE Id = @Id";
-
-            using var command = new SqlCommand(sql, connection);
-            command.Parameters.AddWithValue("@Id", usuarioId);
-
-            await command.ExecuteNonQueryAsync();
+            if (filas == 0)
+            {
+                throw new InvalidOperationException($"Usuario {usuarioId} no encontrado.");
+            }
         }
 
+        // HU1 - #21 Un solo UPDATE: guarda hasta cuándo queda bloqueado y reinicia
+        // el contador para que, al vencer el bloqueo, tenga otros 5 intentos.
         public async Task BloquearAsync(int usuarioId, DateTime bloqueadoHasta)
         {
-            using var connection = _database.CreateConnection();
-            await connection.OpenAsync();
+            var filas = await _context.Usuarios
+                .Where(u => u.Id == usuarioId)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(u => u.BloqueadoHasta, (DateTime?)bloqueadoHasta)
+                    .SetProperty(u => u.IntentosFallidos, 0));
 
-            const string sql = @"UPDATE Usuarios
-                                 SET BloqueadoHasta = @BloqueadoHasta,
-                                     IntentosFallidos = 0
-                                 WHERE Id = @Id";
-
-            using var command = new SqlCommand(sql, connection);
-            command.Parameters.AddWithValue("@BloqueadoHasta", bloqueadoHasta);
-            command.Parameters.AddWithValue("@Id", usuarioId);
-
-            await command.ExecuteNonQueryAsync();
+            if (filas == 0)
+            {
+                throw new InvalidOperationException($"Usuario {usuarioId} no encontrado.");
+            }
         }
     }
 }

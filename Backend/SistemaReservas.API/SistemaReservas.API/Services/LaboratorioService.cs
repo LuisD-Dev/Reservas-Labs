@@ -7,7 +7,7 @@ namespace SistemaReservas.API.Services
     {
         private readonly ILaboratorioRepository _laboratorioRepository;
 
-        // NFR2 - Separar acceso a datos: el SQL de Laboratorios está en ILaboratorioRepository.
+        // NFR2 - Separar acceso a datos: el acceso a Laboratorios está en ILaboratorioRepository.
         public LaboratorioService(ILaboratorioRepository laboratorioRepository)
         {
             _laboratorioRepository = laboratorioRepository;

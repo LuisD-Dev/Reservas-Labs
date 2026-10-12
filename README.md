@@ -59,11 +59,7 @@ Antes de ejecutar el proyecto se requiere:
 
 ## 1. Base de datos
 
-Abrir **SQL Server Management Studio** y ejecutar:
-
-```text
-database/database.sql
-```
+La base de datos se crea con las **migraciones de EF Core** (code-first); no hace falta ejecutar scripts a mano.
 
 La base de datos utilizada es:
 
@@ -84,6 +80,47 @@ Configuración actual:
 ```
 
 > Si la instancia de SQL Server utiliza otro nombre, se debe modificar `Server` en la cadena de conexión.
+
+Las migraciones se aplican con la herramienta `dotnet-ef`, que debe ser de la versión 10 (la misma de EF Core en el proyecto). Para instalarla o actualizarla:
+
+```powershell
+dotnet tool install --global dotnet-ef
+dotnet tool update --global dotnet-ef
+```
+
+Con SQL Server en ejecución, crear o actualizar la base de datos:
+
+```powershell
+cd ".\Backend\SistemaReservas.API\SistemaReservas.API"
+dotnet ef database update
+```
+
+> **Importante:** si la base de datos se creó antes con `database/database.sql`, se debe recrear con las migraciones. Esto borra los datos locales:
+>
+> ```powershell
+> dotnet ef database drop -f
+> dotnet ef database update
+> ```
+
+Al ejecutar el backend en ambiente de desarrollo, `EfDatabaseSeeder` agrega los datos de prueba que falten (no borra nada):
+
+- Los [usuarios de prueba](#usuarios-de-prueba).
+- Los laboratorios de Software y de Redes.
+- Si no hay horarios de hoy en adelante, horarios para mañana y pasado mañana en cada laboratorio: de 08:00 a 12:00 "Disponible" y de 13:00 a 15:00 "No disponible".
+
+Para revisiones o despliegues manuales, el script SQL generado a partir de las migraciones está en:
+
+```text
+Backend/SistemaReservas.API/SistemaReservas.API/Migrations/InitialCreate.sql
+```
+
+Si se agrega una migración, el script se regenera desde la carpeta del backend con:
+
+```powershell
+dotnet ef migrations script -o Migrations/InitialCreate.sql
+```
+
+El archivo `database/database.sql` se conserva solo como referencia histórica; ya no se usa para crear la base de datos.
 
 ---
 
