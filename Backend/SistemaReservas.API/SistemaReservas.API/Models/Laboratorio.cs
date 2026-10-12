@@ -11,5 +11,8 @@
         public int Capacidad { get; set; }
 
         public string Estado { get; set; } = string.Empty;
+
+        // Navigation property: one laboratorio has many disponibilidades
+        public List<Disponibilidad> Disponibilidades { get; set; } = new();
     }
 }
