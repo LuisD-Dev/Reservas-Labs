@@ -35,7 +35,7 @@ namespace SistemaReservas.API.Data.Configurations
                 .HasForeignKey(d => d.LaboratorioId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasCheckConstraint("CK_Disponibilidades_Estado", "Estado IN ('Disponible','No disponible')");
+            builder.ToTable(t => t.HasCheckConstraint("CK_Disponibilidades_Estado", "Estado IN ('Disponible','No disponible')"));
         }
     }
 }

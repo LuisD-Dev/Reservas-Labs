@@ -59,41 +59,68 @@ Antes de ejecutar el proyecto se requiere:
 
 ## 1. Base de datos
 
-Use EF Core migrations and the project's seeder for normal development. Recommended workflow:
+La base de datos se crea con las **migraciones de EF Core** (code-first); no hace falta ejecutar scripts a mano.
 
-- Ensure SQL Server is running and the connection string in Backend/SistemaReservas.API/SistemaReservas.API/appsettings.json points to your instance.
+La base de datos utilizada es:
 
-- To create or update the database from the model using migrations:
+```text
+LaboratorioOBLD
+```
+
+La conexión se encuentra en:
+
+```text
+Backend/SistemaReservas.API/SistemaReservas.API/appsettings.json
+```
+
+Configuración actual:
+
+```json
+"DefaultConnection": "Server=localhost;Database=LaboratorioOBLD;Trusted_Connection=True;TrustServerCertificate=True;"
+```
+
+> Si la instancia de SQL Server utiliza otro nombre, se debe modificar `Server` en la cadena de conexión.
+
+Las migraciones se aplican con la herramienta `dotnet-ef`, que debe ser de la versión 10 (la misma de EF Core en el proyecto). Para instalarla o actualizarla:
+
+```powershell
+dotnet tool install --global dotnet-ef
+dotnet tool update --global dotnet-ef
+```
+
+Con SQL Server en ejecución, crear o actualizar la base de datos:
 
 ```powershell
 cd ".\Backend\SistemaReservas.API\SistemaReservas.API"
 dotnet ef database update
 ```
 
-- To recreate the local development database (destructive):
+> **Importante:** si la base de datos se creó antes con `database/database.sql`, se debe recrear con las migraciones. Esto borra los datos locales:
+>
+> ```powershell
+> dotnet ef database drop -f
+> dotnet ef database update
+> ```
 
-```powershell
-dotnet ef database drop -f
-dotnet ef database update
-```
+Al ejecutar el backend en ambiente de desarrollo, `EfDatabaseSeeder` agrega los datos de prueba que falten (no borra nada):
 
-- Running the backend in the Development environment will execute the EfDatabaseSeeder and insert test users and sample data if they do not already exist.
+- Los [usuarios de prueba](#usuarios-de-prueba).
+- Los laboratorios de Software y de Redes.
+- Si no hay horarios de hoy en adelante, horarios para mañana y pasado mañana en cada laboratorio: de 08:00 a 12:00 "Disponible" y de 13:00 a 15:00 "No disponible".
 
-For auditing or manual deployments a generated SQL script is available at Backend/SistemaReservas.API/SistemaReservas.API/initial_migration.sql. The file database/database.sql is historical documentation and is not required for normal development.
-
-The database used by the project is:
+Para revisiones o despliegues manuales, el script SQL generado a partir de las migraciones está en:
 
 ```text
-LaboratorioOBLD
+Backend/SistemaReservas.API/SistemaReservas.API/Migrations/InitialCreate.sql
 ```
 
-Connection configuration (appsettings.json):
+Si se agrega una migración, el script se regenera desde la carpeta del backend con:
 
-```json
-"DefaultConnection": "Server=localhost;Database=LaboratorioOBLD;Trusted_Connection=True;TrustServerCertificate=True;"
+```powershell
+dotnet ef migrations script -o Migrations/InitialCreate.sql
 ```
 
-If your SQL Server instance uses a different name, update the Server value in the connection string.
+El archivo `database/database.sql` se conserva solo como referencia histórica; ya no se usa para crear la base de datos.
 
 ---
 

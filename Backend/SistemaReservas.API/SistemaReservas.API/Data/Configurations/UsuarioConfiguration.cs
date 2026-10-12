@@ -36,7 +36,7 @@ namespace SistemaReservas.API.Data.Configurations
             builder.Property(u => u.BloqueadoHasta)
                 .IsRequired(false);
 
-            builder.HasCheckConstraint("CK_Usuarios_Rol", "Rol IN ('Administrador','Usuario')");
+            builder.ToTable(t => t.HasCheckConstraint("CK_Usuarios_Rol", "Rol IN ('Administrador','Usuario')"));
         }
     }
 }

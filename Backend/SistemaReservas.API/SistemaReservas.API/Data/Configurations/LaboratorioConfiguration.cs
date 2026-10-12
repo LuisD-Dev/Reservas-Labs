@@ -26,8 +26,8 @@ namespace SistemaReservas.API.Data.Configurations
                 .IsRequired()
                 .HasMaxLength(30);
 
-            builder.HasCheckConstraint("CK_Laboratorios_Capacidad", "Capacidad > 0");
-            builder.HasCheckConstraint("CK_Laboratorios_Estado", "Estado IN ('Habilitado','Fuera de servicio')");
+            builder.ToTable(t => t.HasCheckConstraint("CK_Laboratorios_Capacidad", "Capacidad > 0"));
+            builder.ToTable(t => t.HasCheckConstraint("CK_Laboratorios_Estado", "Estado IN ('Habilitado','Fuera de servicio')"));
 
             builder.HasMany(l => l.Disponibilidades)
                 .WithOne(d => d.Laboratorio)

@@ -4,7 +4,7 @@ using SistemaReservas.API.Repositories;
 namespace SistemaReservas.Tests.Fakes
 {
     // NFR2 - Doble de prueba de IUsuarioRepository: guarda los usuarios en memoria
-    // e imita lo que hacen las consultas SQL de UsuarioRepository.
+    // e imita lo que hace UsuarioRepository en la base de datos.
     // Registra cada llamada para poder verificar el orden y las escrituras.
     public class FakeUsuarioRepository : IUsuarioRepository
     {
@@ -33,7 +33,7 @@ namespace SistemaReservas.Tests.Fakes
                 : null);
         }
 
-        // Igual que UPDATE ... OUTPUT INSERTED.IntentosFallidos: suma 1 y devuelve el nuevo valor.
+        // Igual que UsuarioRepository: suma 1 al contador y devuelve el nuevo valor.
         public Task<int> RegistrarIntentoFallidoAsync(int usuarioId)
         {
             Llamadas.Add(nameof(RegistrarIntentoFallidoAsync));

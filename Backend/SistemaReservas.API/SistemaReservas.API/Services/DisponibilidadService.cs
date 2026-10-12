@@ -7,7 +7,7 @@ namespace SistemaReservas.API.Services
     {
         private readonly IDisponibilidadRepository _disponibilidadRepository;
 
-        // NFR2 - Separar acceso a datos: el SQL de Disponibilidades está en IDisponibilidadRepository.
+        // NFR2 - Separar acceso a datos: el acceso a Disponibilidades está en IDisponibilidadRepository.
         public DisponibilidadService(IDisponibilidadRepository disponibilidadRepository)
         {
             _disponibilidadRepository = disponibilidadRepository;

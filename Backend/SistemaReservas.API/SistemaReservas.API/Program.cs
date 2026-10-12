@@ -78,7 +78,10 @@ if (app.Environment.IsDevelopment())
         var authService =
             scope.ServiceProvider.GetRequiredService<AuthService>();
 
-        await EfDatabaseSeeder.SeedAsync(context, authService);
+        var timeProvider =
+            scope.ServiceProvider.GetRequiredService<TimeProvider>();
+
+        await EfDatabaseSeeder.SeedAsync(context, authService, timeProvider);
     }
 
     app.MapOpenApi();
