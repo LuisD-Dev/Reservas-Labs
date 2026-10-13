@@ -8,6 +8,8 @@ namespace SistemaReservas.Tests.Services
 {
     // NFR2 - Pruebas unitarias de AuthService (HU1) sin base de datos:
     // el repositorio es un doble en memoria y la hora la controla FakeTimeProvider.
+    // Patrón AAA: el Arrange común (usuario "usuario" con su contraseña y el reloj
+    // en Inicio) se prepara en el constructor; cada prueba agrega lo que necesita.
     public class AuthServiceTests
     {
         private const string Username = "usuario";
@@ -54,8 +56,10 @@ namespace SistemaReservas.Tests.Services
             string username,
             string password)
         {
+            // Act
             var resultado = await LoginAsync(password, username);
 
+            // Assert
             Assert.Equal(LoginEstado.CredencialesInvalidas, resultado.Estado);
             Assert.Empty(_repositorio.Llamadas);
         }
@@ -63,8 +67,10 @@ namespace SistemaReservas.Tests.Services
         [Fact]
         public async Task LoginAsync_UsuarioInexistente_CredencialesInvalidas()
         {
+            // Act
             var resultado = await LoginAsync(PasswordCorrecta, "no-existe");
 
+            // Assert
             Assert.Equal(LoginEstado.CredencialesInvalidas, resultado.Estado);
             Assert.Equal(["ObtenerPorUsernameAsync"], _repositorio.Llamadas);
         }
@@ -72,8 +78,10 @@ namespace SistemaReservas.Tests.Services
         [Fact]
         public async Task LoginAsync_PasswordCorrecta_ExitosoConDatosDelUsuario()
         {
+            // Act
             var resultado = await LoginAsync(PasswordCorrecta);
 
+            // Assert
             Assert.Equal(LoginEstado.Exitoso, resultado.Estado);
             Assert.Equal(2, resultado.UsuarioId);
             Assert.Equal("Usuario de prueba", resultado.Nombre);
@@ -85,8 +93,10 @@ namespace SistemaReservas.Tests.Services
         [Fact]
         public async Task LoginAsync_PasswordIncorrecta_SumaIntentoYCredencialesInvalidas()
         {
+            // Act
             var resultado = await LoginAsync(PasswordIncorrecta);
 
+            // Assert
             Assert.Equal(LoginEstado.CredencialesInvalidas, resultado.Estado);
             Assert.Equal(1, _repositorio.Obtener(Username).IntentosFallidos);
             Assert.Equal(["ObtenerPorUsernameAsync", "RegistrarIntentoFallidoAsync"], _repositorio.Llamadas);
@@ -95,12 +105,14 @@ namespace SistemaReservas.Tests.Services
         [Fact]
         public async Task LoginAsync_CuatroFallos_TodaviaNoBloquea()
         {
+            // Act
             LoginResult resultado = null!;
             for (var i = 0; i < 4; i++)
             {
                 resultado = await LoginAsync(PasswordIncorrecta);
             }
 
+            // Assert
             Assert.Equal(LoginEstado.CredencialesInvalidas, resultado.Estado);
             Assert.Equal(4, _repositorio.Obtener(Username).IntentosFallidos);
             Assert.Null(_repositorio.Obtener(Username).BloqueadoHasta);
@@ -109,14 +121,17 @@ namespace SistemaReservas.Tests.Services
         [Fact]
         public async Task LoginAsync_QuintoFallo_BloqueaCincoMinutos()
         {
+            // Arrange
             for (var i = 0; i < 4; i++)
             {
                 await LoginAsync(PasswordIncorrecta);
             }
             _repositorio.Llamadas.Clear();
 
+            // Act
             var resultado = await LoginAsync(PasswordIncorrecta);
 
+            // Assert
             var esperado = Inicio.UtcDateTime.AddMinutes(5);
             Assert.Equal(LoginEstado.Bloqueado, resultado.Estado);
             Assert.Equal(esperado, resultado.BloqueadoHasta);
@@ -131,12 +146,15 @@ namespace SistemaReservas.Tests.Services
         [Fact]
         public async Task LoginAsync_MientrasEstaBloqueado_RechazaAunConPasswordCorrecta()
         {
+            // Arrange
             await BloquearUsuarioAsync();
             _reloj.Advance(TimeSpan.FromMinutes(4) + TimeSpan.FromSeconds(59));
             _repositorio.Llamadas.Clear();
 
+            // Act
             var resultado = await LoginAsync(PasswordCorrecta);
 
+            // Assert
             Assert.Equal(LoginEstado.Bloqueado, resultado.Estado);
             Assert.Equal(Inicio.UtcDateTime.AddMinutes(5), resultado.BloqueadoHasta);
             // Bloqueado: se rechaza sin revisar la contraseña ni sumar intentos.
@@ -146,12 +164,15 @@ namespace SistemaReservas.Tests.Services
         [Fact]
         public async Task LoginAsync_AlVencerElBloqueo_PermiteEntrarYLimpiaElBloqueo()
         {
+            // Arrange
             await BloquearUsuarioAsync();
             _reloj.Advance(TimeSpan.FromMinutes(5));
             _repositorio.Llamadas.Clear();
 
+            // Act
             var resultado = await LoginAsync(PasswordCorrecta);
 
+            // Assert
             Assert.Equal(LoginEstado.Exitoso, resultado.Estado);
             Assert.Null(_repositorio.Obtener(Username).BloqueadoHasta);
             Assert.Equal(["ObtenerPorUsernameAsync", "ReiniciarIntentosAsync"], _repositorio.Llamadas);
@@ -160,12 +181,15 @@ namespace SistemaReservas.Tests.Services
         [Fact]
         public async Task LoginAsync_ExitoTrasFallos_ReiniciaElContador()
         {
+            // Arrange
             await LoginAsync(PasswordIncorrecta);
             await LoginAsync(PasswordIncorrecta);
             _repositorio.Llamadas.Clear();
 
+            // Act
             var resultado = await LoginAsync(PasswordCorrecta);
 
+            // Assert
             Assert.Equal(LoginEstado.Exitoso, resultado.Estado);
             Assert.Equal(0, _repositorio.Obtener(Username).IntentosFallidos);
             Assert.Equal(["ObtenerPorUsernameAsync", "ReiniciarIntentosAsync"], _repositorio.Llamadas);
@@ -174,8 +198,10 @@ namespace SistemaReservas.Tests.Services
         [Fact]
         public void HashPassword_NoGuardaLaPasswordEnTextoPlano()
         {
+            // Act
             var hash = _authService.HashPassword(PasswordCorrecta);
 
+            // Assert
             Assert.False(string.IsNullOrWhiteSpace(hash));
             Assert.DoesNotContain(PasswordCorrecta, hash);
             // Cada hash lleva su propia sal.

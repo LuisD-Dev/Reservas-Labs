@@ -10,6 +10,7 @@ namespace SistemaReservas.Tests.Services
         [Fact]
         public async Task ObtenerLaboratoriosAsync_DevuelveLoQueEntregaElRepositorio()
         {
+            // Arrange
             var laboratorios = new List<Laboratorio>
             {
                 new() { Id = 2, Nombre = "Laboratorio de Redes", Ubicacion = "Edificio B", Capacidad = 25, Estado = "Habilitado" },
@@ -17,8 +18,10 @@ namespace SistemaReservas.Tests.Services
             };
             var servicio = new LaboratorioService(new FakeLaboratorioRepository(laboratorios));
 
+            // Act
             var resultado = await servicio.ObtenerLaboratoriosAsync();
 
+            // Assert
             Assert.Same(laboratorios, resultado);
         }
     }

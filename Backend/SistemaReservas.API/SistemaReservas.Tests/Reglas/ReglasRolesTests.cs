@@ -3,11 +3,13 @@ using SistemaReservas.API.Reglas;
 namespace SistemaReservas.Tests.Reglas
 {
     // NFR2 - Pruebas unitarias de ReglasRoles.
+    // Patrón AAA: en los [Theory] los datos de entrada vienen de [InlineData].
     public class ReglasRolesTests
     {
         [Fact]
         public void Constantes_CoincidenConLosRolesDeLaBaseDeDatos()
         {
+            // Act & Assert
             Assert.Equal("Administrador", ReglasRoles.Administrador);
             Assert.Equal("Usuario", ReglasRoles.Usuario);
         }
@@ -17,6 +19,7 @@ namespace SistemaReservas.Tests.Reglas
         [InlineData("Usuario")]
         public void EsRolValido_RolesDelSistema_DevuelveTrue(string rol)
         {
+            // Act & Assert
             Assert.True(ReglasRoles.EsRolValido(rol));
         }
 
@@ -28,6 +31,7 @@ namespace SistemaReservas.Tests.Reglas
         [InlineData(null)]
         public void EsRolValido_OtrosValores_DevuelveFalse(string? rol)
         {
+            // Act & Assert
             Assert.False(ReglasRoles.EsRolValido(rol));
         }
     }
