@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Taller V - Configuración de cobertura (coverlet) para dotnet test - -collect:"XPlat Code Coverage".
+  Solo se excluye lo que requiere infraestructura real o no es código del equipo.
+-->
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat code coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <!--
+            Exclusiones por archivo (un patrón por línea de comentario):
+            **/SistemaReservas.API/Program.cs
+              Arranque del host: inyección de dependencias, JWT, CORS y pipeline HTTP.
+              Se prueba levantando la aplicación, no con pruebas unitarias.
+            **/Migrations/*.cs
+              Código generado por "dotnet ef migrations add"; no tiene lógica propia.
+            **/Data/EfDatabaseSeeder.cs
+              Carga de datos de desarrollo: necesita una base de datos real y solo
+              se ejecuta en ambiente Development.
+            **/WeatherForecast.cs
+              Modelo de ejemplo de la plantilla de ASP.NET Core; no pertenece a ninguna HU.
+            **/Controllers/WeatherForecastController.cs
+              Controlador de ejemplo de la plantilla de ASP.NET Core; no pertenece a ninguna HU.
+            **/obj/**/*.cs
+              Código que generan los source generators al compilar (por ejemplo OpenAPI).
+          -->
+          <ExcludeByFile>**/SistemaReservas.API/Program.cs,**/Migrations/*.cs,**/Data/EfDatabaseSeeder.cs,**/WeatherForecast.cs,**/Controllers/WeatherForecastController.cs,**/obj/**/*.cs</ExcludeByFile>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

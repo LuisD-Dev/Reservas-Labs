@@ -6,6 +6,9 @@ namespace SistemaReservas.Tests.Reglas
     // NFR2 - Pruebas unitarias de ReglasDisponibilidad (HU3).
     // Los casos y mensajes son los mismos de frontend/src/utils/disponibilidad.test.js;
     // la fecha de hoy se pasa fija.
+    // Patrón AAA: el Arrange común son las constantes Hoy, Fecha, Nueve y Once
+    // y los métodos CrearHorario y CrearLaboratorio; en los [Theory] los datos
+    // de entrada vienen de [InlineData].
     public class ReglasDisponibilidadTests
     {
         private static readonly DateOnly Hoy = new(2026, 10, 5);
@@ -41,8 +44,10 @@ namespace SistemaReservas.Tests.Reglas
         [Fact]
         public void ValidarConsulta_SinDatos_ExigeTodosLosCampos()
         {
+            // Act
             var errores = ReglasDisponibilidad.ValidarConsulta(null, null, null, null, Hoy);
 
+            // Assert
             Assert.Equal(new Dictionary<string, string>
             {
                 ["laboratorioId"] = "Selecciona un laboratorio.",
@@ -55,9 +60,11 @@ namespace SistemaReservas.Tests.Reglas
         [Fact]
         public void ValidarConsulta_FechaPasadaYRangoInvalido_DevuelveAmbosErrores()
         {
+            // Act
             var errores = ReglasDisponibilidad.ValidarConsulta(
                 1, new DateOnly(2000, 1, 1), new TimeSpan(10, 0, 0), Nueve, Hoy);
 
+            // Assert
             Assert.Equal(2, errores.Count);
             Assert.Equal("La fecha no puede ser anterior a hoy.", errores["fecha"]);
             Assert.Equal("La hora final debe ser mayor que la hora inicial.", errores["horaFin"]);
@@ -66,20 +73,24 @@ namespace SistemaReservas.Tests.Reglas
         [Fact]
         public void ValidarConsulta_ConsultaCompleta_SinErrores()
         {
+            // Act & Assert
             Assert.Empty(ReglasDisponibilidad.ValidarConsulta(1, Fecha, Nueve, Once, Hoy));
         }
 
         [Fact]
         public void ValidarConsulta_FechaDeHoy_EsValida()
         {
+            // Act & Assert
             Assert.Empty(ReglasDisponibilidad.ValidarConsulta(1, Hoy, Nueve, Once, Hoy));
         }
 
         [Fact]
         public void ValidarConsulta_HoraFinIgualAInicio_EsInvalida()
         {
+            // Act
             var errores = ReglasDisponibilidad.ValidarConsulta(1, Fecha, Nueve, Nueve, Hoy);
 
+            // Assert
             Assert.Equal("La hora final debe ser mayor que la hora inicial.", Assert.Single(errores).Value);
         }
 
@@ -88,8 +99,10 @@ namespace SistemaReservas.Tests.Reglas
         [InlineData(-1)]
         public void ValidarConsulta_LaboratorioNoValido_ExigeLaboratorio(int laboratorioId)
         {
+            // Act
             var errores = ReglasDisponibilidad.ValidarConsulta(laboratorioId, Fecha, Nueve, Once, Hoy);
 
+            // Assert
             Assert.Equal("Selecciona un laboratorio.", errores["laboratorioId"]);
         }
 
@@ -101,6 +114,7 @@ namespace SistemaReservas.Tests.Reglas
         [InlineData(1, false)]
         public void EsFechaPasada_ComparaConHoy(int diasDesdeHoy, bool esperado)
         {
+            // Act & Assert
             Assert.Equal(esperado, ReglasDisponibilidad.EsFechaPasada(Hoy.AddDays(diasDesdeHoy), Hoy));
         }
 
@@ -110,6 +124,7 @@ namespace SistemaReservas.Tests.Reglas
         [InlineData(11, 9, false)]
         public void EsRangoHorasValido_HoraFinMayorQueInicio(int horaInicio, int horaFin, bool esperado)
         {
+            // Act & Assert
             Assert.Equal(
                 esperado,
                 ReglasDisponibilidad.EsRangoHorasValido(TimeSpan.FromHours(horaInicio), TimeSpan.FromHours(horaFin)));
@@ -127,8 +142,10 @@ namespace SistemaReservas.Tests.Reglas
             string estado,
             bool esperado)
         {
+            // Arrange
             var horario = CrearHorario(1, Fecha, horaInicio, horaFin, estado);
 
+            // Act & Assert
             Assert.Equal(esperado, ReglasDisponibilidad.CubreRango(horario, Nueve, Once));
         }
 
@@ -137,6 +154,7 @@ namespace SistemaReservas.Tests.Reglas
         [InlineData("Fuera de servicio", true)]
         public void EstaFueraDeServicio_SegunEstadoDelLaboratorio(string estado, bool esperado)
         {
+            // Act & Assert
             Assert.Equal(esperado, ReglasDisponibilidad.EstaFueraDeServicio(CrearLaboratorio(estado)));
         }
 
@@ -145,9 +163,15 @@ namespace SistemaReservas.Tests.Reglas
         [Fact]
         public void EvaluarDisponibilidad_RangoCubiertoPorHorarioLibre_EstaDisponible()
         {
-            var resultado = ReglasDisponibilidad.EvaluarDisponibilidad(
-                [CrearHorario(1, Fecha, 8, 12)], Fecha, Nueve, Once, CrearLaboratorio("Habilitado"));
+            // Arrange
+            Disponibilidad[] horarios = [CrearHorario(1, Fecha, 8, 12)];
+            var laboratorio = CrearLaboratorio("Habilitado");
 
+            // Act
+            var resultado = ReglasDisponibilidad.EvaluarDisponibilidad(
+                horarios, Fecha, Nueve, Once, laboratorio);
+
+            // Assert
             Assert.True(resultado.Disponible);
             Assert.Equal("El horario de 08:00 a 12:00 está libre.", resultado.Motivo);
             Assert.Single(resultado.HorariosDelDia);
@@ -156,9 +180,15 @@ namespace SistemaReservas.Tests.Reglas
         [Fact]
         public void EvaluarDisponibilidad_LaboratorioFueraDeServicio_NuncaEstaDisponible()
         {
-            var resultado = ReglasDisponibilidad.EvaluarDisponibilidad(
-                [CrearHorario(1, Fecha, 8, 12)], Fecha, Nueve, Once, CrearLaboratorio("Fuera de servicio"));
+            // Arrange
+            Disponibilidad[] horarios = [CrearHorario(1, Fecha, 8, 12)];
+            var laboratorio = CrearLaboratorio("Fuera de servicio");
 
+            // Act
+            var resultado = ReglasDisponibilidad.EvaluarDisponibilidad(
+                horarios, Fecha, Nueve, Once, laboratorio);
+
+            // Assert
             Assert.False(resultado.Disponible);
             Assert.Equal("El laboratorio está fuera de servicio.", resultado.Motivo);
         }
@@ -166,9 +196,15 @@ namespace SistemaReservas.Tests.Reglas
         [Fact]
         public void EvaluarDisponibilidad_SinHorariosEnLaFecha_NoEstaDisponible()
         {
-            var resultado = ReglasDisponibilidad.EvaluarDisponibilidad(
-                [CrearHorario(1, Fecha.AddDays(1), 8, 12)], Fecha, Nueve, Once, CrearLaboratorio("Habilitado"));
+            // Arrange
+            Disponibilidad[] horarios = [CrearHorario(1, Fecha.AddDays(1), 8, 12)];
+            var laboratorio = CrearLaboratorio("Habilitado");
 
+            // Act
+            var resultado = ReglasDisponibilidad.EvaluarDisponibilidad(
+                horarios, Fecha, Nueve, Once, laboratorio);
+
+            // Assert
             Assert.False(resultado.Disponible);
             Assert.Equal("No hay horarios registrados para esa fecha.", resultado.Motivo);
             Assert.Empty(resultado.HorariosDelDia);
@@ -177,10 +213,15 @@ namespace SistemaReservas.Tests.Reglas
         [Fact]
         public void EvaluarDisponibilidad_NingunHorarioLibreCubreElRango_NoEstaDisponible()
         {
-            var resultado = ReglasDisponibilidad.EvaluarDisponibilidad(
-                [CrearHorario(1, Fecha, 8, 12, "No disponible"), CrearHorario(2, Fecha, 13, 15)],
-                Fecha, Nueve, Once, CrearLaboratorio("Habilitado"));
+            // Arrange
+            Disponibilidad[] horarios = [CrearHorario(1, Fecha, 8, 12, "No disponible"), CrearHorario(2, Fecha, 13, 15)];
+            var laboratorio = CrearLaboratorio("Habilitado");
 
+            // Act
+            var resultado = ReglasDisponibilidad.EvaluarDisponibilidad(
+                horarios, Fecha, Nueve, Once, laboratorio);
+
+            // Assert
             Assert.False(resultado.Disponible);
             Assert.Equal("Ningún horario disponible cubre todo el rango solicitado.", resultado.Motivo);
             Assert.Equal(2, resultado.HorariosDelDia.Count);
@@ -189,10 +230,16 @@ namespace SistemaReservas.Tests.Reglas
         [Fact]
         public void EvaluarDisponibilidad_FiltraOtrasFechasYOrdenaPorHoraDeInicio()
         {
-            var resultado = ReglasDisponibilidad.EvaluarDisponibilidad(
-                [CrearHorario(3, Fecha, 13, 15), CrearHorario(1, Fecha.AddDays(1), 8, 12), CrearHorario(2, Fecha, 7, 12)],
-                Fecha, Nueve, Once, CrearLaboratorio("Habilitado"));
+            // Arrange
+            Disponibilidad[] horarios =
+                [CrearHorario(3, Fecha, 13, 15), CrearHorario(1, Fecha.AddDays(1), 8, 12), CrearHorario(2, Fecha, 7, 12)];
+            var laboratorio = CrearLaboratorio("Habilitado");
 
+            // Act
+            var resultado = ReglasDisponibilidad.EvaluarDisponibilidad(
+                horarios, Fecha, Nueve, Once, laboratorio);
+
+            // Assert
             Assert.Equal([2, 3], resultado.HorariosDelDia.Select(h => h.Id));
             Assert.Equal("El horario de 07:00 a 12:00 está libre.", resultado.Motivo);
         }
@@ -200,9 +247,14 @@ namespace SistemaReservas.Tests.Reglas
         [Fact]
         public void EvaluarDisponibilidad_SinLaboratorio_NoRevisaElEstado()
         {
-            var resultado = ReglasDisponibilidad.EvaluarDisponibilidad(
-                [CrearHorario(1, Fecha, 8, 12)], Fecha, Nueve, Once, null);
+            // Arrange
+            Disponibilidad[] horarios = [CrearHorario(1, Fecha, 8, 12)];
 
+            // Act
+            var resultado = ReglasDisponibilidad.EvaluarDisponibilidad(
+                horarios, Fecha, Nueve, Once, null);
+
+            // Assert
             Assert.True(resultado.Disponible);
         }
     }
