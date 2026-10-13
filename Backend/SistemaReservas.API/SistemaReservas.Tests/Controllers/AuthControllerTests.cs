@@ -5,9 +5,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Time.Testing;
 using Microsoft.IdentityModel.Tokens;
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using SistemaReservas.API.Controllers;
 using SistemaReservas.API.DTOs;
 using SistemaReservas.API.Models;
+using SistemaReservas.API.Repositories;
 using SistemaReservas.API.Services;
 using SistemaReservas.Tests.Fakes;
 
@@ -37,6 +40,23 @@ namespace SistemaReservas.Tests.Controllers
 
         public AuthControllerTests()
         {
+            var authService = new AuthService(_repositorio, _reloj);
+            _controller = CrearController(_repositorio);
+
+            _repositorio.Agregar(new Usuario
+            {
+                Id = 2,
+                Nombre = "Usuario de prueba",
+                Username = Username,
+                PasswordHash = authService.HashPassword(PasswordCorrecta),
+                Rol = "Usuario"
+            });
+        }
+
+        // Arma el controlador con servicios reales sobre el repositorio indicado
+        // (el doble en memoria o un sustituto de NSubstitute).
+        private AuthController CrearController(IUsuarioRepository repositorio)
+        {
             var configuracion = new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string?>
                 {
@@ -47,18 +67,9 @@ namespace SistemaReservas.Tests.Controllers
                 })
                 .Build();
 
-            var authService = new AuthService(_repositorio, _reloj);
+            var authService = new AuthService(repositorio, _reloj);
             var tokenService = new TokenService(configuracion, _reloj);
-            _controller = new AuthController(authService, tokenService, _reloj);
-
-            _repositorio.Agregar(new Usuario
-            {
-                Id = 2,
-                Nombre = "Usuario de prueba",
-                Username = Username,
-                PasswordHash = authService.HashPassword(PasswordCorrecta),
-                Rol = "Usuario"
-            });
+            return new AuthController(authService, tokenService, _reloj);
         }
 
         private Task<IActionResult> LoginAsync(string password, string username = Username)
@@ -191,6 +202,27 @@ namespace SistemaReservas.Tests.Controllers
             Assert.Equal(401, noAutorizado.StatusCode);
             Assert.Equal(MensajeCredenciales, Cuerpo(respuesta).GetProperty("mensaje").GetString());
             Assert.Empty(_repositorio.Llamadas);
+        }
+
+        // ---- Excepciones (NSubstitute) ----
+        // El controlador no captura excepciones: si la BD falla, la excepción sale de Login
+        // y el servidor la convierte en un 500 fuera del controlador.
+
+        [Fact]
+        public async Task Login_RepositorioNoDisponible_LanzaExcepcion()
+        {
+            // Arrange
+            var excepcion = new InvalidOperationException("No se pudo conectar a la base de datos.");
+            var repositorio = Substitute.For<IUsuarioRepository>();
+            repositorio.ObtenerPorUsernameAsync(Username).ThrowsAsync(excepcion);
+            var controller = CrearController(repositorio);
+
+            // Act & Assert
+            var lanzada = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => controller.Login(new LoginRequest(Username, PasswordCorrecta)));
+
+            // Assert
+            Assert.Same(excepcion, lanzada);
         }
     }
 }

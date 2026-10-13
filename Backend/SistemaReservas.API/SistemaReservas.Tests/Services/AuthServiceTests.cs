@@ -1,6 +1,9 @@
 using Microsoft.Extensions.Time.Testing;
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using SistemaReservas.API.DTOs;
 using SistemaReservas.API.Models;
+using SistemaReservas.API.Repositories;
 using SistemaReservas.API.Services;
 using SistemaReservas.Tests.Fakes;
 
@@ -206,6 +209,102 @@ namespace SistemaReservas.Tests.Services
             Assert.DoesNotContain(PasswordCorrecta, hash);
             // Cada hash lleva su propia sal.
             Assert.NotEqual(hash, _authService.HashPassword(PasswordCorrecta));
+        }
+
+        // ---- Excepciones (NSubstitute) ----
+        // AuthService no captura excepciones: si el repositorio falla (BD caída),
+        // la excepción sale tal cual hacia el controlador.
+
+        private Usuario CrearUsuario(int intentosFallidos = 0)
+        {
+            return new Usuario
+            {
+                Id = 2,
+                Nombre = "Usuario de prueba",
+                Username = Username,
+                PasswordHash = _authService.HashPassword(PasswordCorrecta),
+                Rol = "Usuario",
+                IntentosFallidos = intentosFallidos
+            };
+        }
+
+        [Fact]
+        public async Task LoginAsync_RepositorioNoDisponible_LanzaExcepcion()
+        {
+            // Arrange
+            var excepcion = new InvalidOperationException("No se pudo conectar a la base de datos.");
+            var repositorio = Substitute.For<IUsuarioRepository>();
+            repositorio.ObtenerPorUsernameAsync(Username).ThrowsAsync(excepcion);
+            var authService = new AuthService(repositorio, _reloj);
+
+            // Act & Assert
+            var lanzada = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => authService.LoginAsync(new LoginRequest(Username, PasswordCorrecta)));
+
+            // Assert
+            Assert.Same(excepcion, lanzada);
+            await repositorio.DidNotReceive().RegistrarIntentoFallidoAsync(Arg.Any<int>());
+            await repositorio.DidNotReceive().BloquearAsync(Arg.Any<int>(), Arg.Any<DateTime>());
+            await repositorio.DidNotReceive().ReiniciarIntentosAsync(Arg.Any<int>());
+        }
+
+        [Fact]
+        public async Task LoginAsync_FallaAlRegistrarIntento_LanzaExcepcion()
+        {
+            // Arrange
+            var excepcion = new InvalidOperationException("No se pudo conectar a la base de datos.");
+            var repositorio = Substitute.For<IUsuarioRepository>();
+            repositorio.ObtenerPorUsernameAsync(Username).Returns(CrearUsuario());
+            repositorio.RegistrarIntentoFallidoAsync(2).ThrowsAsync(excepcion);
+            var authService = new AuthService(repositorio, _reloj);
+
+            // Act & Assert
+            var lanzada = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => authService.LoginAsync(new LoginRequest(Username, PasswordIncorrecta)));
+
+            // Assert
+            Assert.Same(excepcion, lanzada);
+            await repositorio.Received(1).RegistrarIntentoFallidoAsync(2);
+            await repositorio.DidNotReceive().BloquearAsync(Arg.Any<int>(), Arg.Any<DateTime>());
+        }
+
+        [Fact]
+        public async Task LoginAsync_FallaAlBloquear_LanzaExcepcion()
+        {
+            // Arrange
+            var excepcion = new InvalidOperationException("No se pudo conectar a la base de datos.");
+            var repositorio = Substitute.For<IUsuarioRepository>();
+            repositorio.ObtenerPorUsernameAsync(Username).Returns(CrearUsuario(intentosFallidos: 4));
+            repositorio.RegistrarIntentoFallidoAsync(2).Returns(5);
+            repositorio.BloquearAsync(2, Arg.Any<DateTime>()).ThrowsAsync(excepcion);
+            var authService = new AuthService(repositorio, _reloj);
+
+            // Act & Assert
+            var lanzada = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => authService.LoginAsync(new LoginRequest(Username, PasswordIncorrecta)));
+
+            // Assert
+            Assert.Same(excepcion, lanzada);
+            await repositorio.Received(1).BloquearAsync(2, Inicio.UtcDateTime.AddMinutes(5));
+        }
+
+        [Fact]
+        public async Task LoginAsync_UsuarioInexistente_NoRegistraIntentoFallido()
+        {
+            // Arrange
+            var repositorio = Substitute.For<IUsuarioRepository>();
+            repositorio.ObtenerPorUsernameAsync("no-existe").Returns((Usuario?)null);
+            var authService = new AuthService(repositorio, _reloj);
+
+            // Act
+            var resultado = await authService.LoginAsync(new LoginRequest("no-existe", PasswordCorrecta));
+
+            // Assert
+            Assert.Equal(LoginEstado.CredencialesInvalidas, resultado.Estado);
+            await repositorio.Received(1).ObtenerPorUsernameAsync("no-existe");
+            await repositorio.DidNotReceive().RegistrarIntentoFallidoAsync(Arg.Any<int>());
+            await repositorio.DidNotReceive().BloquearAsync(Arg.Any<int>(), Arg.Any<DateTime>());
+            await repositorio.DidNotReceive().ReiniciarIntentosAsync(Arg.Any<int>());
         }
     }
 }

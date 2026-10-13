@@ -1,4 +1,7 @@
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using SistemaReservas.API.Models;
+using SistemaReservas.API.Repositories;
 using SistemaReservas.API.Services;
 using SistemaReservas.Tests.Fakes;
 
@@ -23,6 +26,25 @@ namespace SistemaReservas.Tests.Services
 
             // Assert
             Assert.Same(laboratorios, resultado);
+        }
+
+        // ---- Excepciones (NSubstitute) ----
+
+        [Fact]
+        public async Task ObtenerLaboratoriosAsync_RepositorioNoDisponible_LanzaExcepcion()
+        {
+            // Arrange
+            var excepcion = new InvalidOperationException("No se pudo conectar a la base de datos.");
+            var repositorio = Substitute.For<ILaboratorioRepository>();
+            repositorio.ObtenerTodosAsync().ThrowsAsync(excepcion);
+            var servicio = new LaboratorioService(repositorio);
+
+            // Act & Assert
+            var lanzada = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => servicio.ObtenerLaboratoriosAsync());
+
+            // Assert
+            Assert.Same(excepcion, lanzada);
         }
     }
 }

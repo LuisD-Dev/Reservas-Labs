@@ -176,5 +176,20 @@ namespace SistemaReservas.Tests.Services
             var handler = new JwtSecurityTokenHandler();
             Assert.NotEqual(handler.ReadJwtToken(primero).Id, handler.ReadJwtToken(segundo).Id);
         }
+
+        // ---- Excepciones ----
+        // TokenService no usa repositorios: aquí la dependencia inválida es la configuración.
+
+        [Fact]
+        public void GenerarToken_ClaveDemasiadoCorta_LanzaExcepcion()
+        {
+            // Arrange
+            // HS256 exige una clave de al menos 256 bits (32 bytes); esta tiene 5.
+            var servicio = CrearServicio(clave: "corta");
+
+            // Act & Assert
+            Assert.Throws<ArgumentOutOfRangeException>(
+                () => servicio.GenerarToken(7, "Administrador", "Administrador"));
+        }
     }
 }
