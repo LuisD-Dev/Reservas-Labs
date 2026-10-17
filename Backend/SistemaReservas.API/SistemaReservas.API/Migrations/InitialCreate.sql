@@ -54,3 +54,28 @@ VALUES (N'20261005163907_InitialCreate', N'10.0.12');
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+CREATE TABLE [Reservas] (
+    [Id] int NOT NULL IDENTITY,
+    [LaboratorioId] int NOT NULL,
+    [UsuarioId] int NOT NULL,
+    [Fecha] date NOT NULL,
+    [HoraInicio] time NOT NULL,
+    [HoraFin] time NOT NULL,
+    [Estado] nvarchar(20) NOT NULL DEFAULT N'Activa',
+    CONSTRAINT [PK_Reservas] PRIMARY KEY ([Id]),
+    CONSTRAINT [CK_Reservas_Estado] CHECK (Estado IN ('Activa','Cancelada')),
+    CONSTRAINT [FK_Reservas_Laboratorios_LaboratorioId] FOREIGN KEY ([LaboratorioId]) REFERENCES [Laboratorios] ([Id]) ON DELETE NO ACTION,
+    CONSTRAINT [FK_Reservas_Usuarios_UsuarioId] FOREIGN KEY ([UsuarioId]) REFERENCES [Usuarios] ([Id]) ON DELETE NO ACTION
+);
+
+CREATE INDEX [IX_Reservas_LaboratorioId_Fecha_Estado] ON [Reservas] ([LaboratorioId], [Fecha], [Estado]);
+
+CREATE INDEX [IX_Reservas_UsuarioId] ON [Reservas] ([UsuarioId]);
+
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20261017025514_AgregarReservasSprint3', N'10.0.12');
+
+COMMIT;
+GO
+

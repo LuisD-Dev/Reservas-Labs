@@ -93,6 +93,48 @@ namespace SistemaReservas.API.Migrations
                         });
                 });
 
+            modelBuilder.Entity("SistemaReservas.API.Models.Reserva", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Activa");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("date");
+
+                    b.Property<TimeSpan>("HoraFin")
+                        .HasColumnType("time");
+
+                    b.Property<TimeSpan>("HoraInicio")
+                        .HasColumnType("time");
+
+                    b.Property<int>("LaboratorioId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UsuarioId");
+
+                    b.HasIndex("LaboratorioId", "Fecha", "Estado");
+
+                    b.ToTable("Reservas", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Reservas_Estado", "Estado IN ('Activa','Cancelada')");
+                        });
+                });
+
             modelBuilder.Entity("SistemaReservas.API.Models.Usuario", b =>
                 {
                     b.Property<int>("Id")
@@ -149,6 +191,25 @@ namespace SistemaReservas.API.Migrations
                         .IsRequired();
 
                     b.Navigation("Laboratorio");
+                });
+
+            modelBuilder.Entity("SistemaReservas.API.Models.Reserva", b =>
+                {
+                    b.HasOne("SistemaReservas.API.Models.Laboratorio", "Laboratorio")
+                        .WithMany()
+                        .HasForeignKey("LaboratorioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SistemaReservas.API.Models.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Laboratorio");
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("SistemaReservas.API.Models.Laboratorio", b =>
