@@ -3,6 +3,17 @@
     // Reglas de negocio compartidas por HU4 y HU5.
     public static class ReglasReserva
     {
+        public const string MensajeFechaPasada =
+            "La fecha no puede ser anterior a hoy.";
+
+        // AB#68: el reloj se resuelve fuera de la regla.
+        public static string? ValidarFechaReserva(DateOnly fecha, DateOnly hoy)
+        {
+            return ReglasDisponibilidad.EsFechaPasada(fecha, hoy)
+                ? MensajeFechaPasada
+                : null;
+        }
+
         public const string MensajeHoraFinRequerida =
             "Ingresa la hora final.";
 

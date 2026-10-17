@@ -9,11 +9,14 @@ namespace SistemaReservas.API.Services
     {
         private readonly IReservaRepository
             _reservaRepository;
+        private readonly TimeProvider _timeProvider;
 
         public ReservaService(
-            IReservaRepository reservaRepository)
+            IReservaRepository reservaRepository,
+            TimeProvider timeProvider)
         {
             _reservaRepository = reservaRepository;
+            _timeProvider = timeProvider;
         }
 
         public async Task<ResultadoCrearReserva> CrearAsync(
@@ -35,6 +38,20 @@ namespace SistemaReservas.API.Services
             if (errorHoraFin is not null)
             {
                 errores["horaFin"] = errorHoraFin;
+            }
+
+            if (request.Fecha.HasValue)
+            {
+                var hoy = DateOnly.FromDateTime(
+                    _timeProvider.GetLocalNow().DateTime);
+                var errorFecha = ReglasReserva.ValidarFechaReserva(
+                    request.Fecha.Value,
+                    hoy);
+
+                if (errorFecha is not null)
+                {
+                    errores["fecha"] = errorFecha;
+                }
             }
 
             if (errores.Count > 0)

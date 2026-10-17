@@ -1,4 +1,5 @@
 ﻿using NSubstitute;
+using Microsoft.Extensions.Time.Testing;
 using SistemaReservas.API.DTOs;
 using SistemaReservas.API.Models;
 using SistemaReservas.API.Reglas;
@@ -9,6 +10,35 @@ namespace SistemaReservas.Tests.Services
 {
     public class ReservaServiceTests
     {
+        private readonly FakeTimeProvider _reloj = new(
+            new DateTimeOffset(2026, 10, 17, 12, 0, 0, TimeSpan.Zero));
+
+        [Fact]
+        public async Task CrearAsync_FechaPasada_NoGuardaReserva()
+        {
+            // Arrange
+            var repositorio = Substitute.For<IReservaRepository>();
+            var servicio = new ReservaService(repositorio, _reloj);
+            var request = new CrearReservaRequest(
+                3,
+                new DateOnly(2026, 10, 16),
+                new TimeSpan(9, 0, 0),
+                new TimeSpan(11, 0, 0));
+
+            // Act
+            var resultado = await servicio.CrearAsync(27, request);
+
+            // Assert
+            Assert.False(resultado.Exitoso);
+            Assert.Null(resultado.Reserva);
+            Assert.Equal(
+                "La fecha no puede ser anterior a hoy.",
+                resultado.Errores["fecha"]);
+            await repositorio
+                .DidNotReceive()
+                .CrearAsync(Arg.Any<Reserva>());
+        }
+
         [Fact]
         public async Task CrearAsync_DatosValidos_UsaUsuarioAutenticado()
         {
@@ -29,7 +59,7 @@ namespace SistemaReservas.Tests.Services
                 });
 
             var servicio =
-                new ReservaService(repositorio);
+                new ReservaService(repositorio, _reloj);
 
             var request = new CrearReservaRequest(
                 3,
@@ -81,7 +111,7 @@ namespace SistemaReservas.Tests.Services
                 Substitute.For<IReservaRepository>();
 
             var servicio =
-                new ReservaService(repositorio);
+                new ReservaService(repositorio, _reloj);
 
             var request = new CrearReservaRequest(
                 3,
@@ -113,7 +143,7 @@ namespace SistemaReservas.Tests.Services
                 Substitute.For<IReservaRepository>();
 
             var servicio =
-                new ReservaService(repositorio);
+                new ReservaService(repositorio, _reloj);
 
             var request = new CrearReservaRequest(
                 null,

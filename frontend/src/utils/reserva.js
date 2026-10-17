@@ -1,8 +1,11 @@
-// AB#62 y AB#67: campos obligatorios y orden de las horas.
-export function validarReserva({ laboratorioId, fecha, horaInicio, horaFin }) {
+import { hoyComoTexto } from "./disponibilidad.js";
+
+// AB#62, AB#67 y AB#68: campos obligatorios, orden de horas y fecha de reserva.
+export function validarReserva({ laboratorioId, fecha, horaInicio, horaFin }, hoy = hoyComoTexto()) {
     const errores = {};
     if (!laboratorioId) errores.laboratorioId = "Selecciona un laboratorio.";
     if (!fecha) errores.fecha = "Ingresa la fecha de la reserva.";
+    else if (fecha < hoy) errores.fecha = "La fecha no puede ser anterior a hoy.";
     if (!horaInicio) errores.horaInicio = "Ingresa la hora inicial.";
     if (!horaFin) errores.horaFin = "Ingresa la hora final.";
     if (horaInicio && horaFin && horaFin <= horaInicio) {

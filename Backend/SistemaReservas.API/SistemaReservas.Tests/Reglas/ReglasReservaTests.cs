@@ -4,6 +4,21 @@ namespace SistemaReservas.Tests.Reglas
 {
     public class ReglasReservaTests
     {
+        [Theory]
+        [InlineData(16, ReglasReserva.MensajeFechaPasada)]
+        [InlineData(17, null)]
+        [InlineData(18, null)]
+        public void ValidarFechaReserva_AyerHoyYManana_DevuelveResultadoEsperado(
+            int dia,
+            string? esperado)
+        {
+            var resultado = ReglasReserva.ValidarFechaReserva(
+                new DateOnly(2026, 10, dia),
+                new DateOnly(2026, 10, 17));
+
+            Assert.Equal(esperado, resultado);
+        }
+
         private static readonly DateOnly Fecha =
             new(2026, 10, 20);
 
