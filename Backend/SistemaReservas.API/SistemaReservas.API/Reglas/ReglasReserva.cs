@@ -105,5 +105,34 @@
 
             return null;
         }
+
+        // HU5 - AB#70: duración máxima de una reserva
+        // (ajustar si el equipo define otro valor).
+        public static readonly TimeSpan DuracionMaxima = TimeSpan.FromHours(2);
+
+        public static readonly string MensajeDuracionExcedida =
+            $"La reserva no puede durar más de {DuracionMaxima.TotalHours:0.##} horas.";
+
+        // Devuelve el mensaje de error, o null si la duración es válida.
+        // Si falta una hora o el rango es inválido no opina: eso lo validan
+        // las reglas de campos obligatorios y de hora de finalización.
+        public static string? ValidarDuracionMaxima(
+            TimeSpan? horaInicio,
+            TimeSpan? horaFin)
+        {
+            if (horaInicio is null || horaFin is null)
+            {
+                return null;
+            }
+
+            if (horaFin <= horaInicio)
+            {
+                return null;
+            }
+
+            return horaFin - horaInicio > DuracionMaxima
+                ? MensajeDuracionExcedida
+                : null;
+        }
     }
 }

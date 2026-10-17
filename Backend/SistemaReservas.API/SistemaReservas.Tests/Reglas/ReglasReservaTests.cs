@@ -317,5 +317,129 @@ namespace SistemaReservas.Tests.Reglas
             // Assert
             Assert.Null(resultado);
         }
+
+        [Fact]
+        public void ValidarDuracionMaxima_DuracionMenorAlMaximo_RetornaNull()
+        {
+            // Arrange
+            var inicio =
+                new TimeSpan(9, 0, 0);
+
+            var fin =
+                new TimeSpan(10, 0, 0);
+
+            // Act
+            var resultado =
+                ReglasReserva.ValidarDuracionMaxima(
+                    inicio,
+                    fin);
+
+            // Assert
+            Assert.Null(resultado);
+        }
+
+        [Fact]
+        public void ValidarDuracionMaxima_DuracionExactaAlMaximo_RetornaNull()
+        {
+            // Arrange
+            var inicio =
+                new TimeSpan(9, 0, 0);
+
+            var fin =
+                inicio + ReglasReserva.DuracionMaxima;
+
+            // Act
+            var resultado =
+                ReglasReserva.ValidarDuracionMaxima(
+                    inicio,
+                    fin);
+
+            // Assert
+            Assert.Null(resultado);
+        }
+
+        [Fact]
+        public void ValidarDuracionMaxima_UnMinutoMasDelMaximo_RetornaMensaje()
+        {
+            // Arrange
+            var inicio =
+                new TimeSpan(9, 0, 0);
+
+            var fin =
+                inicio + ReglasReserva.DuracionMaxima + TimeSpan.FromMinutes(1);
+
+            // Act
+            var resultado =
+                ReglasReserva.ValidarDuracionMaxima(
+                    inicio,
+                    fin);
+
+            // Assert
+            Assert.Equal(
+                ReglasReserva.MensajeDuracionExcedida,
+                resultado);
+        }
+
+        [Fact]
+        public void ValidarDuracionMaxima_DuracionMuyLarga_RetornaMensaje()
+        {
+            // Arrange
+            var inicio =
+                new TimeSpan(8, 0, 0);
+
+            var fin =
+                new TimeSpan(16, 0, 0);
+
+            // Act
+            var resultado =
+                ReglasReserva.ValidarDuracionMaxima(
+                    inicio,
+                    fin);
+
+            // Assert
+            Assert.Equal(
+                ReglasReserva.MensajeDuracionExcedida,
+                resultado);
+        }
+
+        [Fact]
+        public void ValidarDuracionMaxima_RangoInvalido_NoOpina_RetornaNull()
+        {
+            // Arrange
+            var inicio =
+                new TimeSpan(12, 0, 0);
+
+            var fin =
+                new TimeSpan(9, 0, 0);
+
+            // Act
+            var resultado =
+                ReglasReserva.ValidarDuracionMaxima(
+                    inicio,
+                    fin);
+
+            // Assert
+            Assert.Null(resultado);
+        }
+
+        [Fact]
+        public void ValidarDuracionMaxima_SinHoras_RetornaNull()
+        {
+            // Arrange
+            TimeSpan? inicio =
+                null;
+
+            TimeSpan? fin =
+                null;
+
+            // Act
+            var resultado =
+                ReglasReserva.ValidarDuracionMaxima(
+                    inicio,
+                    fin);
+
+            // Assert
+            Assert.Null(resultado);
+        }
     }
 }
