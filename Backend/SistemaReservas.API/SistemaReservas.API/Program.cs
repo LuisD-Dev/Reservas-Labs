@@ -24,10 +24,12 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<ILaboratorioRepository, LaboratorioRepository>();
 builder.Services.AddScoped<IDisponibilidadRepository, DisponibilidadRepository>();
+builder.Services.AddScoped<IReservaRepository, ReservaRepository>();
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<LaboratorioService>();
 builder.Services.AddScoped<DisponibilidadService>();
+builder.Services.AddScoped<ReservaService>();
 builder.Services.AddSingleton<TokenService>();
 
 // NFR1 - #43 Autenticación con JWT

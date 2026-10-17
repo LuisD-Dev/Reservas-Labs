@@ -104,5 +104,69 @@ namespace SistemaReservas.Tests.Data
             // Assert
             Assert.Contains("CK_Disponibilidades_Estado", excepcion.InnerException?.Message);
         }
+        [Fact]
+        public async Task SaveChangesAsync_ReservaValida_AsociaUsuarioYLaboratorio()
+        {
+            // Arrange
+            int usuarioId;
+            int laboratorioId;
+
+            using (var contexto = _baseDatos.CrearContexto())
+            {
+                var usuario = CrearUsuario(
+                    "responsable",
+                    "Usuario");
+
+                var laboratorio = new Laboratorio
+                {
+                    Nombre = "Laboratorio de Software",
+                    Ubicacion = "Edificio A",
+                    Capacidad = 30,
+                    Estado = "Habilitado"
+                };
+
+                contexto.Usuarios.Add(usuario);
+                contexto.Laboratorios.Add(laboratorio);
+
+                await contexto.SaveChangesAsync();
+
+                usuarioId = usuario.Id;
+                laboratorioId = laboratorio.Id;
+
+                contexto.Reservas.Add(new Reserva
+                {
+                    LaboratorioId = laboratorioId,
+                    UsuarioId = usuarioId,
+                    Fecha = new DateTime(2026, 10, 20),
+                    HoraInicio = new TimeSpan(9, 0, 0),
+                    HoraFin = new TimeSpan(11, 0, 0)
+                });
+
+                await contexto.SaveChangesAsync();
+            }
+
+            using var contextoConsulta =
+                _baseDatos.CrearContexto();
+
+            // Act
+            var reserva = await contextoConsulta.Reservas
+                .Include(r => r.Usuario)
+                .Include(r => r.Laboratorio)
+                .SingleAsync();
+
+            // Assert
+            Assert.Equal(usuarioId, reserva.UsuarioId);
+            Assert.Equal(laboratorioId, reserva.LaboratorioId);
+
+            Assert.Equal(
+                "responsable",
+                reserva.Usuario.Username);
+
+            Assert.Equal(
+                "Laboratorio de Software",
+                reserva.Laboratorio.Nombre);
+
+            Assert.Equal("Activa", reserva.Estado);
+        }
     }
 }

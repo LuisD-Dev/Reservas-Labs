@@ -12,12 +12,14 @@ namespace SistemaReservas.API.Data
         public DbSet<Usuario> Usuarios { get; set; } = null!;
         public DbSet<Laboratorio> Laboratorios { get; set; } = null!;
         public DbSet<Disponibilidad> Disponibilidades { get; set; } = null!;
+        public DbSet<Reserva> Reservas { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new Configurations.UsuarioConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.LaboratorioConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.DisponibilidadConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.ReservaConfiguration());
 
             base.OnModelCreating(modelBuilder);
         }
