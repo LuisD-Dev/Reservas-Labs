@@ -34,6 +34,49 @@ namespace SistemaReservas.Tests.Services
                 new TimeSpan(inicio, 0, 0),
                 new TimeSpan(fin, 0, 0));
 
+        private static CrearReservaRequest Solicitud(
+            int horaInicio, int minutoInicio, int horaFin, int minutoFin) =>
+            new(3, DateOnly.FromDateTime(Dia),
+                new TimeSpan(horaInicio, minutoInicio, 0),
+                new TimeSpan(horaFin, minutoFin, 0));
+
+        [Theory]
+        [InlineData(8, 0, 9, 1)]
+        [InlineData(10, 59, 12, 0)]
+        public async Task CrearAsync_TraslapeParcialDeUnMinuto_NoGuardaReserva(
+            int horaInicio,
+            int minutoInicio,
+            int horaFin,
+            int minutoFin)
+        {
+            // Arrange
+            var repositorio =
+                Substitute.For<IReservaRepository>();
+
+            repositorio
+                .ObtenerActivasPorLaboratorioYFechaAsync(3, Dia)
+                .Returns(ReservasExistentes());
+
+            var servicio =
+                new ReservaService(repositorio);
+
+            // Act
+            var resultado = await servicio.CrearAsync(
+                27,
+                Solicitud(horaInicio, minutoInicio, horaFin, minutoFin));
+
+            // Assert
+            Assert.False(resultado.Exitoso);
+            Assert.Null(resultado.Reserva);
+            Assert.Equal(
+                ReservaService.MensajeConflicto,
+                resultado.Errores["conflicto"]);
+
+            await repositorio
+                .DidNotReceive()
+                .CrearAsync(Arg.Any<Reserva>());
+        }
+
         [Theory]
         [InlineData(10, 12)]  // empieza dentro de la existente
         [InlineData(8, 10)]   // termina dentro de la existente
