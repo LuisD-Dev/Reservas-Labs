@@ -78,5 +78,32 @@
 
             return null;
         }
+
+        // HU5 - AB#69: horario de funcionamiento de los laboratorios
+        // (ajustar si el equipo define otro horario).
+        public static readonly TimeSpan HoraApertura = new TimeSpan(7, 0, 0);
+        public static readonly TimeSpan HoraCierre = new TimeSpan(21, 0, 0);
+
+        public static readonly string MensajeFueraDeHorario =
+            $"La reserva debe estar dentro del horario de funcionamiento ({HoraApertura:hh\\:mm} a {HoraCierre:hh\\:mm}).";
+
+        // Devuelve el mensaje de error, o null si el rango cae dentro del horario.
+        // Si falta alguna hora no opina: eso lo validan las reglas de campos obligatorios.
+        public static string? ValidarHorarioFuncionamiento(
+            TimeSpan? horaInicio,
+            TimeSpan? horaFin)
+        {
+            if (horaInicio is null || horaFin is null)
+            {
+                return null;
+            }
+
+            if (horaInicio < HoraApertura || horaFin > HoraCierre)
+            {
+                return MensajeFueraDeHorario;
+            }
+
+            return null;
+        }
     }
 }

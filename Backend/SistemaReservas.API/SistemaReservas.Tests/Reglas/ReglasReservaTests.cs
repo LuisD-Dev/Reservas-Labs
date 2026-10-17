@@ -213,5 +213,109 @@ namespace SistemaReservas.Tests.Reglas
             // Assert
             Assert.Null(resultado);
         }
+
+        [Fact]
+        public void ValidarHorarioFuncionamiento_RangoDentroDelHorario_RetornaNull()
+        {
+            // Arrange
+            var inicio =
+                new TimeSpan(9, 0, 0);
+
+            var fin =
+                new TimeSpan(11, 0, 0);
+
+            // Act
+            var resultado =
+                ReglasReserva.ValidarHorarioFuncionamiento(
+                    inicio,
+                    fin);
+
+            // Assert
+            Assert.Null(resultado);
+        }
+
+        [Fact]
+        public void ValidarHorarioFuncionamiento_RangoExactoDeAperturaACierre_RetornaNull()
+        {
+            // Arrange
+            var inicio =
+                ReglasReserva.HoraApertura;
+
+            var fin =
+                ReglasReserva.HoraCierre;
+
+            // Act
+            var resultado =
+                ReglasReserva.ValidarHorarioFuncionamiento(
+                    inicio,
+                    fin);
+
+            // Assert
+            Assert.Null(resultado);
+        }
+
+        [Fact]
+        public void ValidarHorarioFuncionamiento_InicioAntesDeApertura_RetornaMensaje()
+        {
+            // Arrange
+            var inicio =
+                new TimeSpan(6, 0, 0);
+
+            var fin =
+                new TimeSpan(8, 0, 0);
+
+            // Act
+            var resultado =
+                ReglasReserva.ValidarHorarioFuncionamiento(
+                    inicio,
+                    fin);
+
+            // Assert
+            Assert.Equal(
+                ReglasReserva.MensajeFueraDeHorario,
+                resultado);
+        }
+
+        [Fact]
+        public void ValidarHorarioFuncionamiento_FinDespuesDelCierre_RetornaMensaje()
+        {
+            // Arrange
+            var inicio =
+                new TimeSpan(20, 0, 0);
+
+            var fin =
+                new TimeSpan(22, 0, 0);
+
+            // Act
+            var resultado =
+                ReglasReserva.ValidarHorarioFuncionamiento(
+                    inicio,
+                    fin);
+
+            // Assert
+            Assert.Equal(
+                ReglasReserva.MensajeFueraDeHorario,
+                resultado);
+        }
+
+        [Fact]
+        public void ValidarHorarioFuncionamiento_SinHoras_RetornaNull()
+        {
+            // Arrange
+            TimeSpan? inicio =
+                null;
+
+            TimeSpan? fin =
+                null;
+
+            // Act
+            var resultado =
+                ReglasReserva.ValidarHorarioFuncionamiento(
+                    inicio,
+                    fin);
+
+            // Assert
+            Assert.Null(resultado);
+        }
     }
 }
