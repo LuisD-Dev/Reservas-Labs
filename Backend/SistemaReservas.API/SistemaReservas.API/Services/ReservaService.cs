@@ -40,6 +40,25 @@ namespace SistemaReservas.API.Services
                 errores["horaFin"] = errorHoraFin;
             }
 
+            // HU5 - AB#69 y AB#70: horario de funcionamiento y duración máxima.
+            // Solo se evalúan si las horas ya son válidas, para no mezclar mensajes.
+            if (!errores.ContainsKey("horaInicio") &&
+                !errores.ContainsKey("horaFin"))
+            {
+                var errorHorario =
+                    ReglasReserva.ValidarHorarioFuncionamiento(
+                        request.HoraInicio,
+                        request.HoraFin)
+                    ?? ReglasReserva.ValidarDuracionMaxima(
+                        request.HoraInicio,
+                        request.HoraFin);
+
+                if (errorHorario is not null)
+                {
+                    errores["horaFin"] = errorHorario;
+                }
+            }
+
             if (request.Fecha.HasValue)
             {
                 var hoy = DateOnly.FromDateTime(
