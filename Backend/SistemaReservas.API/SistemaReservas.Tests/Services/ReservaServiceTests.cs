@@ -1,6 +1,7 @@
 ﻿using NSubstitute;
 using SistemaReservas.API.DTOs;
 using SistemaReservas.API.Models;
+using SistemaReservas.API.Reglas;
 using SistemaReservas.API.Repositories;
 using SistemaReservas.API.Services;
 
@@ -66,6 +67,42 @@ namespace SistemaReservas.Tests.Services
                         reserva.HoraFin ==
                             new TimeSpan(11, 0, 0) &&
                         reserva.Estado == "Activa"));
+        }
+
+        [Theory]
+        [InlineData(9, 9)]
+        [InlineData(10, 9)]
+        public async Task CrearAsync_HorarioInvalido_NoGuardaReserva(
+            int horaInicio,
+            int horaFin)
+        {
+            // Arrange
+            var repositorio =
+                Substitute.For<IReservaRepository>();
+
+            var servicio =
+                new ReservaService(repositorio);
+
+            var request = new CrearReservaRequest(
+                3,
+                new DateOnly(2026, 10, 20),
+                new TimeSpan(horaInicio, 0, 0),
+                new TimeSpan(horaFin, 0, 0));
+
+            // Act
+            var resultado =
+                await servicio.CrearAsync(27, request);
+
+            // Assert
+            Assert.False(resultado.Exitoso);
+            Assert.Null(resultado.Reserva);
+            Assert.Equal(
+                ReglasReserva.MensajeHoraFinInvalida,
+                resultado.Errores["horaFin"]);
+
+            await repositorio
+                .DidNotReceive()
+                .CrearAsync(Arg.Any<Reserva>());
         }
 
         [Fact]

@@ -27,6 +27,16 @@ namespace SistemaReservas.API.Services
                     request.HoraInicio,
                     request.HoraFin);
 
+            var errorHoraFin =
+                ReglasReserva.ValidarHoraFinalizacion(
+                    request.HoraInicio,
+                    request.HoraFin);
+
+            if (errorHoraFin is not null)
+            {
+                errores["horaFin"] = errorHoraFin;
+            }
+
             if (errores.Count > 0)
             {
                 return ResultadoCrearReserva.Fallido(

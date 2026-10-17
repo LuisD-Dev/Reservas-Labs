@@ -17,9 +17,24 @@ test("validarReserva exige cada uno de los cuatro campos", () => {
     assert.deepEqual(validarReserva(datos), {});
 });
 
-test("validarReserva no añade reglas de fechas o de orden y duración de horas", () => {
-    assert.deepEqual(validarReserva({ ...datos, fecha: "2000-01-01", horaFin: "07:00" }), {});
-    assert.deepEqual(validarReserva({ ...datos, horaFin: datos.horaInicio }), {});
+test("validarReserva rechaza una hora final anterior a la inicial", () => {
+    assert.deepEqual(validarReserva({ ...datos, horaInicio: "10:00", horaFin: "09:00" }), {
+        horaFin: "La hora final debe ser mayor que la hora inicial.",
+    });
+});
+
+test("validarReserva rechaza horas iguales", () => {
+    assert.deepEqual(validarReserva({ ...datos, horaInicio: "09:00", horaFin: "09:00" }), {
+        horaFin: "La hora final debe ser mayor que la hora inicial.",
+    });
+});
+
+test("validarReserva acepta un rango creciente", () => {
+    assert.deepEqual(validarReserva(datos), {});
+});
+
+test("validarReserva todavía acepta fechas pasadas, pendiente de AB#68", () => {
+    assert.deepEqual(validarReserva({ ...datos, fecha: "2000-01-01" }), {});
 });
 
 test("el cuerpo convierte laboratorioId a número y HH:mm a HH:mm:ss", () => {

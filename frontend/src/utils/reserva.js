@@ -1,10 +1,13 @@
-// AB#62: solo campos obligatorios, sin nuevas reglas de fecha u horario.
+// AB#62 y AB#67: campos obligatorios y orden de las horas.
 export function validarReserva({ laboratorioId, fecha, horaInicio, horaFin }) {
     const errores = {};
     if (!laboratorioId) errores.laboratorioId = "Selecciona un laboratorio.";
     if (!fecha) errores.fecha = "Ingresa la fecha de la reserva.";
     if (!horaInicio) errores.horaInicio = "Ingresa la hora inicial.";
     if (!horaFin) errores.horaFin = "Ingresa la hora final.";
+    if (horaInicio && horaFin && horaFin <= horaInicio) {
+        errores.horaFin = "La hora final debe ser mayor que la hora inicial.";
+    }
     return errores;
 }
 
