@@ -1,4 +1,5 @@
-﻿using SistemaReservas.API.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using SistemaReservas.API.Data;
 using SistemaReservas.API.Models;
 
 namespace SistemaReservas.API.Repositories
@@ -22,6 +23,22 @@ namespace SistemaReservas.API.Repositories
             await _context.SaveChangesAsync();
 
             return reserva;
+        }
+
+        // HU6 - AB#75: solo las reservas activas bloquean el horario.
+        public async Task<IReadOnlyList<Reserva>> ObtenerActivasPorLaboratorioYFechaAsync(
+            int laboratorioId,
+            DateTime fecha)
+        {
+            var dia = fecha.Date;
+
+            return await _context.Reservas
+                .AsNoTracking()
+                .Where(reserva =>
+                    reserva.LaboratorioId == laboratorioId &&
+                    reserva.Fecha == dia &&
+                    reserva.Estado == "Activa")
+                .ToListAsync();
         }
     }
 }

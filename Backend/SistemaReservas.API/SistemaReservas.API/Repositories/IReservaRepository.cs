@@ -6,5 +6,10 @@ namespace SistemaReservas.API.Repositories
     public interface IReservaRepository
     {
         Task<Reserva> CrearAsync(Reserva reserva);
+
+        // HU6 - AB#75: reservas activas de un laboratorio en una fecha.
+        Task<IReadOnlyList<Reserva>> ObtenerActivasPorLaboratorioYFechaAsync(
+            int laboratorioId,
+            DateTime fecha);
     }
 }
