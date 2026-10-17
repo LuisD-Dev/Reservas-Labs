@@ -1,271 +1,109 @@
-﻿using NSubstitute;
-using Microsoft.Extensions.Time.Testing;
-using SistemaReservas.API.DTOs;
+﻿using SistemaReservas.API.DTOs;
 using SistemaReservas.API.Models;
 using SistemaReservas.API.Reglas;
 using SistemaReservas.API.Repositories;
-using SistemaReservas.API.Services;
 
-namespace SistemaReservas.Tests.Services
+namespace SistemaReservas.API.Services
 {
-    public class ReservaServiceTests
+    public class ReservaService
     {
-        private readonly FakeTimeProvider _reloj = new(
-            new DateTimeOffset(2026, 10, 17, 12, 0, 0, TimeSpan.Zero));
+        private readonly IReservaRepository
+            _reservaRepository;
+        private readonly TimeProvider _timeProvider;
 
-        [Fact]
-        public async Task CrearAsync_FechaPasada_NoGuardaReserva()
+        public ReservaService(
+            IReservaRepository reservaRepository,
+            TimeProvider timeProvider)
         {
-            // Arrange
-            var repositorio = Substitute.For<IReservaRepository>();
-            var servicio = new ReservaService(repositorio, _reloj);
-            var request = new CrearReservaRequest(
-                3,
-                new DateOnly(2026, 10, 16),
-                new TimeSpan(9, 0, 0),
-                new TimeSpan(11, 0, 0));
-
-            // Act
-            var resultado = await servicio.CrearAsync(27, request);
-
-            // Assert
-            Assert.False(resultado.Exitoso);
-            Assert.Null(resultado.Reserva);
-            Assert.Equal(
-                "La fecha no puede ser anterior a hoy.",
-                resultado.Errores["fecha"]);
-            await repositorio
-                .DidNotReceive()
-                .CrearAsync(Arg.Any<Reserva>());
+            _reservaRepository = reservaRepository;
+            _timeProvider = timeProvider;
         }
 
-        [Fact]
-        public async Task CrearAsync_DatosValidos_UsaUsuarioAutenticado()
+        public async Task<ResultadoCrearReserva> CrearAsync(
+            int usuarioId,
+            CrearReservaRequest request)
         {
-            // Arrange
-            var repositorio =
-                Substitute.For<IReservaRepository>();
+            var errores =
+                ReglasReserva.ValidarCamposObligatorios(
+                    request.LaboratorioId,
+                    request.Fecha,
+                    request.HoraInicio,
+                    request.HoraFin);
 
-            repositorio
-                .CrearAsync(Arg.Any<Reserva>())
-                .Returns(llamada =>
+            var errorHoraFin =
+                ReglasReserva.ValidarHoraFinalizacion(
+                    request.HoraInicio,
+                    request.HoraFin);
+
+            if (errorHoraFin is not null)
+            {
+                errores["horaFin"] = errorHoraFin;
+            }
+
+            // HU5 - AB#69 y AB#70: horario de funcionamiento y duración máxima.
+            // Solo se evalúan si las horas ya son válidas, para no mezclar mensajes.
+            if (!errores.ContainsKey("horaInicio") &&
+                !errores.ContainsKey("horaFin"))
+            {
+                var errorHorario =
+                    ReglasReserva.ValidarHorarioFuncionamiento(
+                        request.HoraInicio,
+                        request.HoraFin)
+                    ?? ReglasReserva.ValidarDuracionMaxima(
+                        request.HoraInicio,
+                        request.HoraFin);
+
+                if (errorHorario is not null)
                 {
-                    var reserva =
-                        llamada.Arg<Reserva>();
+                    errores["horaFin"] = errorHorario;
+                }
+            }
 
-                    reserva.Id = 10;
+            if (request.Fecha.HasValue)
+            {
+                var hoy = DateOnly.FromDateTime(
+                    _timeProvider.GetLocalNow().DateTime);
+                var errorFecha = ReglasReserva.ValidarFechaReserva(
+                    request.Fecha.Value,
+                    hoy);
 
-                    return reserva;
-                });
+                if (errorFecha is not null)
+                {
+                    errores["fecha"] = errorFecha;
+                }
+            }
 
-            var servicio =
-                new ReservaService(repositorio, _reloj);
+            if (errores.Count > 0)
+            {
+                return ResultadoCrearReserva.Fallido(
+                    errores);
+            }
 
-            var request = new CrearReservaRequest(
-                3,
-                new DateOnly(2026, 10, 20),
-                new TimeSpan(9, 0, 0),
-                new TimeSpan(11, 0, 0));
+            var reserva = new Reserva
+            {
+                LaboratorioId =
+                    request.LaboratorioId!.Value,
 
-            const int usuarioAutenticadoId = 27;
+                UsuarioId = usuarioId,
 
-            // Act
-            var resultado =
-                await servicio.CrearAsync(
-                    usuarioAutenticadoId,
-                    request);
+                Fecha = request.Fecha!.Value
+                    .ToDateTime(TimeOnly.MinValue),
 
-            // Assert
-            Assert.True(resultado.Exitoso);
-            Assert.NotNull(resultado.Reserva);
-            Assert.Equal(10, resultado.Reserva.Id);
-            Assert.Equal(
-                usuarioAutenticadoId,
-                resultado.Reserva.UsuarioId);
+                HoraInicio =
+                    request.HoraInicio!.Value,
 
-            await repositorio
-                .Received(1)
-                .CrearAsync(
-                    Arg.Is<Reserva>(reserva =>
-                        reserva.UsuarioId ==
-                            usuarioAutenticadoId &&
-                        reserva.LaboratorioId == 3 &&
-                        reserva.Fecha ==
-                            new DateTime(2026, 10, 20) &&
-                        reserva.HoraInicio ==
-                            new TimeSpan(9, 0, 0) &&
-                        reserva.HoraFin ==
-                            new TimeSpan(11, 0, 0) &&
-                        reserva.Estado == "Activa"));
-        }
+                HoraFin =
+                    request.HoraFin!.Value,
 
-        [Theory]
-        [InlineData(9, 9)]
-        [InlineData(10, 9)]
-        public async Task CrearAsync_HorarioInvalido_NoGuardaReserva(
-            int horaInicio,
-            int horaFin)
-        {
-            // Arrange
-            var repositorio =
-                Substitute.For<IReservaRepository>();
+                Estado = "Activa"
+            };
 
-            var servicio =
-                new ReservaService(repositorio, _reloj);
+            var guardada =
+                await _reservaRepository
+                    .CrearAsync(reserva);
 
-            var request = new CrearReservaRequest(
-                3,
-                new DateOnly(2026, 10, 20),
-                new TimeSpan(horaInicio, 0, 0),
-                new TimeSpan(horaFin, 0, 0));
-
-            // Act
-            var resultado =
-                await servicio.CrearAsync(27, request);
-
-            // Assert
-            Assert.False(resultado.Exitoso);
-            Assert.Null(resultado.Reserva);
-            Assert.Equal(
-                ReglasReserva.MensajeHoraFinInvalida,
-                resultado.Errores["horaFin"]);
-
-            await repositorio
-                .DidNotReceive()
-                .CrearAsync(Arg.Any<Reserva>());
-        }
-
-        [Fact]
-        public async Task CrearAsync_DatosIncompletos_NoGuardaReserva()
-        {
-            // Arrange
-            var repositorio =
-                Substitute.For<IReservaRepository>();
-
-            var servicio =
-                new ReservaService(repositorio, _reloj);
-
-            var request = new CrearReservaRequest(
-                null,
-                null,
-                null,
-                null);
-
-            // Act
-            var resultado =
-                await servicio.CrearAsync(
-                    27,
-                    request);
-
-            // Assert
-            Assert.False(resultado.Exitoso);
-            Assert.Null(resultado.Reserva);
-            Assert.Equal(4, resultado.Errores.Count);
-
-            await repositorio
-                .DidNotReceive()
-                .CrearAsync(Arg.Any<Reserva>());
-        }
-
-        [Theory]
-        [InlineData(6, 8)]
-        [InlineData(20, 22)]
-        public async Task CrearAsync_FueraDelHorarioDeFuncionamiento_NoGuardaReserva(
-            int horaInicio,
-            int horaFin)
-        {
-            // Arrange
-            var repositorio =
-                Substitute.For<IReservaRepository>();
-
-            var servicio =
-                new ReservaService(repositorio, _reloj);
-
-            var request = new CrearReservaRequest(
-                3,
-                new DateOnly(2026, 10, 20),
-                new TimeSpan(horaInicio, 0, 0),
-                new TimeSpan(horaFin, 0, 0));
-
-            // Act
-            var resultado =
-                await servicio.CrearAsync(27, request);
-
-            // Assert
-            Assert.False(resultado.Exitoso);
-            Assert.Null(resultado.Reserva);
-            Assert.Equal(
-                ReglasReserva.MensajeFueraDeHorario,
-                resultado.Errores["horaFin"]);
-
-            await repositorio
-                .DidNotReceive()
-                .CrearAsync(Arg.Any<Reserva>());
-        }
-
-        [Fact]
-        public async Task CrearAsync_DuracionMayorAlMaximo_NoGuardaReserva()
-        {
-            // Arrange
-            var repositorio =
-                Substitute.For<IReservaRepository>();
-
-            var servicio =
-                new ReservaService(repositorio, _reloj);
-
-            var request = new CrearReservaRequest(
-                3,
-                new DateOnly(2026, 10, 20),
-                new TimeSpan(9, 0, 0),
-                new TimeSpan(12, 0, 0));
-
-            // Act
-            var resultado =
-                await servicio.CrearAsync(27, request);
-
-            // Assert
-            Assert.False(resultado.Exitoso);
-            Assert.Null(resultado.Reserva);
-            Assert.Equal(
-                ReglasReserva.MensajeDuracionExcedida,
-                resultado.Errores["horaFin"]);
-
-            await repositorio
-                .DidNotReceive()
-                .CrearAsync(Arg.Any<Reserva>());
-        }
-
-        [Fact]
-        public async Task CrearAsync_ReservaHastaElCierreConDuracionMaxima_GuardaReserva()
-        {
-            // Arrange
-            var repositorio =
-                Substitute.For<IReservaRepository>();
-
-            repositorio
-                .CrearAsync(Arg.Any<Reserva>())
-                .Returns(llamada => llamada.Arg<Reserva>());
-
-            var servicio =
-                new ReservaService(repositorio, _reloj);
-
-            var request = new CrearReservaRequest(
-                3,
-                new DateOnly(2026, 10, 20),
-                ReglasReserva.HoraCierre - ReglasReserva.DuracionMaxima,
-                ReglasReserva.HoraCierre);
-
-            // Act
-            var resultado =
-                await servicio.CrearAsync(27, request);
-
-            // Assert
-            Assert.True(resultado.Exitoso);
-            Assert.NotNull(resultado.Reserva);
-
-            await repositorio
-                .Received(1)
-                .CrearAsync(Arg.Any<Reserva>());
+            return ResultadoCrearReserva.Correcto(
+                guardada);
         }
     }
 }
