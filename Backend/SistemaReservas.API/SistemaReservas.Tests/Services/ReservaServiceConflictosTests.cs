@@ -58,7 +58,7 @@ namespace SistemaReservas.Tests.Services
                 .Returns(ReservasExistentes());
 
             var servicio =
-                new ReservaService(repositorio);
+                new ReservaService(repositorio, _reloj);
 
             // Act
             var resultado = await servicio.CrearAsync(
@@ -95,7 +95,7 @@ namespace SistemaReservas.Tests.Services
                 .Returns(ReservasExistentes());
 
             var servicio =
-                new ReservaService(repositorio);
+                new ReservaService(repositorio, _reloj);
 
             // Act
             var resultado =
@@ -129,7 +129,7 @@ namespace SistemaReservas.Tests.Services
                 .Returns(llamada => llamada.Arg<Reserva>());
 
             var servicio =
-                new ReservaService(repositorio);
+                new ReservaService(repositorio, _reloj);
 
             // Act
             var resultado =
@@ -159,7 +159,7 @@ namespace SistemaReservas.Tests.Services
                 .Returns(llamada => llamada.Arg<Reserva>());
 
             var servicio =
-                new ReservaService(repositorio);
+                new ReservaService(repositorio, _reloj);
 
             // Act
             var resultado =
@@ -181,7 +181,7 @@ namespace SistemaReservas.Tests.Services
                 Substitute.For<IReservaRepository>();
 
             var servicio =
-                new ReservaService(repositorio);
+                new ReservaService(repositorio, _reloj);
 
             var request = new CrearReservaRequest(null, null, null, null);
 
