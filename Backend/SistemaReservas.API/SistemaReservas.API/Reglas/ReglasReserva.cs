@@ -79,8 +79,7 @@
             return null;
         }
 
-        // HU5 - AB#69: horario de funcionamiento de los laboratorios
-        // (ajustar si el equipo define otro horario).
+        // HU5 - AB#69: horario de funcionamiento de los laboratorios (07:00 a 21:00).
         public static readonly TimeSpan HoraApertura = new TimeSpan(7, 0, 0);
         public static readonly TimeSpan HoraCierre = new TimeSpan(21, 0, 0);
 
@@ -106,8 +105,7 @@
             return null;
         }
 
-        // HU5 - AB#70: duración máxima de una reserva
-        // (ajustar si el equipo define otro valor).
+        // HU5 - AB#70: duración máxima de una reserva (4 horas).
         public static readonly TimeSpan DuracionMaxima = TimeSpan.FromHours(4);
 
         public static readonly string MensajeDuracionExcedida =
