@@ -7,6 +7,9 @@ namespace SistemaReservas.API.Services
 {
     public class ReservaService
     {
+        public const string MensajeConflicto =
+            "El laboratorio ya tiene una reserva que se traslapa con ese horario.";
+
         private readonly IReservaRepository
             _reservaRepository;
         private readonly TimeProvider _timeProvider;
@@ -77,6 +80,30 @@ namespace SistemaReservas.API.Services
             {
                 return ResultadoCrearReserva.Fallido(
                     errores);
+            }
+
+            // HU6 - AB#75: no se permite traslapar una reserva activa del mismo
+            // laboratorio en la misma fecha.
+            var reservasDelDia =
+                await _reservaRepository
+                    .ObtenerActivasPorLaboratorioYFechaAsync(
+                        request.LaboratorioId!.Value,
+                        request.Fecha!.Value.ToDateTime(TimeOnly.MinValue));
+
+            var hayConflicto = reservasDelDia.Any(existente =>
+                ReglasTraslape.HayTraslape(
+                    request.HoraInicio!.Value,
+                    request.HoraFin!.Value,
+                    existente.HoraInicio,
+                    existente.HoraFin));
+
+            if (hayConflicto)
+            {
+                return ResultadoCrearReserva.Fallido(
+                    new Dictionary<string, string>
+                    {
+                        ["conflicto"] = MensajeConflicto
+                    });
             }
 
             var reserva = new Reserva
