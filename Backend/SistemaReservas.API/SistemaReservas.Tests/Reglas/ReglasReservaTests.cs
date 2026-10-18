@@ -318,6 +318,38 @@ namespace SistemaReservas.Tests.Reglas
             Assert.Null(resultado);
         }
 
+        // HU5 - AB#82: valores límite al minuto del horario de 07:00 a 21:00.
+        [Theory]
+        [InlineData(6, 59, 8, 0, false)]  // empieza un minuto antes de abrir
+        [InlineData(7, 0, 8, 0, true)]    // empieza justo al abrir
+        [InlineData(20, 0, 21, 0, true)]  // termina justo al cerrar
+        [InlineData(20, 0, 21, 1, false)] // termina un minuto después de cerrar
+        public void ValidarHorarioFuncionamiento_LimitesAlMinuto_DevuelveResultadoEsperado(
+            int horaInicio,
+            int minutoInicio,
+            int horaFin,
+            int minutoFin,
+            bool esValida)
+        {
+            // Arrange
+            var inicio =
+                new TimeSpan(horaInicio, minutoInicio, 0);
+
+            var fin =
+                new TimeSpan(horaFin, minutoFin, 0);
+
+            // Act
+            var resultado =
+                ReglasReserva.ValidarHorarioFuncionamiento(
+                    inicio,
+                    fin);
+
+            // Assert
+            Assert.Equal(
+                esValida ? null : ReglasReserva.MensajeFueraDeHorario,
+                resultado);
+        }
+
         [Fact]
         public void ValidarDuracionMaxima_DuracionMenorAlMaximo_RetornaNull()
         {
@@ -378,6 +410,27 @@ namespace SistemaReservas.Tests.Reglas
             Assert.Equal(
                 ReglasReserva.MensajeDuracionExcedida,
                 resultado);
+        }
+
+        // HU5 - AB#84: un minuto menos que el máximo de 4 horas sigue siendo válido.
+        [Fact]
+        public void ValidarDuracionMaxima_TresHorasCincuentaYNueveMinutos_RetornaNull()
+        {
+            // Arrange
+            var inicio =
+                new TimeSpan(9, 0, 0);
+
+            var fin =
+                new TimeSpan(12, 59, 0);
+
+            // Act
+            var resultado =
+                ReglasReserva.ValidarDuracionMaxima(
+                    inicio,
+                    fin);
+
+            // Assert
+            Assert.Null(resultado);
         }
 
         [Fact]
