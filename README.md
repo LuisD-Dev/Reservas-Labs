@@ -226,8 +226,8 @@ La reserva solo se acepta si la fecha y el horario son válidos. Tareas: AB#65, 
 
 - Hora final: requerida, igual o menor que la inicial, y válida.
 - Fecha: ayer se rechaza; hoy y mañana se aceptan.
-- Horario de funcionamiento (07:00 a 21:00 [confirmar]): dentro del rango, justo de apertura a cierre, antes de abrir y después de cerrar.
-- Duración máxima (2 horas [confirmar]): menor, exacta al máximo (válida) y un minuto de más (inválida).
+- Horario de funcionamiento (07:00 a 21:00): dentro del rango, justo de apertura a cierre, antes de abrir y después de cerrar.
+- Duración máxima (4 horas): menor, exacta al máximo (válida) y un minuto de más (inválida).
 - Frontend: los mismos casos en `validarReserva`, con el motivo de rechazo bajo el campo.
 
 # HU6 - Evitar conflictos entre reservas
