@@ -217,7 +217,7 @@ namespace SistemaReservas.Tests.Services
                 3,
                 new DateOnly(2026, 10, 20),
                 new TimeSpan(9, 0, 0),
-                new TimeSpan(12, 0, 0));
+                new TimeSpan(13, 1, 0));
 
             // Act
             var resultado =

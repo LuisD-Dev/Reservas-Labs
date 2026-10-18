@@ -3,7 +3,7 @@ import { hoyComoTexto } from "./disponibilidad.js";
 // AB#69 y AB#70: mismos valores y mensajes que ReglasReserva del backend.
 export const HORA_APERTURA = "07:00";
 export const HORA_CIERRE = "21:00";
-export const DURACION_MAXIMA_MINUTOS = 120;
+export const DURACION_MAXIMA_MINUTOS = 240;
 export const MENSAJE_FUERA_DE_HORARIO =
     `La reserva debe estar dentro del horario de funcionamiento (${HORA_APERTURA} a ${HORA_CIERRE}).`;
 export const MENSAJE_DURACION_EXCEDIDA =

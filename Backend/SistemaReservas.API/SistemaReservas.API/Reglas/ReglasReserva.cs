@@ -108,7 +108,7 @@
 
         // HU5 - AB#70: duración máxima de una reserva
         // (ajustar si el equipo define otro valor).
-        public static readonly TimeSpan DuracionMaxima = TimeSpan.FromHours(2);
+        public static readonly TimeSpan DuracionMaxima = TimeSpan.FromHours(4);
 
         public static readonly string MensajeDuracionExcedida =
             $"La reserva no puede durar más de {DuracionMaxima.TotalHours:0.##} horas.";

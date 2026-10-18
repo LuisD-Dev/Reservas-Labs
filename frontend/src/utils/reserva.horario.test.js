@@ -29,8 +29,13 @@ test("validarReserva rechaza una reserva que termina después del cierre", () =>
     assert.equal(errores.horaFin, MENSAJE_FUERA_DE_HORARIO);
 });
 
+test("validarReserva acepta una reserva de exactamente 4 horas (AB#70)", () => {
+    const errores = validarReserva({ ...base, horaInicio: "09:00", horaFin: "13:00" }, hoy);
+    assert.deepEqual(errores, {});
+});
+
 test("validarReserva rechaza una reserva más larga que el máximo", () => {
-    const errores = validarReserva({ ...base, horaInicio: "09:00", horaFin: "12:00" }, hoy);
+    const errores = validarReserva({ ...base, horaInicio: "09:00", horaFin: "13:01" }, hoy);
     assert.equal(errores.horaFin, MENSAJE_DURACION_EXCEDIDA);
 });
 
