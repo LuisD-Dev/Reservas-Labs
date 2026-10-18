@@ -2,24 +2,51 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { crearCuerpoReserva, mensajeErrorReserva, validarReserva } from "./reserva.js";
 
+const hoy = "2026-10-17";
+
 const datos = { laboratorioId: "7", fecha: "2026-10-20", horaInicio: "08:15", horaFin: "09:30" };
 
 test("validarReserva exige cada uno de los cuatro campos", () => {
-    assert.deepEqual(validarReserva({}), {
+    assert.deepEqual(validarReserva({}, hoy), {
         laboratorioId: "Selecciona un laboratorio.",
         fecha: "Ingresa la fecha de la reserva.",
         horaInicio: "Ingresa la hora inicial.",
         horaFin: "Ingresa la hora final.",
     });
     for (const campo of Object.keys(datos)) {
-        assert.deepEqual(Object.keys(validarReserva({ ...datos, [campo]: "" })), [campo]);
+        assert.deepEqual(Object.keys(validarReserva({ ...datos, [campo]: "" }, hoy)), [campo]);
     }
-    assert.deepEqual(validarReserva(datos), {});
+    assert.deepEqual(validarReserva(datos, hoy), {});
 });
 
-test("validarReserva no añade reglas de fechas o de orden y duración de horas", () => {
-    assert.deepEqual(validarReserva({ ...datos, fecha: "2000-01-01", horaFin: "07:00" }), {});
-    assert.deepEqual(validarReserva({ ...datos, horaFin: datos.horaInicio }), {});
+test("validarReserva rechaza una hora final anterior a la inicial", () => {
+    assert.deepEqual(validarReserva({ ...datos, horaInicio: "10:00", horaFin: "09:00" }, hoy), {
+        horaFin: "La hora final debe ser mayor que la hora inicial.",
+    });
+});
+
+test("validarReserva rechaza horas iguales", () => {
+    assert.deepEqual(validarReserva({ ...datos, horaInicio: "09:00", horaFin: "09:00" }, hoy), {
+        horaFin: "La hora final debe ser mayor que la hora inicial.",
+    });
+});
+
+test("validarReserva acepta un rango creciente", () => {
+    assert.deepEqual(validarReserva(datos, hoy), {});
+});
+
+test("validarReserva rechaza ayer", () => {
+    assert.deepEqual(validarReserva({ ...datos, fecha: "2026-10-16" }, hoy), {
+        fecha: "La fecha no puede ser anterior a hoy.",
+    });
+});
+
+test("validarReserva acepta hoy", () => {
+    assert.deepEqual(validarReserva({ ...datos, fecha: "2026-10-17" }, hoy), {});
+});
+
+test("validarReserva acepta mañana", () => {
+    assert.deepEqual(validarReserva({ ...datos, fecha: "2026-10-18" }, hoy), {});
 });
 
 test("el cuerpo convierte laboratorioId a número y HH:mm a HH:mm:ss", () => {

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "../services/api";
-import { crearCuerpoReserva, mensajeErrorReserva, validarReserva } from "../utils/reserva";
+import { hoyComoTexto } from "../utils/disponibilidad";
 import { crearCuerpoReserva, mensajeConfirmacionReserva, mensajeErrorReserva, validarReserva } from "../utils/reserva";
 
 function Reserva({ usuario, datosIniciales = {}, laboratoriosIniciales, onVolver }) {
@@ -136,6 +136,7 @@ function Reserva({ usuario, datosIniciales = {}, laboratoriosIniciales, onVolver
                     <div className="reserva-campo" key={campo}>
                         <label htmlFor={`reserva-${campo}`}>{etiqueta}</label>
                         <input id={`reserva-${campo}`} type={tipo} value={datos[campo]}
+                            min={tipo === "date" ? hoyComoTexto() : undefined}
                             disabled={bloqueado} required
                             aria-invalid={Boolean(errores[campo])}
                             aria-describedby={errores[campo] ? `error-${campo}` : undefined}

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
+using Microsoft.Extensions.Time.Testing;
 using SistemaReservas.API.Controllers;
 using SistemaReservas.API.DTOs;
 using SistemaReservas.API.Models;
@@ -25,7 +26,8 @@ namespace SistemaReservas.Tests.Controllers
         public ReservasControllerTests()
         {
             var servicio =
-                new ReservaService(_repositorio);
+                new ReservaService(_repositorio, new FakeTimeProvider(
+                    new DateTimeOffset(2026, 10, 17, 12, 0, 0, TimeSpan.Zero)));
 
             _controller =
                 new ReservasController(servicio);
