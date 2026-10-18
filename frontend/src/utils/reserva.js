@@ -10,8 +10,10 @@ export function validarReserva({ laboratorioId, fecha, horaInicio, horaFin }) {
 
 export function crearCuerpoReserva({ laboratorioId, fecha, horaInicio, horaFin }) {
     const conSegundos = (hora) => hora.length === 5 ? `${hora}:00` : hora;
-    return { laboratorioId: Number(laboratorioId), fecha,
-        horaInicio: conSegundos(horaInicio), horaFin: conSegundos(horaFin) };
+    return {
+        laboratorioId: Number(laboratorioId), fecha,
+        horaInicio: conSegundos(horaInicio), horaFin: conSegundos(horaFin)
+    };
 }
 
 export function mensajeErrorReserva(status, datos) {
@@ -26,4 +28,19 @@ export function mensajeErrorReserva(status, datos) {
             : datos?.mensaje || datos?.detail || datos?.title || "Revisa los datos de la reserva.";
     }
     return "No se pudo registrar la reserva. Intenta de nuevo.";
+}
+
+
+// AB#66: texto de confirmación tras registrar la reserva.
+export function mensajeConfirmacionReserva(reserva, nombreLaboratorio) {
+    const base = "Reserva registrada correctamente.";
+    if (!reserva) return base;
+    const hora = (valor) => String(valor ?? "").slice(0, 5);
+    const detalle = [
+        nombreLaboratorio ? `Laboratorio: ${nombreLaboratorio}` : null,
+        reserva.fecha ? `Fecha: ${reserva.fecha}` : null,
+        reserva.horaInicio && reserva.horaFin
+            ? `Horario: ${hora(reserva.horaInicio)} a ${hora(reserva.horaFin)}` : null,
+    ].filter(Boolean);
+    return detalle.length ? `${base} ${detalle.join(", ")}.` : base;
 }

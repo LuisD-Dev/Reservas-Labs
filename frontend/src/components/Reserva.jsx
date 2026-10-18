@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "../services/api";
 import { crearCuerpoReserva, mensajeErrorReserva, validarReserva } from "../utils/reserva";
-import "./Reserva.css";
+import { crearCuerpoReserva, mensajeConfirmacionReserva, mensajeErrorReserva, validarReserva } from "../utils/reserva";
 
 function Reserva({ usuario, datosIniciales = {}, laboratoriosIniciales, onVolver }) {
     const reutilizar = laboratoriosIniciales?.length > 0;
@@ -18,6 +18,7 @@ function Reserva({ usuario, datosIniciales = {}, laboratoriosIniciales, onVolver
     const [error, setError] = useState("");
     const [enviando, setEnviando] = useState(false);
     const [exito, setExito] = useState(false);
+    const [confirmacion, setConfirmacion] = useState("");
     const solicitudEnCurso = useRef(false);
 
     async function cargar(signal) {
@@ -74,6 +75,10 @@ function Reserva({ usuario, datosIniciales = {}, laboratoriosIniciales, onVolver
                 body: JSON.stringify(crearCuerpoReserva(datos)),
             });
             if (respuesta.status === 201) {
+                const cuerpo = await respuesta.json().catch(() => null);
+                const laboratorio = laboratorios.find(
+                    (lab) => String(lab.id) === String(datos.laboratorioId));
+                setConfirmacion(mensajeConfirmacionReserva(cuerpo?.reserva, laboratorio?.nombre));
                 setExito(true);
             } else {
                 const detalle = respuesta.status === 400
@@ -143,7 +148,7 @@ function Reserva({ usuario, datosIniciales = {}, laboratoriosIniciales, onVolver
                 </button>
             </form>
             {error && <p className="labs-error" role="alert">{error}</p>}
-            {exito && <p className="reserva-exito" role="status">Reserva registrada correctamente.</p>}
+            {exito && <p className="reserva-exito" role="status">{confirmacion}</p>}
         </section>
     );
 }
