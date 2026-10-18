@@ -172,5 +172,37 @@ namespace SistemaReservas.Tests.Repositories
 
             Assert.Equal("Activa", guardada.Estado);
         }
+
+        // HU4 - AB#78: la BD rechaza una reserva de un laboratorio inexistente por
+        // la FK; el repositorio no captura la excepción (la API hoy responde 500).
+        [Fact]
+        public async Task CrearAsync_LaboratorioInexistente_LanzaDbUpdateException()
+        {
+            // Arrange
+            using var contexto =
+                _baseDatos.CrearContexto();
+
+            var repositorio =
+                new ReservaRepository(contexto);
+
+            var reserva = new Reserva
+            {
+                LaboratorioId = _laboratorioId + 999,
+                UsuarioId = _usuarioId,
+                Fecha = new DateTime(2026, 10, 20),
+                HoraInicio = new TimeSpan(9, 0, 0),
+                HoraFin = new TimeSpan(11, 0, 0),
+                Estado = "Activa"
+            };
+
+            // Act & Assert
+            await Assert.ThrowsAsync<DbUpdateException>(
+                () => repositorio.CrearAsync(reserva));
+
+            using var contextoConsulta =
+                _baseDatos.CrearContexto();
+
+            Assert.Empty(contextoConsulta.Reservas);
+        }
     }
 }

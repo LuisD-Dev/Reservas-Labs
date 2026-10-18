@@ -1,4 +1,5 @@
 ﻿using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Microsoft.Extensions.Time.Testing;
 using SistemaReservas.API.DTOs;
 using SistemaReservas.API.Models;
@@ -165,6 +166,132 @@ namespace SistemaReservas.Tests.Services
             await repositorio
                 .DidNotReceive()
                 .CrearAsync(Arg.Any<Reserva>());
+        }
+
+        // HU4 - AB#80: con varios campos faltantes se informa el error de cada uno
+        // y no se consulta conflictos ni se guarda.
+        [Fact]
+        public async Task CrearAsync_VariosCamposFaltantes_DevuelveErrorDeCadaCampo()
+        {
+            // Arrange
+            var repositorio =
+                Substitute.For<IReservaRepository>();
+
+            var servicio =
+                new ReservaService(repositorio, _reloj);
+
+            var request = new CrearReservaRequest(
+                3,
+                null,
+                null,
+                new TimeSpan(11, 0, 0));
+
+            // Act
+            var resultado =
+                await servicio.CrearAsync(27, request);
+
+            // Assert
+            Assert.False(resultado.Exitoso);
+            Assert.Null(resultado.Reserva);
+            Assert.Equal(2, resultado.Errores.Count);
+
+            Assert.Equal(
+                "Ingresa la fecha de la reserva.",
+                resultado.Errores["fecha"]);
+
+            Assert.Equal(
+                "Ingresa la hora inicial.",
+                resultado.Errores["horaInicio"]);
+
+            Assert.Empty(
+                repositorio.ReceivedCalls());
+        }
+
+        // HU4 - AB#80: laboratorio nulo, cero o negativo es un dato inválido.
+        [Theory]
+        [InlineData(null)]
+        [InlineData(0)]
+        [InlineData(-3)]
+        public async Task CrearAsync_LaboratorioInvalido_NoConsultaConflictosNiGuarda(
+            int? laboratorioId)
+        {
+            // Arrange
+            var repositorio =
+                Substitute.For<IReservaRepository>();
+
+            var servicio =
+                new ReservaService(repositorio, _reloj);
+
+            var request = new CrearReservaRequest(
+                laboratorioId,
+                new DateOnly(2026, 10, 20),
+                new TimeSpan(9, 0, 0),
+                new TimeSpan(11, 0, 0));
+
+            // Act
+            var resultado =
+                await servicio.CrearAsync(27, request);
+
+            // Assert
+            Assert.False(resultado.Exitoso);
+
+            var error =
+                Assert.Single(resultado.Errores);
+
+            Assert.Equal("laboratorioId", error.Key);
+            Assert.Equal("Selecciona un laboratorio.", error.Value);
+
+            await repositorio
+                .DidNotReceive()
+                .ObtenerActivasPorLaboratorioYFechaAsync(
+                    Arg.Any<int>(),
+                    Arg.Any<DateTime>());
+
+            await repositorio
+                .DidNotReceive()
+                .CrearAsync(Arg.Any<Reserva>());
+        }
+
+        // HU4 - AB#78: el servicio no captura excepciones del repositorio. Si la BD
+        // rechaza la reserva (por ejemplo, laboratorio inexistente por la FK), la
+        // excepción se propaga al controlador y hoy la API responde 500.
+        [Fact]
+        public async Task CrearAsync_RepositorioFalla_PropagaExcepcion()
+        {
+            // Arrange
+            var excepcion =
+                new InvalidOperationException(
+                    "No se pudo guardar la reserva.");
+
+            var repositorio =
+                Substitute.For<IReservaRepository>();
+
+            repositorio
+                .ObtenerActivasPorLaboratorioYFechaAsync(
+                    Arg.Any<int>(),
+                    Arg.Any<DateTime>())
+                .Returns(new List<Reserva>());
+
+            repositorio
+                .CrearAsync(Arg.Any<Reserva>())
+                .ThrowsAsync(excepcion);
+
+            var servicio =
+                new ReservaService(repositorio, _reloj);
+
+            var request = new CrearReservaRequest(
+                3,
+                new DateOnly(2026, 10, 20),
+                new TimeSpan(9, 0, 0),
+                new TimeSpan(11, 0, 0));
+
+            // Act
+            var lanzada =
+                await Assert.ThrowsAsync<InvalidOperationException>(
+                    () => servicio.CrearAsync(27, request));
+
+            // Assert
+            Assert.Same(excepcion, lanzada);
         }
 
         [Theory]
