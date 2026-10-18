@@ -208,6 +208,37 @@ Actualmente se encuentra implementado:
 | 5 intentos incorrectos | Bloquea temporalmente al usuario |
 | Login correcto | Reinicia intentos fallidos |
 
+# HU4 - Registrar una reserva
+
+El usuario autenticado registra una reserva indicando laboratorio, fecha y horario. Tareas: AB#62, AB#63, AB#64 y AB#66.
+
+## Pruebas principales HU4
+
+- Campos obligatorios: sin datos, datos completos y laboratorio inválido.
+- El servicio guarda la reserva con el usuario autenticado y no guarda si hay errores de validación.
+- Confirmación en pantalla con laboratorio, fecha y horario de la reserva.
+
+# HU5 - Validar horario de reserva
+
+La reserva solo se acepta si la fecha y el horario son válidos. Tareas: AB#65, AB#67, AB#68, AB#69, AB#70 y AB#71.
+
+## Pruebas principales HU5
+
+- Hora final: requerida, igual o menor que la inicial, y válida.
+- Fecha: ayer se rechaza; hoy y mañana se aceptan.
+- Horario de funcionamiento (07:00 a 21:00 [confirmar]): dentro del rango, justo de apertura a cierre, antes de abrir y después de cerrar.
+- Duración máxima (2 horas [confirmar]): menor, exacta al máximo (válida) y un minuto de más (inválida).
+- Frontend: los mismos casos en `validarReserva`, con el motivo de rechazo bajo el campo.
+
+# HU6 - Evitar conflictos entre reservas
+
+No se permite reservar un laboratorio que ya tiene una reserva activa en ese horario. Tareas: AB#74 y AB#75.
+
+## Pruebas principales HU6
+
+- Traslape: parcial por el inicio o por el final, contenida, contenedora e idéntica (hay conflicto); consecutivas y separadas (no hay conflicto).
+- Servicio: rechaza la reserva traslapada con el mensaje de conflicto, acepta la consecutiva y no consulta conflictos si los datos son inválidos.
+
 # Ejecución rápida
 
 Una vez configurado el proyecto, normalmente solo se necesitan dos terminales:
