@@ -2,6 +2,7 @@ import "./Dashboard.css";
 import { useEffect, useState } from "react";
 import Laboratorios from "./Laboratorios";
 import Disponibilidad from "./Disponibilidad";
+import Reserva from "./Reserva";
 import Icono from "./Iconos";
 
 // Cada módulo indica qué roles lo pueden ver. El backend sigue
@@ -50,6 +51,7 @@ function Dashboard({ usuario, onCerrarSesion }) {
     const [vista, setVista] = useState(null);
     // HU3 - #38 Datos para abrir la consulta de disponibilidad desde Laboratorios.
     const [disponibilidad, setDisponibilidad] = useState(null);
+    const [reserva, setReserva] = useState(null);
     const modulos = modulosPorRol(usuario?.rol);
     const esAdministrador = usuario?.rol === "Administrador";
 
@@ -59,19 +61,21 @@ function Dashboard({ usuario, onCerrarSesion }) {
         const alCambiarHistorial = (evento) => {
             setVista(evento.state?.vista ?? null);
             setDisponibilidad(evento.state?.disponibilidad ?? null);
+            setReserva(evento.state?.reserva ?? null);
         };
 
         window.addEventListener("popstate", alCambiarHistorial);
         return () => window.removeEventListener("popstate", alCambiarHistorial);
     }, []);
 
-    function irA(nuevaVista, datosDisponibilidad = null) {
+    function irA(nuevaVista, datosDisponibilidad = null, datosReserva = null) {
         window.history.pushState(
-            { vista: nuevaVista, disponibilidad: datosDisponibilidad },
+            { vista: nuevaVista, disponibilidad: datosDisponibilidad, reserva: datosReserva },
             ""
         );
         setVista(nuevaVista);
         setDisponibilidad(datosDisponibilidad);
+        setReserva(datosReserva);
     }
 
     return (
@@ -104,10 +108,15 @@ function Dashboard({ usuario, onCerrarSesion }) {
 
             {/* Contenido principal */}
             <main className="dashboard-main">
-                {vista === "disponibilidad" && disponibilidad ? (
+                {vista === "reserva" ? (
+                    <Reserva usuario={usuario} datosIniciales={reserva ?? undefined}
+                        laboratoriosIniciales={disponibilidad?.laboratorios}
+                        onVolver={() => window.history.back()} />
+                ) : vista === "disponibilidad" && disponibilidad ? (
                     <Disponibilidad
                         laboratorios={disponibilidad.laboratorios}
                         laboratorioInicialId={disponibilidad.laboratorioId}
+                        onContinuarReserva={(datos) => irA("reserva", disponibilidad, datos)}
                         onVolver={() => window.history.back()}
                     />
                 ) : vista === "laboratorios" ? (
@@ -137,8 +146,8 @@ function Dashboard({ usuario, onCerrarSesion }) {
                                         type="button"
                                         className="dashboard-card"
                                         onClick={() =>
-                                            modulo.id === "laboratorios"
-                                                ? irA("laboratorios")
+                                            ["laboratorios", "mis-reservas"].includes(modulo.id)
+                                                ? irA(modulo.id === "mis-reservas" ? "reserva" : "laboratorios")
                                                 : alert(`Módulo: ${modulo.titulo}`)
                                         }
                                     >

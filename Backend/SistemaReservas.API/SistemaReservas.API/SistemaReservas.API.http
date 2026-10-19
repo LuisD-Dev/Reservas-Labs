@@ -60,19 +60,31 @@ Content-Type: application/json
 }
 
 ### NFR1-03 Endpoint de Administrador sin token (esperado 401)
-POST {{SistemaReservas.API_HostAddress}}/api/reservas
+POST {{SistemaReservas.API_HostAddress}}/api/reservas/prueba-administrador
 
 ### NFR1-04 Endpoint de Administrador con token de Usuario (esperado 403)
-POST {{SistemaReservas.API_HostAddress}}/api/reservas
+POST {{SistemaReservas.API_HostAddress}}/api/reservas/prueba-administrador
 Authorization: Bearer {{loginUsuario.response.body.$.token}}
 
 ### NFR1-05 Endpoint de Administrador con token de Administrador (esperado 200)
-POST {{SistemaReservas.API_HostAddress}}/api/reservas
+POST {{SistemaReservas.API_HostAddress}}/api/reservas/prueba-administrador
 Authorization: Bearer {{loginAdmin.response.body.$.token}}
 
 ### NFR1-06 Token alterado o inventado (esperado 401)
-POST {{SistemaReservas.API_HostAddress}}/api/reservas
+POST {{SistemaReservas.API_HostAddress}}/api/reservas/prueba-administrador
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiQWRtaW5pc3RyYWRvciJ9.firma-invalida
+
+### HU4 - AB#63 Crear reserva como Usuario autenticado (esperado 201)
+POST {{SistemaReservas.API_HostAddress}}/api/reservas
+Authorization: Bearer {{loginUsuario.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "laboratorioId": 1,
+  "fecha": "2026-10-20",
+  "horaInicio": "09:00:00",
+  "horaFin": "11:00:00"
+}
 
 ### NFR1-07 Endpoint autenticado sin token (esperado 401)
 GET {{SistemaReservas.API_HostAddress}}/weatherforecast

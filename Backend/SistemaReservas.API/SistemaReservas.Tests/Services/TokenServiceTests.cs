@@ -10,6 +10,8 @@ namespace SistemaReservas.Tests.Services
 {
     // NFR2 - Pruebas unitarias de TokenService (NFR1 - #43): claims, firma y expiración.
     // Usa una clave solo de prueba (no la de appsettings) y una hora fija con FakeTimeProvider.
+    // Patrón AAA: la configuración en memoria la arma CrearServicio y el reloj fijo
+    // es el campo _reloj; en los [Theory] los datos de entrada vienen de [InlineData].
     public class TokenServiceTests
     {
         private const string ClavePrueba = "clave-solo-para-pruebas-unitarias-0123456789";
@@ -57,10 +59,14 @@ namespace SistemaReservas.Tests.Services
         [Fact]
         public void GenerarToken_IncluyeLosClaimsDelUsuario()
         {
-            var (token, _) = CrearServicio().GenerarToken(7, "Administrador", "Administrador");
+            // Arrange
+            var servicio = CrearServicio();
 
+            // Act
+            var (token, _) = servicio.GenerarToken(7, "Administrador", "Administrador");
+
+            // Assert
             var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
-
             Assert.Equal("7", ValorClaim(jwt, JwtRegisteredClaimNames.Sub));
             Assert.Equal("7", ValorClaim(jwt, ClaimTypes.NameIdentifier));
             Assert.Equal("Administrador", ValorClaim(jwt, ClaimTypes.Name));
@@ -71,10 +77,14 @@ namespace SistemaReservas.Tests.Services
         [Fact]
         public void GenerarToken_UsaIssuerYAudienceDeLaConfiguracion()
         {
-            var (token, _) = CrearServicio().GenerarToken(7, "Administrador", "Administrador");
+            // Arrange
+            var servicio = CrearServicio();
 
+            // Act
+            var (token, _) = servicio.GenerarToken(7, "Administrador", "Administrador");
+
+            // Assert
             var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
-
             Assert.Equal(Issuer, jwt.Issuer);
             Assert.Equal(Audience, Assert.Single(jwt.Audiences));
         }
@@ -82,8 +92,13 @@ namespace SistemaReservas.Tests.Services
         [Fact]
         public void GenerarToken_ExpiraSegunExpiraHoras()
         {
-            var (token, expiraUtc) = CrearServicio(expiraHoras: "2").GenerarToken(7, "Administrador", "Administrador");
+            // Arrange
+            var servicio = CrearServicio(expiraHoras: "2");
 
+            // Act
+            var (token, expiraUtc) = servicio.GenerarToken(7, "Administrador", "Administrador");
+
+            // Assert
             var esperado = Inicio.UtcDateTime.AddHours(2);
             Assert.Equal(esperado, expiraUtc);
             Assert.Equal(DateTimeKind.Utc, expiraUtc.Kind);
@@ -96,27 +111,38 @@ namespace SistemaReservas.Tests.Services
         [InlineData("no-es-numero")]
         public void GenerarToken_SinExpiraHorasValido_ExpiraEnOchoHoras(string? expiraHoras)
         {
-            var (_, expiraUtc) = CrearServicio(expiraHoras).GenerarToken(7, "Administrador", "Administrador");
+            // Arrange
+            var servicio = CrearServicio(expiraHoras);
 
+            // Act
+            var (_, expiraUtc) = servicio.GenerarToken(7, "Administrador", "Administrador");
+
+            // Assert
             Assert.Equal(Inicio.UtcDateTime.AddHours(8), expiraUtc);
         }
 
         [Fact]
         public void GenerarToken_SinClave_LanzaInvalidOperationException()
         {
+            // Arrange
             var servicio = CrearServicio(clave: null);
 
+            // Act & Assert
             Assert.Throws<InvalidOperationException>(() => servicio.GenerarToken(7, "Administrador", "Administrador"));
         }
 
         [Fact]
         public void GenerarToken_FirmaValidaConLaMismaClave()
         {
-            var (token, _) = CrearServicio().GenerarToken(7, "Administrador", "Administrador");
+            // Arrange
+            var servicio = CrearServicio();
 
+            // Act
+            var (token, _) = servicio.GenerarToken(7, "Administrador", "Administrador");
+
+            // Assert
             var principal = new JwtSecurityTokenHandler()
                 .ValidateToken(token, ParametrosValidacion(ClavePrueba), out var tokenValidado);
-
             Assert.Equal(SecurityAlgorithms.HmacSha256, ((JwtSecurityToken)tokenValidado).Header.Alg);
             Assert.True(principal.IsInRole("Administrador"));
         }
@@ -124,9 +150,14 @@ namespace SistemaReservas.Tests.Services
         [Fact]
         public void GenerarToken_ConOtraClave_FirmaNoValida()
         {
-            var (token, _) = CrearServicio().GenerarToken(7, "Administrador", "Administrador");
+            // Arrange
+            var servicio = CrearServicio();
             var otraClave = "otra-clave-distinta-para-pruebas-9876543210";
 
+            // Act
+            var (token, _) = servicio.GenerarToken(7, "Administrador", "Administrador");
+
+            // Assert
             Assert.ThrowsAny<SecurityTokenException>(() =>
                 new JwtSecurityTokenHandler().ValidateToken(token, ParametrosValidacion(otraClave), out _));
         }
@@ -134,13 +165,31 @@ namespace SistemaReservas.Tests.Services
         [Fact]
         public void GenerarToken_CadaTokenTieneJtiDistinto()
         {
+            // Arrange
             var servicio = CrearServicio();
 
+            // Act
             var (primero, _) = servicio.GenerarToken(7, "Administrador", "Administrador");
             var (segundo, _) = servicio.GenerarToken(7, "Administrador", "Administrador");
 
+            // Assert
             var handler = new JwtSecurityTokenHandler();
             Assert.NotEqual(handler.ReadJwtToken(primero).Id, handler.ReadJwtToken(segundo).Id);
+        }
+
+        // ---- Excepciones ----
+        // TokenService no usa repositorios: aquí la dependencia inválida es la configuración.
+
+        [Fact]
+        public void GenerarToken_ClaveDemasiadoCorta_LanzaExcepcion()
+        {
+            // Arrange
+            // HS256 exige una clave de al menos 256 bits (32 bytes); esta tiene 5.
+            var servicio = CrearServicio(clave: "corta");
+
+            // Act & Assert
+            Assert.Throws<ArgumentOutOfRangeException>(
+                () => servicio.GenerarToken(7, "Administrador", "Administrador"));
         }
     }
 }

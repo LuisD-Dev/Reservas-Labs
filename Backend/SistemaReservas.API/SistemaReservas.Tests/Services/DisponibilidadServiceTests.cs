@@ -1,4 +1,7 @@
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using SistemaReservas.API.Models;
+using SistemaReservas.API.Repositories;
 using SistemaReservas.API.Services;
 using SistemaReservas.Tests.Fakes;
 
@@ -10,6 +13,7 @@ namespace SistemaReservas.Tests.Services
         [Fact]
         public async Task ObtenerDisponibilidadAsync_DevuelveLoQueEntregaElRepositorioParaEseLaboratorio()
         {
+            // Arrange
             var disponibilidades = new List<Disponibilidad>
             {
                 new()
@@ -25,10 +29,32 @@ namespace SistemaReservas.Tests.Services
             var repositorio = new FakeDisponibilidadRepository(disponibilidades);
             var servicio = new DisponibilidadService(repositorio);
 
+            // Act
             var resultado = await servicio.ObtenerDisponibilidadAsync(1);
 
+            // Assert
             Assert.Same(disponibilidades, resultado);
             Assert.Equal(1, repositorio.LaboratorioConsultado);
+        }
+
+        // ---- Excepciones (NSubstitute) ----
+
+        [Fact]
+        public async Task ObtenerDisponibilidadAsync_RepositorioNoDisponible_LanzaExcepcion()
+        {
+            // Arrange
+            var excepcion = new InvalidOperationException("No se pudo conectar a la base de datos.");
+            var repositorio = Substitute.For<IDisponibilidadRepository>();
+            repositorio.ObtenerPorLaboratorioAsync(1).ThrowsAsync(excepcion);
+            var servicio = new DisponibilidadService(repositorio);
+
+            // Act & Assert
+            var lanzada = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => servicio.ObtenerDisponibilidadAsync(1));
+
+            // Assert
+            Assert.Same(excepcion, lanzada);
+            await repositorio.Received(1).ObtenerPorLaboratorioAsync(1);
         }
     }
 }

@@ -208,74 +208,36 @@ Actualmente se encuentra implementado:
 | 5 intentos incorrectos | Bloquea temporalmente al usuario |
 | Login correcto | Reinicia intentos fallidos |
 
-# Pruebas unitarias
+# HU4 - Registrar una reserva
 
-El proyecto cuenta con pruebas unitarias automatizadas para el **backend** (xUnit) y para la lógica del **frontend** (`node --test`). Las pruebas no necesitan la base de datos, ni levantar la API o la interfaz: cada regla de negocio se prueba de forma aislada (**NFR2 – Mantenibilidad / Testeabilidad**).
+El usuario autenticado registra una reserva indicando laboratorio, fecha y horario. Tareas: AB#62, AB#63, AB#64 y AB#66.
 
-## Organización del backend
+## Pruebas principales HU4
 
-Para poder probar la lógica sin SQL Server, el backend está separado en capas:
+- Campos obligatorios: sin datos, datos completos y laboratorio inválido.
+- El servicio guarda la reserva con el usuario autenticado y no guarda si hay errores de validación.
+- Confirmación en pantalla con laboratorio, fecha y horario de la reserva.
 
-| Capa | Carpeta | Responsabilidad |
-|---|---|---|
-| Controladores | `Controllers/` | Reciben la petición HTTP y devuelven la respuesta |
-| Servicios | `Services/` | Coordinan cada caso de uso (`AuthService`, `TokenService`, `LaboratorioService`, `DisponibilidadService`) |
-| Reglas de negocio | `Reglas/` | Clases sin base de datos, HTTP ni reloj: `ReglasBloqueo` (HU1), `ReglasDisponibilidad` (HU3) y `ReglasRoles` |
-| Acceso a datos | `Repositories/` | Consultas a SQL Server detrás de interfaces: `IUsuarioRepository`, `ILaboratorioRepository`, `IDisponibilidadRepository` |
+# HU5 - Validar horario de reserva
 
-- Los servicios reciben los repositorios por **interfaz**; en las pruebas se reemplazan por repositorios falsos en memoria (carpeta `Fakes/`).
-- La hora actual se obtiene de **`TimeProvider`**; en las pruebas se usa `FakeTimeProvider` para simular el paso del tiempo (por ejemplo, que venza un bloqueo de 5 minutos) sin esperar en tiempo real.
+La reserva solo se acepta si la fecha y el horario son válidos. Tareas: AB#65, AB#67, AB#68, AB#69, AB#70 y AB#71.
 
-## Pruebas del backend (xUnit)
+## Pruebas principales HU5
 
-Proyecto: `Backend/SistemaReservas.API/SistemaReservas.Tests` (incluido en la solución `SistemaReservas.API.slnx`).
+- Hora final: requerida, igual o menor que la inicial, y válida.
+- Fecha: ayer se rechaza; hoy y mañana se aceptan.
+- Horario de funcionamiento (07:00 a 21:00): dentro del rango, justo de apertura a cierre, antes de abrir y después de cerrar.
+- Duración máxima (4 horas): menor, exacta al máximo (válida) y un minuto de más (inválida).
+- Frontend: los mismos casos en `validarReserva`, con el motivo de rechazo bajo el campo.
 
-**Ejecutar desde la raíz del repositorio:**
+# HU6 - Evitar conflictos entre reservas
 
-```powershell
-dotnet test Backend/SistemaReservas.API/SistemaReservas.API.slnx
-```
+No se permite reservar un laboratorio que ya tiene una reserva activa en ese horario. Tareas: AB#74 y AB#75.
 
-También se pueden ejecutar en Visual Studio desde **Prueba → Explorador de pruebas → Ejecutar todas las pruebas**.
+## Pruebas principales HU6
 
-**Medir la cobertura (coverlet):**
-
-```powershell
-dotnet test Backend/SistemaReservas.API/SistemaReservas.API.slnx --collect:"XPlat Code Coverage"
-```
-
-El reporte se genera en `SistemaReservas.Tests/TestResults/` (carpeta ignorada por git).
-
-**Herramientas:** xUnit 2.9.3, Microsoft.NET.Test.Sdk, Microsoft.Extensions.TimeProvider.Testing (`FakeTimeProvider`) y coverlet.collector. Los dobles de prueba están escritos a mano, sin librerías de mocks.
-
-| Clase de prueba | Pruebas | Qué valida | HU / NFR |
-|---|---|---|---|
-| `Reglas/ReglasBloqueoTests` | 16 | Límite de 5 intentos y 5 minutos; bloqueo vigente, vencido y justo al vencer; cuándo bloquear (4.º vs. 5.º intento) y cuándo reiniciar el contador; segundos restantes redondeados hacia arriba y nunca negativos | HU1 |
-| `Reglas/ReglasDisponibilidadTests` | 26 | Campos obligatorios; fecha pasada y fecha de hoy; hora final igual o menor que la inicial; horario que cubre el rango y sus límites; laboratorio fuera de servicio; fecha sin horarios; ningún horario cubre el rango; filtra por fecha y ordena por hora. Usa los mismos casos y mensajes que las pruebas del frontend | HU3 |
-| `Reglas/ReglasRolesTests` | 8 | Los roles coinciden con la base de datos (`Administrador`, `Usuario`); distingue mayúsculas y rechaza vacío, nulo y roles desconocidos | NFR1 |
-| `Services/AuthServiceTests` | 12 | Datos vacíos sin consultar la BD; usuario inexistente y contraseña incorrecta con el mismo resultado; login correcto; intentos 1 a 4; bloqueo en el 5.º; sigue bloqueado a los 4:59 aun con la contraseña correcta; a los 5:00 vuelve a entrar; reinicio del contador tras un login correcto; contraseña guardada como hash | HU1 |
-| `Services/TokenServiceTests` | 9 | Claims del usuario (id, nombre, rol, `jti`); issuer y audience; expiración según `ExpiraHoras` (8 h por defecto); error si falta la clave; firma válida con la misma clave y rechazada con otra; `jti` distinto en cada token | NFR1 |
-| `Services/LaboratorioServiceTests` | 1 | Devuelve los laboratorios que entrega el repositorio | HU2 |
-| `Services/DisponibilidadServiceTests` | 1 | Devuelve los horarios del laboratorio solicitado | HU3 |
-
-**Resultado (Sprint 2):** 73 pruebas, 73 correctas. Cobertura de líneas: **100 % en `Services/`** y **100 % en `Reglas/`** (meta del plan de calidad: ≥ 80 % en la capa de servicios).
-
-## Pruebas del frontend (`node --test`)
-
-**Ejecutar desde la carpeta `frontend`:**
-
-```powershell
-npm.cmd test
-```
-
-| Archivo | Qué valida | HU / NFR |
-|---|---|---|
-| `src/utils/disponibilidad.test.js` | Validación del formulario de consulta, normalización de fechas y horas de la API, formato de fechas sin cambio de día por zona horaria, evaluación de disponibilidad y laboratorio fuera de servicio | HU3 |
-| `src/services/api.test.js` | Nombre y rol se leen del token; el token JWT se envía en cada petición; ante un 401 o una sesión vencida se cierra la sesión | NFR1 |
-
-## Criterio
-
-Todas las pruebas deben pasar antes de integrar cambios a `develop`.
+- Traslape: parcial por el inicio o por el final, contenida, contenedora e idéntica (hay conflicto); consecutivas y separadas (no hay conflicto).
+- Servicio: rechaza la reserva traslapada con el mensaje de conflicto, acepta la consecutiva y no consulta conflictos si los datos son inválidos.
 
 # Ejecución rápida
 
@@ -300,6 +262,15 @@ Luego ingresar a:
 ```text
 http://localhost:5173
 ```
+
+### Pruebas
+
+```powershell
+dotnet test Backend/SistemaReservas.API/SistemaReservas.API.slnx
+cd ".\frontend"; npm.cmd test
+```
+
+Detalle de las pruebas y la cobertura: [Wiki – Pruebas de unidad – Taller V](https://dev.azure.com/mazunigaal/Laboratorio%20OBLD/_wiki/wikis/Laboratorio-OBLD.wiki/3/Pruebas-de-unidad-%E2%80%93-Taller-V)
 
 # Problemas comunes
 
