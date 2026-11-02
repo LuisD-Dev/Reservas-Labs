@@ -10,8 +10,7 @@ namespace SistemaReservas.API.Services
         public const string MensajeConflicto =
             "El laboratorio ya tiene una reserva que se traslapa con ese horario.";
 
-        private readonly IReservaRepository
-            _reservaRepository;
+        private readonly IReservaRepository _reservaRepository;
         private readonly TimeProvider _timeProvider;
 
         public ReservaService(
@@ -66,6 +65,7 @@ namespace SistemaReservas.API.Services
             {
                 var hoy = DateOnly.FromDateTime(
                     _timeProvider.GetLocalNow().DateTime);
+
                 var errorFecha = ReglasReserva.ValidarFechaReserva(
                     request.Fecha.Value,
                     hoy);
@@ -78,8 +78,7 @@ namespace SistemaReservas.API.Services
 
             if (errores.Count > 0)
             {
-                return ResultadoCrearReserva.Fallido(
-                    errores);
+                return ResultadoCrearReserva.Fallido(errores);
             }
 
             // HU6 - AB#75: no se permite traslapar una reserva activa del mismo
@@ -108,29 +107,71 @@ namespace SistemaReservas.API.Services
 
             var reserva = new Reserva
             {
-                LaboratorioId =
-                    request.LaboratorioId!.Value,
-
+                LaboratorioId = request.LaboratorioId!.Value,
                 UsuarioId = usuarioId,
-
                 Fecha = request.Fecha!.Value
                     .ToDateTime(TimeOnly.MinValue),
-
-                HoraInicio =
-                    request.HoraInicio!.Value,
-
-                HoraFin =
-                    request.HoraFin!.Value,
-
+                HoraInicio = request.HoraInicio!.Value,
+                HoraFin = request.HoraFin!.Value,
                 Estado = "Activa"
             };
 
             var guardada =
-                await _reservaRepository
-                    .CrearAsync(reserva);
+                await _reservaRepository.CrearAsync(reserva);
 
-            return ResultadoCrearReserva.Correcto(
-                guardada);
+            return ResultadoCrearReserva.Correcto(guardada);
+        }
+
+        // HU8 - AB#99: valida al propietario antes de cancelar.
+        public async Task<ResultadoCancelarReserva> CancelarAsync(
+            int reservaId,
+            int usuarioId)
+        {
+            if (usuarioId <= 0)
+            {
+                return new ResultadoCancelarReserva(
+                    EstadoResultadoCancelacion.UsuarioInvalido,
+                    "No fue posible identificar al usuario autenticado.");
+            }
+
+            var reserva =
+                await _reservaRepository.ObtenerPorIdAsync(reservaId);
+
+            if (reserva is null)
+            {
+                return new ResultadoCancelarReserva(
+                    EstadoResultadoCancelacion.NoEncontrada,
+                    "La reserva no existe.");
+            }
+
+            if (reserva.UsuarioId != usuarioId)
+            {
+                return new ResultadoCancelarReserva(
+                    EstadoResultadoCancelacion.NoAutorizada,
+                    "No tienes permiso para cancelar esta reserva.");
+            }
+
+            if (reserva.Estado == "Cancelada")
+            {
+                return new ResultadoCancelarReserva(
+                    EstadoResultadoCancelacion.YaCancelada,
+                    "La reserva ya está cancelada.");
+            }
+
+            if (reserva.Estado != "Activa")
+            {
+                return new ResultadoCancelarReserva(
+                    EstadoResultadoCancelacion.EstadoInvalido,
+                    "La reserva no se encuentra en un estado que permita cancelarla.");
+            }
+
+            reserva.Estado = "Cancelada";
+
+            await _reservaRepository.GuardarCambiosAsync();
+
+            return new ResultadoCancelarReserva(
+                EstadoResultadoCancelacion.Exitosa,
+                "Reserva cancelada correctamente.");
         }
     }
 }

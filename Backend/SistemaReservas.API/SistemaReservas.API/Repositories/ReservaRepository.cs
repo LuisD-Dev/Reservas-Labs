@@ -40,5 +40,15 @@ namespace SistemaReservas.API.Repositories
                     reserva.Estado == "Activa")
                 .ToListAsync();
         }
+        public async Task<Reserva?> ObtenerPorIdAsync(int reservaId)
+        {
+            return await _context.Reservas
+                .SingleOrDefaultAsync(reserva => reserva.Id == reservaId);
+        }
+
+        public async Task GuardarCambiosAsync()
+        {
+            await _context.SaveChangesAsync();
+        }
     }
 }
