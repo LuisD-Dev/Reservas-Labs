@@ -8,7 +8,7 @@ trigger:
 
 # Ejecutar en una máquina Windows hospedada por Microsoft.
 pool:
-  vmImage: 'windows-latest'
+  name: 'Default'
 
 variables:
   buildConfiguration: 'Release'
