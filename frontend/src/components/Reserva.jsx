@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "../services/api";
 import { hoyComoTexto } from "../utils/disponibilidad";
 import { crearCuerpoReserva, mensajeConfirmacionReserva, mensajeErrorReserva, validarReserva } from "../utils/reserva";
+import "./Reserva.css"; 
 
 function Reserva({ usuario, datosIniciales = {}, laboratoriosIniciales, onVolver }) {
     const reutilizar = laboratoriosIniciales?.length > 0;
@@ -94,26 +95,39 @@ function Reserva({ usuario, datosIniciales = {}, laboratoriosIniciales, onVolver
     }
 
     const bloqueado = cargando || enviando || Boolean(errorCarga);
+
     return (
         <section className="reserva-section">
             <button className="labs-volver" onClick={onVolver}>Volver</button>
+
             <div className="labs-encabezado">
                 <h1>Registrar reserva</h1>
                 <p>Selecciona el laboratorio, la fecha y el horario que necesitas.</p>
             </div>
+
             {cargando && <p role="status">Cargando laboratorios...</p>}
-            {errorCarga && <div className="labs-error" role="alert">
-                <p>{errorCarga}</p>
-                <button onClick={() => cargar()} disabled={cargando}>Reintentar</button>
-            </div>}
+
+            {errorCarga && (
+                <div className="labs-error" role="alert">
+                    <p>{errorCarga}</p>
+                    <button onClick={() => cargar()} disabled={cargando}>Reintentar</button>
+                </div>
+            )}
+
             {!cargando && !errorCarga && laboratorios.length === 0 && (
                 <p role="status">Todavía no hay laboratorios registrados.</p>
             )}
+
+            {/* Formulario conectado con tus clases CSS */}
             <form className="reserva-form" onSubmit={registrar} noValidate aria-busy={enviando}>
+
+                {/* Responsable */}
                 <div className="reserva-campo reserva-ancho">
                     <label htmlFor="reserva-responsable">Responsable</label>
                     <input id="reserva-responsable" value={usuario?.nombre ?? ""} readOnly />
                 </div>
+
+                {/* Laboratorio */}
                 <div className="reserva-campo reserva-ancho">
                     <label htmlFor="reserva-laboratorioId">Laboratorio</label>
                     <select id="reserva-laboratorioId" value={datos.laboratorioId}
@@ -128,26 +142,46 @@ function Reserva({ usuario, datosIniciales = {}, laboratoriosIniciales, onVolver
                     </select>
                     {errores.laboratorioId && <span className="reserva-error" id="error-laboratorioId" role="alert">{errores.laboratorioId}</span>}
                 </div>
-                {[
-                    ["fecha", "Fecha", "date"],
-                    ["horaInicio", "Hora inicial", "time"],
-                    ["horaFin", "Hora final", "time"],
-                ].map(([campo, etiqueta, tipo]) => (
-                    <div className="reserva-campo" key={campo}>
-                        <label htmlFor={`reserva-${campo}`}>{etiqueta}</label>
-                        <input id={`reserva-${campo}`} type={tipo} value={datos[campo]}
-                            min={tipo === "date" ? hoyComoTexto() : undefined}
-                            disabled={bloqueado} required
-                            aria-invalid={Boolean(errores[campo])}
-                            aria-describedby={errores[campo] ? `error-${campo}` : undefined}
-                            onChange={(e) => cambiar(campo, e.target.value)} />
-                        {errores[campo] && <span className="reserva-error" id={`error-${campo}`} role="alert">{errores[campo]}</span>}
-                    </div>
-                ))}
+
+                {/* Fecha */}
+                <div className="reserva-campo">
+                    <label htmlFor="reserva-fecha">Fecha</label>
+                    <input id="reserva-fecha" type="date" value={datos.fecha}
+                        min={hoyComoTexto()} disabled={bloqueado} required
+                        aria-invalid={Boolean(errores.fecha)}
+                        aria-describedby={errores.fecha ? "error-fecha" : undefined}
+                        onChange={(e) => cambiar("fecha", e.target.value)} />
+                    {errores.fecha && <span className="reserva-error" id="error-fecha" role="alert">{errores.fecha}</span>}
+                </div>
+
+                {/* Hora inicial */}
+                <div className="reserva-campo">
+                    <label htmlFor="reserva-horaInicio">Hora inicial</label>
+                    <input id="reserva-horaInicio" type="time" value={datos.horaInicio}
+                        disabled={bloqueado} required
+                        aria-invalid={Boolean(errores.horaInicio)}
+                        aria-describedby={errores.horaInicio ? "error-horaInicio" : undefined}
+                        onChange={(e) => cambiar("horaInicio", e.target.value)} />
+                    {errores.horaInicio && <span className="reserva-error" id="error-horaInicio" role="alert">{errores.horaInicio}</span>}
+                </div>
+
+                {/* Hora final */}
+                <div className="reserva-campo">
+                    <label htmlFor="reserva-horaFin">Hora final</label>
+                    <input id="reserva-horaFin" type="time" value={datos.horaFin}
+                        disabled={bloqueado} required
+                        aria-invalid={Boolean(errores.horaFin)}
+                        aria-describedby={errores.horaFin ? "error-horaFin" : undefined}
+                        onChange={(e) => cambiar("horaFin", e.target.value)} />
+                    {errores.horaFin && <span className="reserva-error" id="error-horaFin" role="alert">{errores.horaFin}</span>}
+                </div>
+
+                {/* Botón Registrar */}
                 <button type="submit" className="reserva-registrar" disabled={bloqueado || exito}>
                     {enviando ? "Registrando..." : "Registrar reserva"}
                 </button>
             </form>
+
             {error && <p className="labs-error" role="alert">{error}</p>}
             {exito && <p className="reserva-exito" role="status">{confirmacion}</p>}
         </section>
