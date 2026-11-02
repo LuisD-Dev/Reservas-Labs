@@ -132,5 +132,26 @@ namespace SistemaReservas.API.Services
             return ResultadoCrearReserva.Correcto(
                 guardada);
         }
+        public async Task<IReadOnlyList<MiReservaResponse>>
+    ObtenerMisReservasAsync(int usuarioId)
+        {
+            if (usuarioId <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(usuarioId));
+            }
+
+            var reservas =
+                await _reservaRepository.ObtenerPorUsuarioAsync(usuarioId);
+
+            return reservas.Select(reserva => new MiReservaResponse(
+                reserva.Id,
+                reserva.LaboratorioId,
+                reserva.Laboratorio.Nombre,
+                DateOnly.FromDateTime(reserva.Fecha),
+                reserva.HoraInicio,
+                reserva.HoraFin,
+                reserva.Estado
+            )).ToList();
+        }
     }
 }

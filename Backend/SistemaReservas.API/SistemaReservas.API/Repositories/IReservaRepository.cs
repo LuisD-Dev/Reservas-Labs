@@ -11,5 +11,6 @@ namespace SistemaReservas.API.Repositories
         Task<IReadOnlyList<Reserva>> ObtenerActivasPorLaboratorioYFechaAsync(
             int laboratorioId,
             DateTime fecha);
+        Task<IReadOnlyList<Reserva>> ObtenerPorUsuarioAsync(int usuarioId);
     }
 }

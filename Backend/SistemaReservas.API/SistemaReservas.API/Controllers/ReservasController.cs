@@ -84,6 +84,34 @@ namespace SistemaReservas.API.Controllers
                     }
                 });
         }
+
+        // HU7 - AB#92: consulta las reservas del usuario autenticado.
+        [HttpGet("mias")]
+        public async Task<IActionResult> ObtenerMisReservas()
+        {
+            var claimUsuarioId =
+                User.FindFirstValue(
+                    ClaimTypes.NameIdentifier);
+
+            if (!int.TryParse(
+                    claimUsuarioId,
+                    out var usuarioId) ||
+                usuarioId <= 0)
+            {
+                return Unauthorized(new
+                {
+                    mensaje =
+                        "No fue posible identificar al usuario autenticado."
+                });
+            }
+
+            var reservas =
+                await _reservaService.ObtenerMisReservasAsync(
+                    usuarioId);
+
+            return Ok(reservas);
+        }
+
         // NFR1 - #44 Conserva la comprobación de acceso
         // exclusivo para el rol Administrador.
         [HttpPost("prueba-administrador")]
@@ -97,5 +125,4 @@ namespace SistemaReservas.API.Controllers
             });
         }
     }
-
 }

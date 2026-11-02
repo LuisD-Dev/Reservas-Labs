@@ -40,5 +40,17 @@ namespace SistemaReservas.API.Repositories
                     reserva.Estado == "Activa")
                 .ToListAsync();
         }
+        public async Task<IReadOnlyList<Reserva>> ObtenerPorUsuarioAsync(
+    int usuarioId)
+        {
+            return await _context.Reservas
+                .AsNoTracking()
+                .Include(reserva => reserva.Laboratorio)
+                .Where(reserva => reserva.UsuarioId == usuarioId)
+                .OrderBy(reserva => reserva.Fecha)
+                .ThenBy(reserva => reserva.HoraInicio)
+                .ThenBy(reserva => reserva.Id)
+                .ToListAsync();
+        }
     }
 }
