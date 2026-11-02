@@ -1,0 +1,60 @@
+# Laboratorio VII: Integración Continua de la API de reservas.
+
+# Ejecutar automáticamente después de cada push a main.
+trigger:
+  branches:
+    include:
+      - main
+
+# Ejecutar en una máquina Windows hospedada por Microsoft.
+pool:
+  name: 'Default'
+
+variables:
+  buildConfiguration: 'Release'
+  testProject: 'Backend/SistemaReservas.API/SistemaReservas.Tests/SistemaReservas.Tests.csproj'
+
+steps:
+  # Obtener el código de la rama que se está ejecutando.
+  - checkout: self
+    clean: true
+
+  # Instalar el SDK requerido por los proyectos net10.0.
+  - task: UseDotNet@2
+    displayName: 'Instalar SDK .NET 10'
+    inputs:
+      packageType: 'sdk'
+      version: '10.0.x'
+
+  # Restaurar los paquetes del proyecto de pruebas y de la API referenciada.
+  - script: dotnet restore "$(testProject)"
+    displayName: 'Restaurar dependencias'
+
+  # Compilar las pruebas y la API en Release.
+  - script: dotnet build "$(testProject)" --configuration "$(buildConfiguration)" --no-restore
+    displayName: 'Compilar en Release'
+
+  # Ejecutar todas las pruebas del proyecto y generar el reporte TRX.
+  - script: >
+      dotnet test "$(testProject)"
+      --configuration "$(buildConfiguration)"
+      --no-build
+      --no-restore
+      --logger "trx;LogFileName=resultados.trx"
+      --results-directory "$(Agent.TempDirectory)/TestResults"
+    displayName: 'Ejecutar pruebas unitarias e integración'
+
+  # Publicar los resultados incluso si alguna prueba falla.
+  - task: PublishTestResults@2
+    displayName: 'Publicar reporte de pruebas TRX'
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFormat: 'VSTest'
+      testResultsFiles: '**/*.trx'
+      searchFolder: '$(Agent.TempDirectory)/TestResults'
+      mergeTestResults: true
+      failTaskOnFailedTests: true
+      failTaskOnMissingResultsFile: true
+      failTaskOnFailureToPublishResults: true
+      publishRunAttachments: true
+      testRunTitle: 'Reservas-Labs - $(Build.BuildNumber)'
