@@ -1,0 +1,56 @@
+.mis-reservas-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.mis-reservas-acciones {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.mis-reservas-nueva {
+    background-color: #003b71;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.mis-reservas-nueva:hover {
+    background-color: #002b54;
+}
+
+.mis-reservas-nueva:focus-visible {
+    outline: 2px solid #003b71;
+    outline-offset: 2px;
+}
+
+.mis-reservas-tabla-contenedor {
+    overflow-x: auto;
+}
+
+.mis-reservas-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+}
+
+.mis-reservas-tabla th,
+.mis-reservas-tabla td {
+    text-align: left;
+    padding: 10px 12px;
+    font-size: 14px;
+    color: #0b2240;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.mis-reservas-tabla th {
+    background-color: #f1f5f9;
+    font-weight: 600;
+}
