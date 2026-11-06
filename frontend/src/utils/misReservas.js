@@ -1,4 +1,4 @@
-// AB#94: funciones de apoyo de la pantalla Mis Reservas.
+// AB#94 y AB#95: funciones de apoyo de la pantalla Mis Reservas.
 
 // Próximas primero: ordena por fecha y hora de inicio. No modifica la lista original.
 export function ordenarReservas(reservas) {
@@ -26,4 +26,34 @@ export function mensajeErrorMisReservas(status) {
     if (status === 401) return "Tu sesión venció. Inicia sesión de nuevo.";
     if (status === 403) return "Tu usuario no tiene permiso para consultar reservas.";
     return "No se pudieron cargar tus reservas. Intenta de nuevo.";
+}
+
+// AB#95: distinguir reservas activas y canceladas.
+function normalizarEstado(estado) {
+    return String(estado ?? "").trim().toLowerCase();
+}
+
+export function esReservaCancelada(estado) {
+    return normalizarEstado(estado).startsWith("cancel");
+}
+
+export function esReservaActiva(estado) {
+    return normalizarEstado(estado) === "activa";
+}
+
+// "activa" | "cancelada" | "otro": se usa para el color de la etiqueta.
+export function tipoEstado(estado) {
+    if (esReservaCancelada(estado)) return "cancelada";
+    if (esReservaActiva(estado)) return "activa";
+    return "otro";
+}
+
+// Separa las reservas en dos grupos conservando el orden recibido.
+// Todo lo que no está cancelado se muestra con las activas, para no ocultar ninguna reserva.
+export function separarReservas(reservas) {
+    const lista = Array.isArray(reservas) ? reservas : [];
+    return {
+        activas: lista.filter((reserva) => !esReservaCancelada(reserva.estado)),
+        canceladas: lista.filter((reserva) => esReservaCancelada(reserva.estado)),
+    };
 }

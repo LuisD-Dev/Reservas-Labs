@@ -21,14 +21,26 @@
     cursor: pointer;
 }
 
-.mis-reservas-nueva:hover {
-    background-color: #002b54;
+    .mis-reservas-nueva:hover {
+        background-color: #002b54;
+    }
+
+    .mis-reservas-nueva:focus-visible {
+        outline: 2px solid #003b71;
+        outline-offset: 2px;
+    }
+
+.mis-reservas-grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
-.mis-reservas-nueva:focus-visible {
-    outline: 2px solid #003b71;
-    outline-offset: 2px;
-}
+    .mis-reservas-grupo h2 {
+        margin: 0;
+        font-size: 18px;
+        color: #0b2240;
+    }
 
 .mis-reservas-tabla-contenedor {
     overflow-x: auto;
@@ -41,16 +53,46 @@
     border: 1px solid #e2e8f0;
 }
 
-.mis-reservas-tabla th,
-.mis-reservas-tabla td {
-    text-align: left;
-    padding: 10px 12px;
-    font-size: 14px;
-    color: #0b2240;
-    border-bottom: 1px solid #e2e8f0;
+    .mis-reservas-tabla th,
+    .mis-reservas-tabla td {
+        text-align: left;
+        padding: 10px 12px;
+        font-size: 14px;
+        color: #0b2240;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .mis-reservas-tabla th {
+        background-color: #f1f5f9;
+        font-weight: 600;
+    }
+
+.mis-reservas-fila--cancelada td {
+    color: #64748b;
 }
 
-.mis-reservas-tabla th {
-    background-color: #f1f5f9;
+.mis-reservas-estado {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 12px;
     font-weight: 600;
+}
+
+.mis-reservas-estado--activa {
+    background-color: #f0fdf4;
+    color: #166534;
+    border: 1px solid #16a34a;
+}
+
+.mis-reservas-estado--cancelada {
+    background-color: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #dc2626;
+}
+
+.mis-reservas-estado--otro {
+    background-color: #f1f5f9;
+    color: #334155;
+    border: 1px solid #94a3b8;
 }
