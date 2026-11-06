@@ -122,10 +122,11 @@ namespace SistemaReservas.API.Services
             return ResultadoCrearReserva.Correcto(guardada);
         }
 
-        // HU8 - AB#99: valida al propietario antes de cancelar.
+        // HU8 - AB#99 y AB#100: el propietario cancela la suya y el Administrador puede cancelar cualquiera.
         public async Task<ResultadoCancelarReserva> CancelarAsync(
             int reservaId,
-            int usuarioId)
+            int usuarioId,
+            bool esAdministrador = false)
         {
             if (usuarioId <= 0)
             {
@@ -144,7 +145,7 @@ namespace SistemaReservas.API.Services
                     "La reserva no existe.");
             }
 
-            if (reserva.UsuarioId != usuarioId)
+            if (!ReglasCancelacion.PuedeCancelar(reserva.UsuarioId, usuarioId, esAdministrador))
             {
                 return new ResultadoCancelarReserva(
                     EstadoResultadoCancelacion.NoAutorizada,
