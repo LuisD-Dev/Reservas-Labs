@@ -84,6 +84,53 @@ namespace SistemaReservas.API.Controllers
                     }
                 });
         }
+        // HU8 - AB#101: cancela una reserva. El propietario cancela la suya
+        // y el Administrador puede cancelar cualquiera.
+        [HttpPost("{id:int}/cancelar")]
+        public async Task<IActionResult> CancelarReserva(int id)
+        {
+            var claimUsuarioId =
+                User.FindFirstValue(
+                    ClaimTypes.NameIdentifier);
+
+            if (!int.TryParse(
+                    claimUsuarioId,
+                    out var usuarioId) ||
+                usuarioId <= 0)
+            {
+                return Unauthorized(new
+                {
+                    mensaje =
+                        "No fue posible identificar al usuario autenticado."
+                });
+            }
+
+            var resultado =
+                await _reservaService.CancelarAsync(
+                    id,
+                    usuarioId,
+                    User.IsInRole(ReglasRoles.Administrador));
+
+            return resultado.Estado switch
+            {
+                EstadoResultadoCancelacion.Exitosa =>
+                    Ok(new { mensaje = resultado.Mensaje }),
+
+                EstadoResultadoCancelacion.NoEncontrada =>
+                    NotFound(new { mensaje = resultado.Mensaje }),
+
+                EstadoResultadoCancelacion.NoAutorizada =>
+                    StatusCode(
+                        StatusCodes.Status403Forbidden,
+                        new { mensaje = resultado.Mensaje }),
+
+                EstadoResultadoCancelacion.UsuarioInvalido =>
+                    Unauthorized(new { mensaje = resultado.Mensaje }),
+
+                _ =>
+                    Conflict(new { mensaje = resultado.Mensaje })
+            };
+        }
         // NFR1 - #44 Conserva la comprobación de acceso
         // exclusivo para el rol Administrador.
         [HttpPost("prueba-administrador")]
