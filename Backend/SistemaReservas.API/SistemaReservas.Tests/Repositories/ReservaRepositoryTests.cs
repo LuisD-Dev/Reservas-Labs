@@ -193,6 +193,7 @@ namespace SistemaReservas.Tests.Repositories
             Assert.Empty(contextoConsulta.Reservas);
         }
 
+
         // HU8 - AB#98: una reserva inexistente devuelve null.
         [Fact]
         public async Task ObtenerPorIdAsync_ReservaInexistente_DevuelveNull()
@@ -266,6 +267,208 @@ namespace SistemaReservas.Tests.Repositories
                 Assert.Equal(horaInicio, guardada.HoraInicio);
                 Assert.Equal(horaFin, guardada.HoraFin);
             }
+        }
+        // HU7 - AB#96: crea un usuario adicional para probar el aislamiento entre usuarios.
+        private int CrearOtroUsuario()
+        {
+            using var contexto =
+                _baseDatos.CrearContexto();
+
+            var otroUsuario = new Usuario
+            {
+                Nombre = "Otro usuario",
+                Username = "otro",
+                PasswordHash = "hash",
+                Rol = "Usuario"
+            };
+
+            contexto.Usuarios.Add(otroUsuario);
+            contexto.SaveChanges();
+
+            return otroUsuario.Id;
+        }
+
+        private Reserva NuevaReserva(
+            int usuarioId,
+            DateTime fecha,
+            int horaInicio,
+            string estado = "Activa")
+        {
+            return new Reserva
+            {
+                LaboratorioId = _laboratorioId,
+                UsuarioId = usuarioId,
+                Fecha = fecha,
+                HoraInicio = new TimeSpan(horaInicio, 0, 0),
+                HoraFin = new TimeSpan(horaInicio + 1, 0, 0),
+                Estado = estado
+            };
+        }
+
+        // HU7 - AB#96: aislamiento por usuario, solo se devuelven las reservas propias.
+        [Fact]
+        public async Task ObtenerPorUsuarioAsync_VariosUsuarios_DevuelveSoloLasDelUsuario()
+        {
+            // Arrange
+            var otroUsuarioId = CrearOtroUsuario();
+            var fecha = new DateTime(2026, 11, 10);
+
+            using (var contexto = _baseDatos.CrearContexto())
+            {
+                contexto.Reservas.AddRange(
+                    NuevaReserva(_usuarioId, fecha, 8),
+                    NuevaReserva(otroUsuarioId, fecha, 10),
+                    NuevaReserva(_usuarioId, fecha, 12),
+                    NuevaReserva(otroUsuarioId, fecha.AddDays(1), 14));
+
+                await contexto.SaveChangesAsync();
+            }
+
+            using var contextoConsulta = _baseDatos.CrearContexto();
+            var repositorio = new ReservaRepository(contextoConsulta);
+
+            // Act
+            var resultado = await repositorio.ObtenerPorUsuarioAsync(_usuarioId);
+
+            // Assert
+            Assert.Equal(2, resultado.Count);
+            Assert.All(
+                resultado,
+                reserva => Assert.Equal(_usuarioId, reserva.UsuarioId));
+        }
+
+        // HU7 - AB#96: el otro usuario tampoco ve las reservas del primero.
+        [Fact]
+        public async Task ObtenerPorUsuarioAsync_OtroUsuario_NoVeReservasAjenas()
+        {
+            // Arrange
+            var otroUsuarioId = CrearOtroUsuario();
+
+            using (var contexto = _baseDatos.CrearContexto())
+            {
+                contexto.Reservas.Add(
+                    NuevaReserva(_usuarioId, new DateTime(2026, 11, 10), 8));
+
+                await contexto.SaveChangesAsync();
+            }
+
+            using var contextoConsulta = _baseDatos.CrearContexto();
+            var repositorio = new ReservaRepository(contextoConsulta);
+
+            // Act
+            var resultado = await repositorio.ObtenerPorUsuarioAsync(otroUsuarioId);
+
+            // Assert
+            Assert.Empty(resultado);
+        }
+
+        // HU7 - AB#96: Mis Reservas muestra tanto las activas como las canceladas.
+        [Fact]
+        public async Task ObtenerPorUsuarioAsync_ActivasYCanceladas_DevuelveAmbosEstados()
+        {
+            // Arrange
+            var fecha = new DateTime(2026, 11, 10);
+
+            using (var contexto = _baseDatos.CrearContexto())
+            {
+                contexto.Reservas.AddRange(
+                    NuevaReserva(_usuarioId, fecha, 8, "Activa"),
+                    NuevaReserva(_usuarioId, fecha, 10, "Cancelada"));
+
+                await contexto.SaveChangesAsync();
+            }
+
+            using var contextoConsulta = _baseDatos.CrearContexto();
+            var repositorio = new ReservaRepository(contextoConsulta);
+
+            // Act
+            var resultado = await repositorio.ObtenerPorUsuarioAsync(_usuarioId);
+
+            // Assert
+            Assert.Equal(
+                new[] { "Activa", "Cancelada" },
+                resultado.Select(reserva => reserva.Estado));
+        }
+
+        // HU7 - AB#96: orden por fecha, luego hora de inicio y luego id.
+        [Fact]
+        public async Task ObtenerPorUsuarioAsync_VariasReservas_OrdenaPorFechaYHora()
+        {
+            // Arrange
+            var fecha = new DateTime(2026, 11, 10);
+            var tardeId = 0;
+            var mananaId = 0;
+            var diaSiguienteId = 0;
+            var empateId = 0;
+
+            using (var contexto = _baseDatos.CrearContexto())
+            {
+                var diaSiguiente = NuevaReserva(_usuarioId, fecha.AddDays(1), 7);
+                var tarde = NuevaReserva(_usuarioId, fecha, 15);
+                var manana = NuevaReserva(_usuarioId, fecha, 9);
+                var empate = NuevaReserva(_usuarioId, fecha, 15, "Cancelada");
+
+                contexto.Reservas.AddRange(diaSiguiente, tarde, manana, empate);
+                await contexto.SaveChangesAsync();
+
+                tardeId = tarde.Id;
+                mananaId = manana.Id;
+                diaSiguienteId = diaSiguiente.Id;
+                empateId = empate.Id;
+            }
+
+            using var contextoConsulta = _baseDatos.CrearContexto();
+            var repositorio = new ReservaRepository(contextoConsulta);
+
+            // Act
+            var resultado = await repositorio.ObtenerPorUsuarioAsync(_usuarioId);
+
+            // Assert
+            Assert.Equal(
+                new[] { mananaId, tardeId, empateId, diaSiguienteId },
+                resultado.Select(reserva => reserva.Id));
+        }
+
+        // HU7 - AB#96: incluye el laboratorio para mostrar su nombre.
+        [Fact]
+        public async Task ObtenerPorUsuarioAsync_ReservaExistente_IncluyeLaboratorio()
+        {
+            // Arrange
+            using (var contexto = _baseDatos.CrearContexto())
+            {
+                contexto.Reservas.Add(
+                    NuevaReserva(_usuarioId, new DateTime(2026, 11, 10), 8));
+
+                await contexto.SaveChangesAsync();
+            }
+
+            using var contextoConsulta = _baseDatos.CrearContexto();
+            var repositorio = new ReservaRepository(contextoConsulta);
+
+            // Act
+            var resultado = await repositorio.ObtenerPorUsuarioAsync(_usuarioId);
+
+            // Assert
+            var reserva = Assert.Single(resultado);
+            Assert.NotNull(reserva.Laboratorio);
+            Assert.Equal("Laboratorio de Software", reserva.Laboratorio.Nombre);
+        }
+
+        // HU7 - AB#96: usuario sin reservas recibe una lista vacía (no null).
+        [Fact]
+        public async Task ObtenerPorUsuarioAsync_UsuarioSinReservas_DevuelveListaVacia()
+        {
+            // Arrange
+            using var contexto = _baseDatos.CrearContexto();
+            var repositorio = new ReservaRepository(contexto);
+
+            // Act
+            var resultado = await repositorio.ObtenerPorUsuarioAsync(_usuarioId);
+
+            // Assert
+            Assert.NotNull(resultado);
+            Assert.Empty(resultado);
+
         }
     }
 }
