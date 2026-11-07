@@ -82,7 +82,7 @@ export function evaluarDisponibilidad(horarios, { fecha, horaInicio, horaFin }, 
         disponible: false,
         motivo:
             horariosDelDia.length === 0
-                ? "No hay horarios registrados para esa fecha."
+                ? "No hay horarios disponibles para esa fecha."
                 : "Ningún horario disponible cubre todo el rango solicitado.",
         horariosDelDia,
     };
