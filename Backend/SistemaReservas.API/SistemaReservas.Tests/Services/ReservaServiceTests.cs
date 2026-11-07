@@ -678,5 +678,161 @@ namespace SistemaReservas.Tests.Services
                 .DidNotReceive()
                 .CrearAsync(Arg.Any<Reserva>());
         }
+
+        // HU7 - AB#96: crea una reserva con su laboratorio para las pruebas de Mis Reservas.
+        private static Reserva ReservaConLaboratorio(
+            int id,
+            int usuarioId,
+            string estado = "Activa")
+        {
+            return new Reserva
+            {
+                Id = id,
+                LaboratorioId = 3,
+                UsuarioId = usuarioId,
+                Fecha = new DateTime(2026, 11, 10),
+                HoraInicio = new TimeSpan(9, 0, 0),
+                HoraFin = new TimeSpan(11, 0, 0),
+                Estado = estado,
+                Laboratorio = new Laboratorio
+                {
+                    Id = 3,
+                    Nombre = "Laboratorio de Software",
+                    Ubicacion = "Edificio A",
+                    Capacidad = 30,
+                    Estado = "Habilitado"
+                }
+            };
+        }
+
+        // HU7 - AB#96: convierte cada reserva al DTO con todos sus campos.
+        [Fact]
+        public async Task ObtenerMisReservasAsync_UsuarioConReservas_MapeaTodosLosCampos()
+        {
+            // Arrange
+            var repositorio = Substitute.For<IReservaRepository>();
+            repositorio
+                .ObtenerPorUsuarioAsync(27)
+                .Returns(new List<Reserva> { ReservaConLaboratorio(15, 27) });
+
+            var servicio = new ReservaService(repositorio, _reloj);
+
+            // Act
+            var resultado = await servicio.ObtenerMisReservasAsync(27);
+
+            // Assert
+            var reserva = Assert.Single(resultado);
+            Assert.Equal(15, reserva.Id);
+            Assert.Equal(3, reserva.LaboratorioId);
+            Assert.Equal("Laboratorio de Software", reserva.NombreLaboratorio);
+            Assert.Equal(new DateOnly(2026, 11, 10), reserva.Fecha);
+            Assert.Equal(new TimeSpan(9, 0, 0), reserva.HoraInicio);
+            Assert.Equal(new TimeSpan(11, 0, 0), reserva.HoraFin);
+            Assert.Equal("Activa", reserva.Estado);
+        }
+
+        // HU7 - AB#96: aislamiento, el servicio consulta solo el usuario indicado.
+        [Fact]
+        public async Task ObtenerMisReservasAsync_UsuarioValido_ConsultaSoloEseUsuario()
+        {
+            // Arrange
+            var repositorio = Substitute.For<IReservaRepository>();
+            repositorio
+                .ObtenerPorUsuarioAsync(Arg.Any<int>())
+                .Returns(new List<Reserva>());
+
+            var servicio = new ReservaService(repositorio, _reloj);
+
+            // Act
+            await servicio.ObtenerMisReservasAsync(27);
+
+            // Assert
+            await repositorio.Received(1).ObtenerPorUsuarioAsync(27);
+            await repositorio
+                .DidNotReceive()
+                .ObtenerPorUsuarioAsync(Arg.Is<int>(id => id != 27));
+        }
+
+        // HU7 - AB#96: conserva el orden del repositorio y los estados Activa/Cancelada.
+        [Fact]
+        public async Task ObtenerMisReservasAsync_ActivasYCanceladas_ConservaOrdenYEstado()
+        {
+            // Arrange
+            var repositorio = Substitute.For<IReservaRepository>();
+            repositorio
+                .ObtenerPorUsuarioAsync(27)
+                .Returns(new List<Reserva>
+                {
+                    ReservaConLaboratorio(4, 27, "Cancelada"),
+                    ReservaConLaboratorio(9, 27, "Activa")
+                });
+
+            var servicio = new ReservaService(repositorio, _reloj);
+
+            // Act
+            var resultado = await servicio.ObtenerMisReservasAsync(27);
+
+            // Assert
+            Assert.Equal(new[] { 4, 9 }, resultado.Select(r => r.Id));
+            Assert.Equal(
+                new[] { "Cancelada", "Activa" },
+                resultado.Select(r => r.Estado));
+        }
+
+        // HU7 - AB#96: usuario sin reservas recibe una lista vacía.
+        [Fact]
+        public async Task ObtenerMisReservasAsync_SinReservas_DevuelveListaVacia()
+        {
+            // Arrange
+            var repositorio = Substitute.For<IReservaRepository>();
+            repositorio
+                .ObtenerPorUsuarioAsync(27)
+                .Returns(new List<Reserva>());
+
+            var servicio = new ReservaService(repositorio, _reloj);
+
+            // Act
+            var resultado = await servicio.ObtenerMisReservasAsync(27);
+
+            // Assert
+            Assert.Empty(resultado);
+        }
+
+        // HU7 - AB#96: excepción, un id inválido no llega al repositorio.
+        [Theory]
+        [InlineData(0)]
+        [InlineData(-1)]
+        public async Task ObtenerMisReservasAsync_UsuarioIdInvalido_LanzaArgumentOutOfRange(
+            int usuarioId)
+        {
+            // Arrange
+            var repositorio = Substitute.For<IReservaRepository>();
+            var servicio = new ReservaService(repositorio, _reloj);
+
+            // Act & Assert
+            await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
+                () => servicio.ObtenerMisReservasAsync(usuarioId));
+
+            await repositorio
+                .DidNotReceive()
+                .ObtenerPorUsuarioAsync(Arg.Any<int>());
+        }
+
+        // HU7 - AB#96: excepción, si el repositorio falla el error se propaga.
+        [Fact]
+        public async Task ObtenerMisReservasAsync_RepositorioFalla_PropagaExcepcion()
+        {
+            // Arrange
+            var repositorio = Substitute.For<IReservaRepository>();
+            repositorio
+                .ObtenerPorUsuarioAsync(27)
+                .ThrowsAsync(new InvalidOperationException("Error de base de datos"));
+
+            var servicio = new ReservaService(repositorio, _reloj);
+
+            // Act & Assert
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                () => servicio.ObtenerMisReservasAsync(27));
+        }
     }
 }
