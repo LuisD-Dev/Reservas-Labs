@@ -40,6 +40,8 @@ namespace SistemaReservas.API.Repositories
                     reserva.Estado == "Activa")
                 .ToListAsync();
         }
+
+        // HU8: busca una reserva con seguimiento, para poder modificarla.
         public async Task<Reserva?> ObtenerPorIdAsync(int reservaId)
         {
             return await _context.Reservas
@@ -49,6 +51,20 @@ namespace SistemaReservas.API.Repositories
         public async Task GuardarCambiosAsync()
         {
             await _context.SaveChangesAsync();
+        }
+
+        // HU7: reservas de un usuario, con el nombre del laboratorio.
+        public async Task<IReadOnlyList<Reserva>> ObtenerPorUsuarioAsync(
+            int usuarioId)
+        {
+            return await _context.Reservas
+                .AsNoTracking()
+                .Include(reserva => reserva.Laboratorio)
+                .Where(reserva => reserva.UsuarioId == usuarioId)
+                .OrderBy(reserva => reserva.Fecha)
+                .ThenBy(reserva => reserva.HoraInicio)
+                .ThenBy(reserva => reserva.Id)
+                .ToListAsync();
         }
     }
 }

@@ -11,8 +11,13 @@ namespace SistemaReservas.API.Repositories
         Task<IReadOnlyList<Reserva>> ObtenerActivasPorLaboratorioYFechaAsync(
             int laboratorioId,
             DateTime fecha);
+
+        // HU8: busca una reserva y guarda los cambios (cancelación).
         Task<Reserva?> ObtenerPorIdAsync(int reservaId);
 
         Task GuardarCambiosAsync();
+
+        // HU7: reservas de un usuario, con el nombre del laboratorio.
+        Task<IReadOnlyList<Reserva>> ObtenerPorUsuarioAsync(int usuarioId);
     }
 }

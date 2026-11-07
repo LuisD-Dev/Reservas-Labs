@@ -1,0 +1,59 @@
+// AB#94 y AB#95: funciones de apoyo de la pantalla Mis Reservas.
+
+// Próximas primero: ordena por fecha y hora de inicio. No modifica la lista original.
+export function ordenarReservas(reservas) {
+    const lista = Array.isArray(reservas) ? [...reservas] : [];
+    return lista.sort((a, b) =>
+        `${a.fecha} ${a.horaInicio}`.localeCompare(`${b.fecha} ${b.horaInicio}`));
+}
+
+// "09:00:00" -> "09:00"
+export function formatearHoraReserva(hora) {
+    return String(hora ?? "").slice(0, 5);
+}
+
+// "2026-10-20" -> "20/10/2026", sin pasar por Date para no desplazar el día por zona horaria.
+export function formatearFechaReserva(fecha) {
+    const texto = String(fecha ?? "");
+    const coincidencia = /^(\d{4})-(\d{2})-(\d{2})/.exec(texto);
+    if (!coincidencia) return texto;
+    const [, anio, mes, dia] = coincidencia;
+    return `${dia}/${mes}/${anio}`;
+}
+
+export function mensajeErrorMisReservas(status) {
+    if (!status) return "No se pudo conectar con el servidor. Verifica tu conexión e intenta de nuevo.";
+    if (status === 401) return "Tu sesión venció. Inicia sesión de nuevo.";
+    if (status === 403) return "Tu usuario no tiene permiso para consultar reservas.";
+    return "No se pudieron cargar tus reservas. Intenta de nuevo.";
+}
+
+// AB#95: distinguir reservas activas y canceladas.
+function normalizarEstado(estado) {
+    return String(estado ?? "").trim().toLowerCase();
+}
+
+export function esReservaCancelada(estado) {
+    return normalizarEstado(estado).startsWith("cancel");
+}
+
+export function esReservaActiva(estado) {
+    return normalizarEstado(estado) === "activa";
+}
+
+// "activa" | "cancelada" | "otro": se usa para el color de la etiqueta.
+export function tipoEstado(estado) {
+    if (esReservaCancelada(estado)) return "cancelada";
+    if (esReservaActiva(estado)) return "activa";
+    return "otro";
+}
+
+// Separa las reservas en dos grupos conservando el orden recibido.
+// Todo lo que no está cancelado se muestra con las activas, para no ocultar ninguna reserva.
+export function separarReservas(reservas) {
+    const lista = Array.isArray(reservas) ? reservas : [];
+    return {
+        activas: lista.filter((reserva) => !esReservaCancelada(reserva.estado)),
+        canceladas: lista.filter((reserva) => esReservaCancelada(reserva.estado)),
+    };
+}
