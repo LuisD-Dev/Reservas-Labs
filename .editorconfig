@@ -1,0 +1,29 @@
+root = true
+
+# Safe rules for text files.
+# Do not set end_of_line or charset; preserve existing files.
+[*]
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# C# uses four spaces.
+[*.cs]
+indent_style = space
+indent_size = 4
+tab_width = 4
+
+# React and CSS use four spaces.
+[*.{js,jsx,css}]
+indent_style = space
+indent_size = 4
+tab_width = 4
+
+# Configuration and project files use two spaces.
+[*.{json,csproj,props,targets,slnx,yml,yaml}]
+indent_style = space
+indent_size = 2
+tab_width = 2
+
+# Markdown may use trailing spaces for intentional line breaks.
+[*.md]
+trim_trailing_whitespace = false
