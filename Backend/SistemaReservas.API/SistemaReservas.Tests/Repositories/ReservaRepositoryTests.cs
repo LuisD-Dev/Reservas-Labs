@@ -2,21 +2,20 @@
 using SistemaReservas.API.Models;
 using SistemaReservas.API.Repositories;
 using SistemaReservas.Tests.Infraestructura;
+using Xunit;
 
 namespace SistemaReservas.Tests.Repositories
 {
     public sealed class ReservaRepositoryTests : IDisposable
     {
-        private readonly BaseDatosEnMemoria _baseDatos =
-            new();
+        private readonly BaseDatosEnMemoria _baseDatos = new();
 
         private readonly int _usuarioId;
         private readonly int _laboratorioId;
 
         public ReservaRepositoryTests()
         {
-            using var contexto =
-                _baseDatos.CrearContexto();
+            using var contexto = _baseDatos.CrearContexto();
 
             var usuario = new Usuario
             {
@@ -115,12 +114,14 @@ namespace SistemaReservas.Tests.Repositories
             var repositorio = new ReservaRepository(contextoConsulta);
 
             // Act
-            var resultado = await repositorio.ObtenerActivasPorLaboratorioYFechaAsync(
-                _laboratorioId,
-                fechaObjetivo.AddHours(15));
+            var resultado =
+                await repositorio.ObtenerActivasPorLaboratorioYFechaAsync(
+                    _laboratorioId,
+                    fechaObjetivo.AddHours(15));
 
             // Assert
             var reserva = Assert.Single(resultado);
+
             Assert.Equal(reservaEsperadaId, reserva.Id);
             Assert.Equal(_laboratorioId, reserva.LaboratorioId);
             Assert.Equal(fechaObjetivo, reserva.Fecha);
@@ -133,11 +134,8 @@ namespace SistemaReservas.Tests.Repositories
         public async Task CrearAsync_ReservaValida_GuardaUsuarioResponsable()
         {
             // Arrange
-            using var contexto =
-                _baseDatos.CrearContexto();
-
-            var repositorio =
-                new ReservaRepository(contexto);
+            using var contexto = _baseDatos.CrearContexto();
+            var repositorio = new ReservaRepository(contexto);
 
             var reserva = new Reserva
             {
@@ -149,41 +147,32 @@ namespace SistemaReservas.Tests.Repositories
             };
 
             // Act
-            var resultado =
-                await repositorio.CrearAsync(reserva);
+            var resultado = await repositorio.CrearAsync(reserva);
 
             // Assert
             Assert.Same(reserva, resultado);
             Assert.True(resultado.Id > 0);
             Assert.Equal(_usuarioId, resultado.UsuarioId);
 
-            using var contextoConsulta =
-                _baseDatos.CrearContexto();
+            using var contextoConsulta = _baseDatos.CrearContexto();
 
-            var guardada =
-                await contextoConsulta.Reservas
-                    .Include(r => r.Usuario)
-                    .SingleAsync();
+            var guardada = await contextoConsulta.Reservas
+                .Include(r => r.Usuario)
+                .SingleAsync();
 
             Assert.Equal(_usuarioId, guardada.UsuarioId);
-            Assert.Equal(
-                "responsable",
-                guardada.Usuario.Username);
-
+            Assert.Equal("responsable", guardada.Usuario.Username);
             Assert.Equal("Activa", guardada.Estado);
         }
 
-        // HU4 - AB#78: la BD rechaza una reserva de un laboratorio inexistente por
-        // la FK; el repositorio no captura la excepción (la API hoy responde 500).
+        // HU4 - AB#78: la BD rechaza una reserva de un laboratorio
+        // inexistente por la FK; el repositorio propaga la excepción.
         [Fact]
         public async Task CrearAsync_LaboratorioInexistente_LanzaDbUpdateException()
         {
             // Arrange
-            using var contexto =
-                _baseDatos.CrearContexto();
-
-            var repositorio =
-                new ReservaRepository(contexto);
+            using var contexto = _baseDatos.CrearContexto();
+            var repositorio = new ReservaRepository(contexto);
 
             var reserva = new Reserva
             {
@@ -199,10 +188,84 @@ namespace SistemaReservas.Tests.Repositories
             await Assert.ThrowsAsync<DbUpdateException>(
                 () => repositorio.CrearAsync(reserva));
 
-            using var contextoConsulta =
-                _baseDatos.CrearContexto();
+            using var contextoConsulta = _baseDatos.CrearContexto();
 
             Assert.Empty(contextoConsulta.Reservas);
+        }
+
+        // HU8 - AB#98: una reserva inexistente devuelve null.
+        [Fact]
+        public async Task ObtenerPorIdAsync_ReservaInexistente_DevuelveNull()
+        {
+            using var contexto = _baseDatos.CrearContexto();
+            var repositorio = new ReservaRepository(contexto);
+
+            var resultado =
+                await repositorio.ObtenerPorIdAsync(int.MaxValue);
+
+            Assert.Null(resultado);
+        }
+
+        // HU8 - AB#98: cancelar conserva la reserva y persiste su estado.
+        [Fact]
+        public async Task GuardarCambiosAsync_Cancelacion_ConservaReservaYPersisteEstado()
+        {
+            var fecha = new DateTime(2026, 11, 10);
+            var horaInicio = new TimeSpan(9, 0, 0);
+            var horaFin = new TimeSpan(10, 0, 0);
+            int reservaId;
+
+            // Crear una reserva y guardarla.
+            using (var contexto = _baseDatos.CrearContexto())
+            {
+                var reserva = new Reserva
+                {
+                    UsuarioId = _usuarioId,
+                    LaboratorioId = _laboratorioId,
+                    Fecha = fecha,
+                    HoraInicio = horaInicio,
+                    HoraFin = horaFin,
+                    Estado = "Activa"
+                };
+
+                contexto.Reservas.Add(reserva);
+                await contexto.SaveChangesAsync();
+
+                reservaId = reserva.Id;
+            }
+
+            // Recuperarla mediante el repositorio y cancelar.
+            using (var contexto = _baseDatos.CrearContexto())
+            {
+                var repositorio = new ReservaRepository(contexto);
+
+                var reserva =
+                    await repositorio.ObtenerPorIdAsync(reservaId);
+
+                Assert.NotNull(reserva);
+                Assert.Equal(reservaId, reserva.Id);
+
+                reserva.Estado = "Cancelada";
+
+                await repositorio.GuardarCambiosAsync();
+            }
+
+            // Consultar desde otro contexto para comprobar la persistencia.
+            using (var contexto = _baseDatos.CrearContexto())
+            {
+                var guardada = await contexto.Reservas
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync(
+                        reserva => reserva.Id == reservaId);
+
+                Assert.NotNull(guardada);
+                Assert.Equal("Cancelada", guardada.Estado);
+                Assert.Equal(_usuarioId, guardada.UsuarioId);
+                Assert.Equal(_laboratorioId, guardada.LaboratorioId);
+                Assert.Equal(fecha, guardada.Fecha);
+                Assert.Equal(horaInicio, guardada.HoraInicio);
+                Assert.Equal(horaFin, guardada.HoraFin);
+            }
         }
     }
 }
