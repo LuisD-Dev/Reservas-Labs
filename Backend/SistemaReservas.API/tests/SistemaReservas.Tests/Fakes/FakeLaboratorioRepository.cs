@@ -13,9 +13,18 @@ namespace SistemaReservas.Tests.Fakes
             _laboratorios = laboratorios;
         }
 
-        public Task<List<Laboratorio>> ObtenerTodosAsync()
+        public Task<List<Laboratorio>> ObtenerTodosAsync(bool soloHabilitados = false)
         {
-            return Task.FromResult(_laboratorios);
+            return Task.FromResult(soloHabilitados
+                ? _laboratorios.Where(l => l.Estado == SistemaReservas.Domain.Rules.ReglasEstadoLaboratorio.Habilitado).ToList()
+                : _laboratorios);
         }
+
+        public Task<Laboratorio?> ObtenerPorIdAsync(int id)
+        {
+            return Task.FromResult(_laboratorios.SingleOrDefault(l => l.Id == id));
+        }
+
+        public Task GuardarCambiosAsync() => Task.CompletedTask;
     }
 }

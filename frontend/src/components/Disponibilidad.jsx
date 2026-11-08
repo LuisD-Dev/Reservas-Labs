@@ -1,3 +1,4 @@
+import { filtrarLaboratoriosHabilitados } from "../utils/laboratorios";
 import { useState } from "react";
 import "./Formularios.css";
 import "./Disponibilidad.css";
@@ -14,8 +15,9 @@ import {
 // pantalla de Laboratorios y el laboratorio desde el que se abrió.
 
 function Disponibilidad({ laboratorios = [], laboratorioInicialId, onVolver, onContinuarReserva }) {
-    const [laboratorioId, setLaboratorioId] = useState(
-        laboratorioInicialId ? String(laboratorioInicialId) : ""
+    const habilitados = filtrarLaboratoriosHabilitados(laboratorios);
+    const [seleccionId, setLaboratorioId] = useState(
+        habilitados.some(lab => String(lab.id) === String(laboratorioInicialId)) ? String(laboratorioInicialId) : ""
     );
     const [fecha, setFecha] = useState("");
     const [horaInicio, setHoraInicio] = useState("");
@@ -26,7 +28,8 @@ function Disponibilidad({ laboratorios = [], laboratorioInicialId, onVolver, onC
     const [cargando, setCargando] = useState(false);
     const [errorServidor, setErrorServidor] = useState("");
 
-    const laboratorio = laboratorios.find((lab) => String(lab.id) === laboratorioId);
+    const laboratorio = habilitados.find((lab) => String(lab.id) === seleccionId);
+    const laboratorioId = laboratorio ? seleccionId : "";
 
     function limpiarResultado() {
         setConsulta(null);
@@ -44,6 +47,7 @@ function Disponibilidad({ laboratorios = [], laboratorioInicialId, onVolver, onC
 
     // HU3 - #39 Consulta los horarios del laboratorio en la API y evalúa el rango.
     async function consultar(datos) {
+        if (!habilitados.some(lab => String(lab.id) === String(datos.laboratorioId))) return;
         setCargando(true);
         setErrorServidor("");
         setResultado(null);
@@ -117,7 +121,7 @@ function Disponibilidad({ laboratorios = [], laboratorioInicialId, onVolver, onC
                         }}
                     >
                         <option value="">Selecciona un laboratorio</option>
-                        {laboratorios.map((lab) => (
+                        {habilitados.map((lab) => (
                             <option key={lab.id} value={lab.id}>
                                 {lab.nombre} — {lab.ubicacion}
                             </option>
@@ -199,7 +203,7 @@ function Disponibilidad({ laboratorios = [], laboratorioInicialId, onVolver, onC
                 </div>
             )}
 
-            {errorServidor && consulta && (
+            {errorServidor && consulta && laboratorio && (
                 <div className="labs-error" role="alert">
                     <p>{errorServidor}</p>
                     <button onClick={() => consultar(consulta)} disabled={cargando}>
@@ -208,7 +212,7 @@ function Disponibilidad({ laboratorios = [], laboratorioInicialId, onVolver, onC
                 </div>
             )}
 
-            {consulta && resultado && (
+            {consulta && resultado && laboratorio && (
                 <div className="disp-resultado" aria-live="polite">
                     <div className={`disp-veredicto ${resultado.disponible ? "disp-si" : "disp-no"}`}>
                         {resultado.disponible ? "Disponible" : "No disponible"}

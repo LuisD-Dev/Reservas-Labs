@@ -6,6 +6,10 @@ namespace SistemaReservas.Infrastructure.Interfaces
     public interface ILaboratorioRepository
     {
         // Devuelve todos los laboratorios ordenados por nombre.
-        Task<List<Laboratorio>> ObtenerTodosAsync();
+        Task<List<Laboratorio>> ObtenerTodosAsync(bool soloHabilitados = false);
+
+        Task<Laboratorio?> ObtenerPorIdAsync(int id);
+
+        Task GuardarCambiosAsync();
     }
 }

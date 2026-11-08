@@ -1,3 +1,4 @@
+import { esLaboratorioHabilitado, filtrarLaboratoriosHabilitados } from "../utils/laboratorios";
 import { useEffect, useState } from "react";
 import { apiFetch } from "../services/api";
 import "./Laboratorios.css";
@@ -122,10 +123,10 @@ function Laboratorios({ onVolver, onConsultarDisponibilidad }) {
                                     <dd>{lab.capacidad} personas</dd>
                                 </div>
                             </dl>
-                            {onConsultarDisponibilidad && (
+                            {onConsultarDisponibilidad && esLaboratorioHabilitado(lab) && (
                                 <button
                                     className="labs-consultar"
-                                    onClick={() => onConsultarDisponibilidad(lab.id, laboratorios)}
+                                    onClick={() => onConsultarDisponibilidad(lab.id, filtrarLaboratoriosHabilitados(laboratorios))}
                                 >
                                     Consultar disponibilidad
                                 </button>

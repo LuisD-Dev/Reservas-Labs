@@ -35,7 +35,7 @@ namespace SistemaReservas.Tests.Services
             var reserva = NuevaReserva("Activa");
             var repositorio = Substitute.For<IReservaRepository>();
             repositorio.ObtenerPorIdAsync(ReservaId).Returns(reserva);
-            var servicio = new ReservaService(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+            var servicio = SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             // Act
             var resultado =
@@ -57,7 +57,7 @@ namespace SistemaReservas.Tests.Services
             var reserva = NuevaReserva("Activa");
             var repositorio = Substitute.For<IReservaRepository>();
             repositorio.ObtenerPorIdAsync(ReservaId).Returns(reserva);
-            var servicio = new ReservaService(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+            var servicio = SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             // Act
             var resultado =
@@ -76,7 +76,7 @@ namespace SistemaReservas.Tests.Services
             var reserva = NuevaReserva("Cancelada");
             var repositorio = Substitute.For<IReservaRepository>();
             repositorio.ObtenerPorIdAsync(ReservaId).Returns(reserva);
-            var servicio = new ReservaService(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+            var servicio = SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             // Act
             var resultado =
@@ -96,7 +96,7 @@ namespace SistemaReservas.Tests.Services
             // Arrange
             var repositorio = Substitute.For<IReservaRepository>();
             repositorio.ObtenerPorIdAsync(ReservaId).Returns((Reserva?)null);
-            var servicio = new ReservaService(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+            var servicio = SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             // Act
             var resultado =

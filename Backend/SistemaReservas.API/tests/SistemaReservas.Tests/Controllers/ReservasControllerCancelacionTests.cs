@@ -38,7 +38,7 @@ namespace SistemaReservas.Tests.Controllers
             var reloj = new FakeTimeProvider(
                 new DateTimeOffset(2026, 11, 6, 12, 0, 0, TimeSpan.Zero));
 
-            var servicio = new ReservaService(repositorio, reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+            var servicio = SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             return new ReservasController(servicio)
             {

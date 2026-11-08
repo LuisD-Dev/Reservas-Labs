@@ -16,7 +16,7 @@ namespace SistemaReservas.Tests.Services
             int usuarioId)
         {
             var repositorio = Substitute.For<IReservaRepository>();
-            var servicio = new ReservaService(
+            var servicio = SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(
                 repositorio, TimeProvider.System, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             var resultado = await servicio.CancelarAsync(10, usuarioId);
@@ -37,7 +37,7 @@ namespace SistemaReservas.Tests.Services
             repositorio.ObtenerPorIdAsync(10)
                 .Returns(Task.FromResult<Reserva?>(null));
 
-            var servicio = new ReservaService(
+            var servicio = SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(
                 repositorio, TimeProvider.System, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             var resultado = await servicio.CancelarAsync(10, 27);
@@ -68,7 +68,7 @@ namespace SistemaReservas.Tests.Services
             repositorio.ObtenerPorIdAsync(10)
                 .Returns(Task.FromResult<Reserva?>(reserva));
 
-            var servicio = new ReservaService(
+            var servicio = SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(
                 repositorio, TimeProvider.System, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             var resultado = await servicio.CancelarAsync(10, 27);
@@ -105,7 +105,7 @@ namespace SistemaReservas.Tests.Services
             repositorio.ObtenerPorIdAsync(10)
                 .Returns(Task.FromResult<Reserva?>(reserva));
 
-            var servicio = new ReservaService(
+            var servicio = SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(
                 repositorio, TimeProvider.System, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             var resultado = await servicio.CancelarAsync(10, 27);
@@ -143,7 +143,7 @@ namespace SistemaReservas.Tests.Services
                 return Task.CompletedTask;
             });
 
-            var servicio = new ReservaService(
+            var servicio = SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(
                 repositorio, TimeProvider.System, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             var resultado = await servicio.CancelarAsync(10, 27);

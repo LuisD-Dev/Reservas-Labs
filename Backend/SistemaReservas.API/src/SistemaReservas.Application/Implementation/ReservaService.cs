@@ -10,19 +10,22 @@ namespace SistemaReservas.Application.Implementation
     public class ReservaService : IReservaService
     {
         public const string MensajeConflicto =
-            "El laboratorio ya tiene una reserva que se traslapa con ese horario.";
+            ReglasTraslape.MensajeConflicto;
 
         private readonly IMapper _mapper;
+        private readonly IVerificacionDisponibilidadService _verificacion;
         private readonly IReservaRepository _reservaRepository;
         private readonly TimeProvider _timeProvider;
 
         public ReservaService(
             IReservaRepository reservaRepository,
-            TimeProvider timeProvider, IMapper mapper)
+            TimeProvider timeProvider, IMapper mapper,
+            IVerificacionDisponibilidadService verificacion)
         {
             _reservaRepository = reservaRepository;
             _timeProvider = timeProvider;
             _mapper = mapper;
+            _verificacion = verificacion;
         }
 
         public async Task<ResultadoCrearReserva> CrearAsync(
@@ -38,28 +41,21 @@ namespace SistemaReservas.Application.Implementation
                 return ResultadoCrearReserva.Fallido(errores);
             }
 
-            // HU6 - AB#75: no se permite traslapar una reserva activa del mismo
-            // laboratorio en la misma fecha.
-            var reservasDelDia =
-                await _reservaRepository
-                    .ObtenerActivasPorLaboratorioYFechaAsync(
-                        request.LaboratorioId!.Value,
-                        request.Fecha!.Value.ToDateTime(TimeOnly.MinValue));
+            var disponibilidad = await _verificacion.VerificarAsync(
+                request.LaboratorioId!.Value,
+                new ConsultaDisponibilidadRequest(request.Fecha, request.HoraInicio, request.HoraFin));
 
-            var hayConflicto = reservasDelDia.Any(existente =>
-                ReglasTraslape.HayTraslape(
-                    request.HoraInicio!.Value,
-                    request.HoraFin!.Value,
-                    existente.HoraInicio,
-                    existente.HoraFin));
+            if (disponibilidad.Errores.Count > 0)
+                return ResultadoCrearReserva.Fallido(disponibilidad.Errores);
 
-            if (hayConflicto)
+            if (!disponibilidad.Disponible)
             {
-                return ResultadoCrearReserva.Fallido(
-                    new Dictionary<string, string>
-                    {
-                        ["conflicto"] = MensajeConflicto
-                    });
+                var clave = disponibilidad.Motivo == ReglasTraslape.MensajeConflicto
+                    ? "conflicto" : "disponibilidad";
+                return ResultadoCrearReserva.Fallido(new Dictionary<string, string>
+                {
+                    [clave] = disponibilidad.Motivo
+                });
             }
 
             var reserva = new Reserva

@@ -57,6 +57,13 @@ namespace SistemaReservas.Tests.Services
             contexto.Laboratorios.Add(laboratorio);
             contexto.SaveChanges();
 
+            contexto.Disponibilidades.Add(new Disponibilidad
+            {
+                LaboratorioId = laboratorio.Id, Fecha = Dia.ToDateTime(TimeOnly.MinValue),
+                HoraInicio = TimeSpan.FromHours(7), HoraFin = TimeSpan.FromHours(21), Estado = "Disponible"
+            });
+            contexto.SaveChanges();
+
             _usuarioAId = usuarioA.Id;
             _usuarioBId = usuarioB.Id;
             _laboratorioId = laboratorio.Id;
@@ -74,8 +81,8 @@ namespace SistemaReservas.Tests.Services
         {
             using var contexto = _baseDatos.CrearContexto();
 
-            var servicio = new ReservaService(
-                new ReservaRepository(contexto),
+            var servicio = SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(
+                contexto,
                 _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             return await servicio.CrearAsync(
@@ -93,7 +100,7 @@ namespace SistemaReservas.Tests.Services
         {
             using var contexto = _baseDatos.CrearContexto();
 
-            var servicio = new ReservaService(
+            var servicio = SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(
                 new ReservaRepository(contexto),
                 _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
