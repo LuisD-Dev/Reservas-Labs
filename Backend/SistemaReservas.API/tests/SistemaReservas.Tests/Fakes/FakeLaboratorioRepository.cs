@@ -17,5 +17,12 @@ namespace SistemaReservas.Tests.Fakes
         {
             return Task.FromResult(_laboratorios);
         }
+
+        public Task<Laboratorio?> ObtenerPorIdAsync(int id)
+        {
+            return Task.FromResult(_laboratorios.SingleOrDefault(l => l.Id == id));
+        }
+
+        public Task GuardarCambiosAsync() => Task.CompletedTask;
     }
 }

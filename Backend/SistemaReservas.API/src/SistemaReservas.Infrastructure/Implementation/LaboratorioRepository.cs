@@ -22,5 +22,15 @@ namespace SistemaReservas.Infrastructure.Implementation
                 .OrderBy(l => l.Nombre)
                 .ToListAsync();
         }
+
+        public Task<Laboratorio?> ObtenerPorIdAsync(int id)
+        {
+            return _context.Laboratorios.SingleOrDefaultAsync(l => l.Id == id);
+        }
+
+        public async Task GuardarCambiosAsync()
+        {
+            await _context.SaveChangesAsync();
+        }
     }
 }

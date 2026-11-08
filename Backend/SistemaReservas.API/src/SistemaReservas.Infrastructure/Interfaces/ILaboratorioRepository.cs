@@ -7,5 +7,9 @@ namespace SistemaReservas.Infrastructure.Interfaces
     {
         // Devuelve todos los laboratorios ordenados por nombre.
         Task<List<Laboratorio>> ObtenerTodosAsync();
+
+        Task<Laboratorio?> ObtenerPorIdAsync(int id);
+
+        Task GuardarCambiosAsync();
     }
 }
