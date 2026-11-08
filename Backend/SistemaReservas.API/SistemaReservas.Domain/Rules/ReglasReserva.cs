@@ -1,4 +1,4 @@
-﻿namespace SistemaReservas.API.Reglas
+﻿namespace SistemaReservas.Domain.Rules
 {
     // Reglas de negocio compartidas por HU4 y HU5.
     public static class ReglasReserva

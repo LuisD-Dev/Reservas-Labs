@@ -1,4 +1,4 @@
-﻿namespace SistemaReservas.API.Models
+﻿namespace SistemaReservas.Domain.Entities
 {
     public class Usuario
     {

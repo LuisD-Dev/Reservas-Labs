@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using SistemaReservas.API.Models;
+using SistemaReservas.Domain.Entities;
 using SistemaReservas.Application.Abstractions.Security;
 
-namespace SistemaReservas.API.Data
+namespace SistemaReservas.Infrastructure.Data
 {
     public static class EfDatabaseSeeder
     {

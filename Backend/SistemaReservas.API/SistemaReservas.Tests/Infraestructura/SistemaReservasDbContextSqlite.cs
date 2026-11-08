@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using SistemaReservas.API.Data;
+using SistemaReservas.Infrastructure.Data;
 
 namespace SistemaReservas.Tests.Infraestructura
 {

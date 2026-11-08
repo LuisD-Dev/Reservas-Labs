@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using SistemaReservas.API.Models;
+using SistemaReservas.Domain.Entities;
 
-namespace SistemaReservas.API.Data
+namespace SistemaReservas.Infrastructure.Data
 {
     public class SistemaReservasDbContext : DbContext
     {

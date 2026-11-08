@@ -1,4 +1,4 @@
-namespace SistemaReservas.API.Reglas
+namespace SistemaReservas.Domain.Rules
 {
     // NFR2 - Reglas de negocio aisladas: roles del sistema.
     // Los textos coinciden con el CHECK CK_Usuarios_Rol de la base de datos.

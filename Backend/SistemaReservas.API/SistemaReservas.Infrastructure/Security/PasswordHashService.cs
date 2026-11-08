@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Identity;
-using SistemaReservas.API.Models;
+using SistemaReservas.Domain.Entities;
 using SistemaReservas.Application.Abstractions.Security;
 
 namespace SistemaReservas.Infrastructure.Security

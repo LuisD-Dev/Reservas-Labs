@@ -1,8 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
-using SistemaReservas.API.Data;
-using SistemaReservas.API.Models;
+﻿using SistemaReservas.Application.Abstractions.Persistence;
+using Microsoft.EntityFrameworkCore;
+using SistemaReservas.Infrastructure.Data;
+using SistemaReservas.Domain.Entities;
 
-namespace SistemaReservas.API.Repositories
+namespace SistemaReservas.Infrastructure.Repositories
 {
     // NFR2 - Implementación de reservas mediante EF Core.
     public class ReservaRepository : IReservaRepository

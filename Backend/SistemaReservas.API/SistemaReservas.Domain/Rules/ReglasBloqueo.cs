@@ -1,4 +1,4 @@
-namespace SistemaReservas.API.Reglas
+namespace SistemaReservas.Domain.Rules
 {
     // NFR2 - Reglas de negocio aisladas: bloqueo temporal del login (HU1).
     // No usan base de datos, HTTP ni reloj: la hora actual llega como parámetro.

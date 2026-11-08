@@ -1,6 +1,6 @@
-using SistemaReservas.API.Models;
+using SistemaReservas.Domain.Entities;
 
-namespace SistemaReservas.API.Repositories
+namespace SistemaReservas.Application.Abstractions.Persistence
 {
     // NFR2 - Separar acceso a datos: operaciones sobre la tabla Usuarios
     // que usa el login (HU1). AuthService depende de esta interfaz.

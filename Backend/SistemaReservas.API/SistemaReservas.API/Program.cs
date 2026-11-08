@@ -3,9 +3,11 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
-using SistemaReservas.API.Data;
-using SistemaReservas.API.Repositories;
+using SistemaReservas.Infrastructure.Data;
+using SistemaReservas.Application.Abstractions.Persistence;
+using SistemaReservas.Infrastructure.Repositories;
 using SistemaReservas.API.Services;
+using SistemaReservas.Application.Services;
 using SistemaReservas.Application.Abstractions.Security;
 using SistemaReservas.Infrastructure.Security;
 

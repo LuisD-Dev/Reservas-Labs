@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using SistemaReservas.API.Models;
+using SistemaReservas.Domain.Entities;
 
-namespace SistemaReservas.API.Data.Configurations
+namespace SistemaReservas.Infrastructure.Data.Configurations
 {
     public class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
     {

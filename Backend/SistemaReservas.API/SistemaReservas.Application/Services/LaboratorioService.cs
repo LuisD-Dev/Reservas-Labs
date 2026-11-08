@@ -1,7 +1,7 @@
-﻿using SistemaReservas.API.Models;
-using SistemaReservas.API.Repositories;
+﻿using SistemaReservas.Domain.Entities;
+using SistemaReservas.Application.Abstractions.Persistence;
 
-namespace SistemaReservas.API.Services
+namespace SistemaReservas.Application.Services
 {
     public class LaboratorioService
     {

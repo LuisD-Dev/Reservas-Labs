@@ -1,6 +1,6 @@
-﻿using SistemaReservas.API.Models;
+﻿using SistemaReservas.Domain.Entities;
 
-namespace SistemaReservas.API.DTOs
+namespace SistemaReservas.Application.DTOs
 {
     public record ResultadoCrearReserva(
         Reserva? Reserva,

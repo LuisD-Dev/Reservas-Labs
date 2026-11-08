@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace SistemaReservas.API.Migrations
+namespace SistemaReservas.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class AgregarReservasSprint3 : Migration

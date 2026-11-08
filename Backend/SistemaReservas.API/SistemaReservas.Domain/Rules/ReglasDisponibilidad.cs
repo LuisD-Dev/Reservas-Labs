@@ -1,6 +1,6 @@
-using SistemaReservas.API.Models;
+using SistemaReservas.Domain.Entities;
 
-namespace SistemaReservas.API.Reglas
+namespace SistemaReservas.Domain.Rules
 {
     // HU3 - Resultado de evaluar si un laboratorio está disponible para una consulta.
     public record ResultadoDisponibilidad(

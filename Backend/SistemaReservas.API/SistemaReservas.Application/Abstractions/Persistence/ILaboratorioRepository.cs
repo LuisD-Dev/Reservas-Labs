@@ -1,6 +1,6 @@
-using SistemaReservas.API.Models;
+using SistemaReservas.Domain.Entities;
 
-namespace SistemaReservas.API.Repositories
+namespace SistemaReservas.Application.Abstractions.Persistence
 {
     // NFR2 - Separar acceso a datos: consultas sobre la tabla Laboratorios (HU2).
     public interface ILaboratorioRepository

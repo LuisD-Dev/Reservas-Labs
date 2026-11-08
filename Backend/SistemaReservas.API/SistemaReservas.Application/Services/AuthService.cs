@@ -1,10 +1,10 @@
 using SistemaReservas.Application.Abstractions.Security;
-using SistemaReservas.API.DTOs;
-using SistemaReservas.API.Models;
-using SistemaReservas.API.Reglas;
-using SistemaReservas.API.Repositories;
+using SistemaReservas.Application.DTOs;
+using SistemaReservas.Domain.Entities;
+using SistemaReservas.Domain.Rules;
+using SistemaReservas.Application.Abstractions.Persistence;
 
-namespace SistemaReservas.API.Services
+namespace SistemaReservas.Application.Services
 {
     public class AuthService
     {

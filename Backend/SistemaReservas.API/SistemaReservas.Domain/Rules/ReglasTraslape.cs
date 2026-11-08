@@ -1,4 +1,4 @@
-﻿namespace SistemaReservas.API.Reglas
+﻿namespace SistemaReservas.Domain.Rules
 {
     // HU6 - AB#74: detección de traslapes entre rangos de hora.
     // Regla pura: no usa base de datos, HTTP ni reloj.

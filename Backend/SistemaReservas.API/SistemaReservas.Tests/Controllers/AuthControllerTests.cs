@@ -8,10 +8,11 @@ using Microsoft.IdentityModel.Tokens;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using SistemaReservas.API.Controllers;
-using SistemaReservas.API.DTOs;
-using SistemaReservas.API.Models;
-using SistemaReservas.API.Repositories;
+using SistemaReservas.Application.DTOs;
+using SistemaReservas.Domain.Entities;
+using SistemaReservas.Application.Abstractions.Persistence;
 using SistemaReservas.API.Services;
+using SistemaReservas.Application.Services;
 using SistemaReservas.Tests.Fakes;
 using SistemaReservas.Infrastructure.Security;
 

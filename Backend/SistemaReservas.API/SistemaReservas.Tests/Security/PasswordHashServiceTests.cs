@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
-using SistemaReservas.API.Models;
+using SistemaReservas.Domain.Entities;
 using SistemaReservas.Infrastructure.Security;
 
 namespace SistemaReservas.Tests.Security

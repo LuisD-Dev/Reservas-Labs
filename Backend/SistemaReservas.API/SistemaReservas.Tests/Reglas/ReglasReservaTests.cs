@@ -1,4 +1,4 @@
-﻿using SistemaReservas.API.Reglas;
+﻿using SistemaReservas.Domain.Rules;
 
 namespace SistemaReservas.Tests.Reglas
 {

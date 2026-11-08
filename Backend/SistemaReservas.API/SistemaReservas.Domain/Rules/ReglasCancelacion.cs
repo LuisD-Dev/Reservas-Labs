@@ -1,4 +1,4 @@
-namespace SistemaReservas.API.Reglas
+namespace SistemaReservas.Domain.Rules
 {
     // HU8 - AB#100: quién puede cancelar una reserva.
     // Regla pura: no usa base de datos, HTTP ni reloj.

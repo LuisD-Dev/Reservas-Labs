@@ -1,8 +1,9 @@
+using SistemaReservas.Application.Abstractions.Persistence;
 using Microsoft.EntityFrameworkCore;
-using SistemaReservas.API.Data;
-using SistemaReservas.API.Models;
+using SistemaReservas.Infrastructure.Data;
+using SistemaReservas.Domain.Entities;
 
-namespace SistemaReservas.API.Repositories
+namespace SistemaReservas.Infrastructure.Repositories
 {
     // NFR2 - Separar acceso a datos: implementación con EF Core.
     public class UsuarioRepository : IUsuarioRepository

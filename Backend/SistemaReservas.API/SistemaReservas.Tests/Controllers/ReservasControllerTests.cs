@@ -6,13 +6,13 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Microsoft.Extensions.Time.Testing;
 using SistemaReservas.API.Controllers;
-using SistemaReservas.API.DTOs;
-using SistemaReservas.API.Models;
-using SistemaReservas.API.Repositories;
-using SistemaReservas.API.Services;
+using SistemaReservas.Application.DTOs;
+using SistemaReservas.Domain.Entities;
+using SistemaReservas.Application.Abstractions.Persistence;
+using SistemaReservas.Application.Services;
 using System.Reflection;
 using Microsoft.AspNetCore.Authorization;
-using SistemaReservas.API.Reglas;
+using SistemaReservas.Domain.Rules;
 
 namespace SistemaReservas.Tests.Controllers
 {

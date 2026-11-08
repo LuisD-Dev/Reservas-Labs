@@ -1,6 +1,6 @@
-﻿using SistemaReservas.API.Models;
+﻿using SistemaReservas.Domain.Entities;
 
-namespace SistemaReservas.API.Repositories
+namespace SistemaReservas.Application.Abstractions.Persistence
 {
     // NFR2 - Separa el acceso a datos de la lógica de reservas.
     public interface IReservaRepository

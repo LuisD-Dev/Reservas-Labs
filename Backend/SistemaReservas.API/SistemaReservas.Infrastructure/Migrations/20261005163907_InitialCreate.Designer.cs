@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using SistemaReservas.API.Data;
+using SistemaReservas.Infrastructure.Data;
 
 #nullable disable
 
-namespace SistemaReservas.API.Migrations
+namespace SistemaReservas.Infrastructure.Migrations
 {
     [DbContext(typeof(SistemaReservasDbContext))]
     [Migration("20261005163907_InitialCreate")]
@@ -25,7 +25,7 @@ namespace SistemaReservas.API.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("SistemaReservas.API.Models.Disponibilidad", b =>
+            modelBuilder.Entity("SistemaReservas.Domain.Entities.Disponibilidad", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -60,7 +60,7 @@ namespace SistemaReservas.API.Migrations
                         });
                 });
 
-            modelBuilder.Entity("SistemaReservas.API.Models.Laboratorio", b =>
+            modelBuilder.Entity("SistemaReservas.Domain.Entities.Laboratorio", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -96,7 +96,7 @@ namespace SistemaReservas.API.Migrations
                         });
                 });
 
-            modelBuilder.Entity("SistemaReservas.API.Models.Usuario", b =>
+            modelBuilder.Entity("SistemaReservas.Domain.Entities.Usuario", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -143,9 +143,9 @@ namespace SistemaReservas.API.Migrations
                         });
                 });
 
-            modelBuilder.Entity("SistemaReservas.API.Models.Disponibilidad", b =>
+            modelBuilder.Entity("SistemaReservas.Domain.Entities.Disponibilidad", b =>
                 {
-                    b.HasOne("SistemaReservas.API.Models.Laboratorio", "Laboratorio")
+                    b.HasOne("SistemaReservas.Domain.Entities.Laboratorio", "Laboratorio")
                         .WithMany("Disponibilidades")
                         .HasForeignKey("LaboratorioId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -154,7 +154,7 @@ namespace SistemaReservas.API.Migrations
                     b.Navigation("Laboratorio");
                 });
 
-            modelBuilder.Entity("SistemaReservas.API.Models.Laboratorio", b =>
+            modelBuilder.Entity("SistemaReservas.Domain.Entities.Laboratorio", b =>
                 {
                     b.Navigation("Disponibilidades");
                 });

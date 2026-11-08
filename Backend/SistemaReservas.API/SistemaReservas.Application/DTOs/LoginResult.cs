@@ -1,4 +1,4 @@
-namespace SistemaReservas.API.DTOs
+namespace SistemaReservas.Application.DTOs
 {
     public enum LoginEstado
     {
