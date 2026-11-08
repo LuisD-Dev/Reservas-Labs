@@ -15,8 +15,17 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 // EF Core DbContext
-builder.Services.AddDbContext<SistemaReservasDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<SistemaReservasDbContext>(
+    options =>
+        options.UseSqlServer(
+            builder.Configuration.GetConnectionString(
+                "DefaultConnection"),
+            sqlServerOptions =>
+                sqlServerOptions.MigrationsAssembly(
+                    typeof(SistemaReservasDbContext)
+                        .Assembly
+                        .GetName()
+                        .Name!)));
 
 // NFR2 - Tiempo inyectable: la hora actual se obtiene de TimeProvider
 // para poder reemplazarla en las pruebas.
