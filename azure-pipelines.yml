@@ -1,16 +1,18 @@
 # Laboratorio VII: Integración Continua de la API de reservas.
 
-# Ejecutar automáticamente después de cada push a main.
+# Ejecutar automáticamente después de cada push a main o develop.
 trigger:
   branches:
     include:
       - main
+      - develop
 
 # Ejecutar en una máquina Windows hospedada por Microsoft.
 pool:
   name: 'Default'
 
 variables:
+  frontendDirectory: 'frontend'
   buildConfiguration: 'Release'
   testProject: 'Backend/SistemaReservas.API/SistemaReservas.Tests/SistemaReservas.Tests.csproj'
 
@@ -58,3 +60,24 @@ steps:
       failTaskOnFailureToPublishResults: true
       publishRunAttachments: true
       testRunTitle: 'Reservas-Labs - $(Build.BuildNumber)'
+
+  - task: NodeTool@0
+    displayName: 'Instalar Node.js 22'
+    inputs:
+      versionSpec: '22.x'
+
+  - script: npm ci
+    displayName: 'Restaurar dependencias del frontend'
+    workingDirectory: '$(frontendDirectory)'
+
+  - script: npm test
+    displayName: 'Ejecutar pruebas del frontend'
+    workingDirectory: '$(frontendDirectory)'
+
+  - script: npm run lint
+    displayName: 'Validar lint del frontend'
+    workingDirectory: '$(frontendDirectory)'
+
+  - script: npm run build
+    displayName: 'Compilar frontend'
+    workingDirectory: '$(frontendDirectory)'
