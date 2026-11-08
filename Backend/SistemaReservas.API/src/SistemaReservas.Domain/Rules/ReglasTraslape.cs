@@ -4,6 +4,9 @@
     // Regla pura: no usa base de datos, HTTP ni reloj.
     public static class ReglasTraslape
     {
+        public const string MensajeConflicto =
+            "El laboratorio ya tiene una reserva que se traslapa con ese horario.";
+
         // Dos rangos se traslapan si cada uno empieza antes de que el otro termine.
         // Con "<" estricto, dos reservas consecutivas (una termina justo cuando
         // la otra empieza) no chocan.

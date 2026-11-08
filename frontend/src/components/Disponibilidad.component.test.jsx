@@ -13,6 +13,41 @@ async function consultar(user) {
     await user.click(screen.getByRole('button', { name: 'Consultar', exact: true }));
 }
 
+test('excluye fuera de servicio y rechaza su seleccion inicial sin consultar la API', async () => {
+    const user = userEvent.setup();
+    render(<Disponibilidad laboratorios={laboratorios} laboratorioInicialId={9} />);
+    expect(screen.getByRole('combobox', { name: 'Laboratorio' })).toHaveValue('');
+    expect(screen.queryByRole('option', { name: /Redes/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /Software/ })).toBeInTheDocument();
+    await user.type(screen.getByLabelText('Fecha'), fechaFutura());
+    await user.type(screen.getByLabelText('Hora inicial'), '09:00');
+    await user.type(screen.getByLabelText('Hora final'), '10:00');
+    await user.click(screen.getByRole('button', { name: 'Consultar', exact: true }));
+    expect(screen.getByLabelText('Laboratorio')).toHaveAttribute('aria-invalid', 'true');
+    expect(apiFetch).not.toHaveBeenCalled();
+});
+
+test('una actualizacion de props deja de mostrar el laboratorio deshabilitado seleccionado', () => {
+    const { rerender } = render(<Disponibilidad laboratorios={laboratorios} laboratorioInicialId={7} />);
+    expect(screen.getByLabelText('Laboratorio')).toHaveValue('7');
+    rerender(<Disponibilidad laboratorios={[{ ...laboratorios[0], estado: 'Fuera de servicio' }]} laboratorioInicialId={7} />);
+    expect(screen.getByLabelText('Laboratorio')).toHaveValue('');
+    expect(screen.queryByRole('option', { name: /Software/ })).not.toBeInTheDocument();
+    expect(screen.queryByText('Estado: Fuera de servicio')).not.toBeInTheDocument();
+});
+
+test('deshabilitar el laboratorio invalida tambien la continuacion de una consulta previa', async () => {
+    const user = userEvent.setup();
+    apiFetch.mockResolvedValue(respuesta({ disponible: true, motivo: 'Rango libre.', horariosDelDia: [] }));
+    const { rerender } = render(<Disponibilidad laboratorios={laboratorios} onContinuarReserva={vi.fn()} />);
+    await consultar(user);
+    expect(await screen.findByRole('button', { name: 'Continuar con la reserva' })).toBeInTheDocument();
+    rerender(<Disponibilidad laboratorios={[{ ...laboratorios[0], estado: 'Fuera de servicio' }]} onContinuarReserva={vi.fn()} />);
+    expect(screen.queryByRole('button', { name: 'Continuar con la reserva' })).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Laboratorio')).toHaveValue('');
+    expect(apiFetch).toHaveBeenCalledTimes(1);
+});
+
 test('envío vacío anuncia cuatro errores y los relaciona con sus campos', async () => {
     const user = userEvent.setup();
     render(<Disponibilidad laboratorios={laboratorios} />);

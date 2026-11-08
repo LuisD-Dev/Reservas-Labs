@@ -19,9 +19,9 @@ namespace SistemaReservas.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ObtenerLaboratorios()
+        public async Task<IActionResult> ObtenerLaboratorios([FromQuery] bool soloHabilitados = false)
         {
-            var laboratorios = await _laboratorioService.ObtenerLaboratoriosAsync();
+            var laboratorios = await _laboratorioService.ObtenerLaboratoriosAsync(soloHabilitados);
 
             return Ok(laboratorios);
         }

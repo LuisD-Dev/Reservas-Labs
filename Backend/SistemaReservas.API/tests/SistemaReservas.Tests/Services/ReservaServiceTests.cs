@@ -19,7 +19,7 @@ namespace SistemaReservas.Tests.Services
         {
             // Arrange
             var repositorio = Substitute.For<IReservaRepository>();
-            var servicio = new ReservaService(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+            var servicio = SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
             var request = new CrearReservaRequest(
                 3,
                 new DateOnly(2026, 10, 16),
@@ -60,7 +60,7 @@ namespace SistemaReservas.Tests.Services
                 });
 
             var servicio =
-                new ReservaService(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+                SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             var request = new CrearReservaRequest(
                 3,
@@ -110,7 +110,7 @@ namespace SistemaReservas.Tests.Services
                 Substitute.For<IReservaRepository>();
 
             var servicio =
-                new ReservaService(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+                SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             var request = new CrearReservaRequest(
                 3,
@@ -142,7 +142,7 @@ namespace SistemaReservas.Tests.Services
                 Substitute.For<IReservaRepository>();
 
             var servicio =
-                new ReservaService(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+                SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             var request = new CrearReservaRequest(
                 null,
@@ -176,7 +176,7 @@ namespace SistemaReservas.Tests.Services
                 Substitute.For<IReservaRepository>();
 
             var servicio =
-                new ReservaService(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+                SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             var request = new CrearReservaRequest(
                 3,
@@ -218,7 +218,7 @@ namespace SistemaReservas.Tests.Services
                 Substitute.For<IReservaRepository>();
 
             var servicio =
-                new ReservaService(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+                SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             var request = new CrearReservaRequest(
                 laboratorioId,
@@ -275,7 +275,7 @@ namespace SistemaReservas.Tests.Services
                 .ThrowsAsync(excepcion);
 
             var servicio =
-                new ReservaService(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+                SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             var request = new CrearReservaRequest(
                 3,
@@ -304,7 +304,7 @@ namespace SistemaReservas.Tests.Services
                 Substitute.For<IReservaRepository>();
 
             var servicio =
-                new ReservaService(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+                SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             var request = new CrearReservaRequest(
                 3,
@@ -336,7 +336,7 @@ namespace SistemaReservas.Tests.Services
                 Substitute.For<IReservaRepository>();
 
             var servicio =
-                new ReservaService(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+                SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             var request = new CrearReservaRequest(
                 3,
@@ -372,7 +372,7 @@ namespace SistemaReservas.Tests.Services
                 .Returns(llamada => llamada.Arg<Reserva>());
 
             var servicio =
-                new ReservaService(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+                SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             var request = new CrearReservaRequest(
                 3,
@@ -429,7 +429,7 @@ namespace SistemaReservas.Tests.Services
             var repositorio = RepositorioQueGuarda();
 
             var servicio =
-                new ReservaService(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+                SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             var request = new CrearReservaRequest(
                 3,
@@ -472,7 +472,7 @@ namespace SistemaReservas.Tests.Services
                 Substitute.For<IReservaRepository>();
 
             var servicio =
-                new ReservaService(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+                SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             var request = new CrearReservaRequest(
                 3,
@@ -505,7 +505,7 @@ namespace SistemaReservas.Tests.Services
                 Substitute.For<IReservaRepository>();
 
             var servicio =
-                new ReservaService(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+                SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             var request = new CrearReservaRequest(
                 3,
@@ -539,7 +539,7 @@ namespace SistemaReservas.Tests.Services
             var repositorio = RepositorioQueGuarda();
 
             var servicio =
-                new ReservaService(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+                SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             var request = new CrearReservaRequest(
                 3,
@@ -584,7 +584,7 @@ namespace SistemaReservas.Tests.Services
             var repositorio = RepositorioQueGuarda();
 
             var servicio =
-                new ReservaService(repositorio, reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+                SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             var request = new CrearReservaRequest(
                 3,
@@ -619,7 +619,7 @@ namespace SistemaReservas.Tests.Services
             var repositorio = RepositorioQueGuarda();
 
             var servicio =
-                new ReservaService(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+                SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             var request = new CrearReservaRequest(
                 3,
@@ -653,7 +653,7 @@ namespace SistemaReservas.Tests.Services
                 Substitute.For<IReservaRepository>();
 
             var servicio =
-                new ReservaService(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+                SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             var request = new CrearReservaRequest(
                 3,
@@ -713,7 +713,7 @@ namespace SistemaReservas.Tests.Services
                 .ObtenerPorUsuarioAsync(27)
                 .Returns(new List<Reserva> { ReservaConLaboratorio(15, 27) });
 
-            var servicio = new ReservaService(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+            var servicio = SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             // Act
             var resultado = await servicio.ObtenerMisReservasAsync(27);
@@ -739,7 +739,7 @@ namespace SistemaReservas.Tests.Services
                 .ObtenerPorUsuarioAsync(Arg.Any<int>())
                 .Returns(new List<Reserva>());
 
-            var servicio = new ReservaService(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+            var servicio = SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             // Act
             await servicio.ObtenerMisReservasAsync(27);
@@ -765,7 +765,7 @@ namespace SistemaReservas.Tests.Services
                     ReservaConLaboratorio(9, 27, "Activa")
                 });
 
-            var servicio = new ReservaService(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+            var servicio = SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             // Act
             var resultado = await servicio.ObtenerMisReservasAsync(27);
@@ -787,7 +787,7 @@ namespace SistemaReservas.Tests.Services
                 .ObtenerPorUsuarioAsync(27)
                 .Returns(new List<Reserva>());
 
-            var servicio = new ReservaService(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+            var servicio = SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             // Act
             var resultado = await servicio.ObtenerMisReservasAsync(27);
@@ -805,7 +805,7 @@ namespace SistemaReservas.Tests.Services
         {
             // Arrange
             var repositorio = Substitute.For<IReservaRepository>();
-            var servicio = new ReservaService(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+            var servicio = SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
@@ -826,7 +826,7 @@ namespace SistemaReservas.Tests.Services
                 .ObtenerPorUsuarioAsync(27)
                 .ThrowsAsync(new InvalidOperationException("Error de base de datos"));
 
-            var servicio = new ReservaService(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
+            var servicio = SistemaReservas.Tests.Fakes.ReservaServiceFactory.Crear(repositorio, _reloj, new MapsterMapper.Mapper(SistemaReservas.Application.Mapper.MapsterConfig.RegisterMaps()));
 
             // Act & Assert
             await Assert.ThrowsAsync<InvalidOperationException>(

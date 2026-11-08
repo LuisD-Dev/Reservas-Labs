@@ -18,9 +18,9 @@ namespace SistemaReservas.Application.Implementation
             _laboratorioRepository = laboratorioRepository;
         }
 
-        public async Task<IReadOnlyList<LaboratorioResponse>> ObtenerLaboratoriosAsync()
+        public async Task<IReadOnlyList<LaboratorioResponse>> ObtenerLaboratoriosAsync(bool soloHabilitados = false)
         {
-            return _mapper.Map<List<LaboratorioResponse>>(await _laboratorioRepository.ObtenerTodosAsync());
+            return _mapper.Map<List<LaboratorioResponse>>(await _laboratorioRepository.ObtenerTodosAsync(soloHabilitados));
         }
 
         public async Task<ResultadoActualizarEstadoLaboratorio> ActualizarEstadoAsync(int id, string? estado)

@@ -23,8 +23,10 @@ test('consultar disponibilidad entrega el laboratorio elegido y la lista', async
     apiFetch.mockResolvedValue(respuesta(laboratorios));
     render(<Laboratorios onConsultarDisponibilidad={navegar} />);
     const botones = await screen.findAllByRole('button', { name: 'Consultar disponibilidad' });
-    await user.click(botones[1]);
-    expect(navegar).toHaveBeenCalledExactlyOnceWith(9, laboratorios);
+    expect(botones).toHaveLength(1);
+    expect(screen.getByRole('heading', { name: 'Redes' })).toBeInTheDocument();
+    await user.click(botones[0]);
+    expect(navegar).toHaveBeenCalledExactlyOnceWith(7, [laboratorios[0]]);
 });
 
 test('un fallo de red se muestra como alerta y permite reintentar', async () => {

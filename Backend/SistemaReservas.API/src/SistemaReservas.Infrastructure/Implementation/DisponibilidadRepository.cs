@@ -1,3 +1,4 @@
+using SistemaReservas.Domain.Rules;
 using SistemaReservas.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using SistemaReservas.Infrastructure.Data;
@@ -19,7 +20,8 @@ namespace SistemaReservas.Infrastructure.Implementation
         {
             return await _context.Disponibilidades
                 .AsNoTracking()
-                .Where(d => d.LaboratorioId == laboratorioId)
+                .Where(d => d.LaboratorioId == laboratorioId
+                    && d.Laboratorio.Estado == ReglasEstadoLaboratorio.Habilitado)
                 .OrderBy(d => d.Fecha)
                 .ThenBy(d => d.HoraInicio)
                 .ToListAsync();

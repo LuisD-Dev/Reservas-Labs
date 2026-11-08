@@ -15,7 +15,8 @@ namespace SistemaReservas.Domain.Rules
     // la fecha de hoy llega como parámetro.
     public static class ReglasDisponibilidad
     {
-        public const string EstadoLaboratorioHabilitado = "Habilitado";
+        public const string EstadoLaboratorioHabilitado = ReglasEstadoLaboratorio.Habilitado;
+        public const string MensajeFueraDeServicio = "El laboratorio está fuera de servicio.";
         public const string EstadoHorarioDisponible = "Disponible";
 
         // Devuelve los errores por campo, con las mismas claves que el frontend.
@@ -75,7 +76,7 @@ namespace SistemaReservas.Domain.Rules
             {
                 return new ResultadoDisponibilidad(
                     false,
-                    "El laboratorio está fuera de servicio.",
+                    MensajeFueraDeServicio,
                     horariosDelDia);
             }
 

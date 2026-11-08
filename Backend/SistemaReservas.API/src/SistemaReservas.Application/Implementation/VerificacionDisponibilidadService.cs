@@ -23,13 +23,15 @@ namespace SistemaReservas.Application.Implementation
             var fecha = request.Fecha!.Value;
             var inicio = request.HoraInicio!.Value;
             var fin = request.HoraFin!.Value;
-            var laboratorio = (await laboratorios.ObtenerTodosAsync())
-                .SingleOrDefault(l => l.Id == laboratorioId);
+            var laboratorio = await laboratorios.ObtenerPorIdAsync(laboratorioId);
             if (laboratorio is null)
             {
-                errores["laboratorioId"] = "Selecciona un laboratorio.";
+                errores["laboratorioId"] = "El laboratorio no existe.";
                 return new(false, "", [], errores);
             }
+
+            if (ReglasDisponibilidad.EstaFueraDeServicio(laboratorio))
+                return new(false, ReglasDisponibilidad.MensajeFueraDeServicio, [], errores);
 
             var horarios = await disponibilidades.ObtenerPorLaboratorioAsync(laboratorioId);
             var reservasDelDia = await reservas.ObtenerActivasPorLaboratorioYFechaAsync(
@@ -44,7 +46,7 @@ namespace SistemaReservas.Application.Implementation
                 !ReglasDisponibilidad.EstaFueraDeServicio(laboratorio));
             var horariosPublicos = mapper.Map<List<HorarioDisponibilidadResponse>>(tramos);
             return new(evaluacion.Disponible && !conflicto,
-                evaluacion.Disponible && conflicto ? ReservaService.MensajeConflicto : evaluacion.Motivo,
+                evaluacion.Disponible && conflicto ? ReglasTraslape.MensajeConflicto : evaluacion.Motivo,
                 horariosPublicos, errores);
         }
     }
