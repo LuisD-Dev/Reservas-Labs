@@ -2,7 +2,7 @@ import { useState } from "react";
 import "./Disponibilidad.css";
 import { apiFetch } from "../services/api";
 import {
-    evaluarDisponibilidad,
+    interpretarDisponibilidad,
     formatearFecha,
     hoyComoTexto,
     validarConsulta,
@@ -48,17 +48,24 @@ function Disponibilidad({ laboratorios = [], laboratorioInicialId, onVolver, onC
         setResultado(null);
 
         try {
-            const respuesta = await apiFetch(`/api/laboratorios/${datos.laboratorioId}/disponibilidad`);
+            const respuesta = await apiFetch(`/api/laboratorios/${datos.laboratorioId}/disponibilidad/verificar`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ fecha: datos.fecha, horaInicio: `${datos.horaInicio}:00`, horaFin: `${datos.horaFin}:00` }),
+            });
 
             if (respuesta.status === 401) {
                 setErrorServidor("Tu sesión venció. Inicia sesión de nuevo.");
             } else if (respuesta.status === 403) {
                 setErrorServidor("Tu usuario no tiene permiso para consultar la disponibilidad.");
+            } else if (respuesta.status === 400) {
+                const cuerpo = await respuesta.json();
+                setErrores(cuerpo.errores ?? cuerpo.errors ?? {});
             } else if (!respuesta.ok) {
                 setErrorServidor("No se pudo consultar la disponibilidad. Intenta de nuevo.");
             } else {
-                const horarios = await respuesta.json();
-                setResultado(evaluarDisponibilidad(horarios, datos, laboratorio));
+                const datosServidor = await respuesta.json();
+                setResultado(interpretarDisponibilidad(datosServidor));
             }
         } catch {
             setErrorServidor("No se pudo conectar con el servidor. Verifica que la API esté en ejecución.");
@@ -219,7 +226,7 @@ function Disponibilidad({ laboratorios = [], laboratorioInicialId, onVolver, onC
                     ) : (
                         <ul className="disp-horarios">
                             {resultado.horariosDelDia.map((h) => (
-                                <li key={h.id}>
+                                <li key={`${h.id}-${h.horaInicio}-${h.horaFin}`}>
                                     <span>{h.horaInicio} – {h.horaFin}</span>
                                     <span className={h.estado === "Disponible" ? "disp-chip-si" : "disp-chip-no"}>
                                         {h.estado}

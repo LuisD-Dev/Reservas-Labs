@@ -27,35 +27,8 @@ namespace SistemaReservas.Domain.Rules
             TimeSpan? horaFin,
             DateOnly hoy)
         {
-            var errores = new Dictionary<string, string>();
-
-            if (laboratorioId is null || laboratorioId <= 0)
-            {
-                errores["laboratorioId"] = "Selecciona un laboratorio.";
-            }
-            if (fecha is null)
-            {
-                errores["fecha"] = "Ingresa la fecha a consultar.";
-            }
-            else if (EsFechaPasada(fecha.Value, hoy))
-            {
-                errores["fecha"] = "La fecha no puede ser anterior a hoy.";
-            }
-            if (horaInicio is null)
-            {
-                errores["horaInicio"] = "Ingresa la hora inicial.";
-            }
-            if (horaFin is null)
-            {
-                errores["horaFin"] = "Ingresa la hora final.";
-            }
-            if (horaInicio is not null && horaFin is not null &&
-                !EsRangoHorasValido(horaInicio.Value, horaFin.Value))
-            {
-                errores["horaFin"] = "La hora final debe ser mayor que la hora inicial.";
-            }
-
-            return errores;
+            return ReglasReserva.ValidarSolicitud(
+                laboratorioId, fecha, horaInicio, horaFin, hoy, consulta: true);
         }
 
         public static bool EsFechaPasada(DateOnly fecha, DateOnly hoy)
@@ -122,6 +95,44 @@ namespace SistemaReservas.Domain.Rules
                     ? "No hay horarios registrados para esa fecha."
                     : "Ningún horario disponible cubre todo el rango solicitado.",
                 horariosDelDia);
+        }
+
+        // Divide horarios nominales para mostrar los tramos libres y ocupados reales.
+        public static IEnumerable<Disponibilidad> ObtenerTramosEfectivos(
+            IEnumerable<Disponibilidad> horarios, IReadOnlyList<Reserva> reservas,
+            int laboratorioId, DateOnly fecha, bool habilitado)
+        {
+            foreach (var horario in horarios)
+            {
+                var limites = new SortedSet<TimeSpan> { horario.HoraInicio, horario.HoraFin };
+                foreach (var reserva in reservas.Where(r => r.Estado == "Activa"
+                    && r.LaboratorioId == laboratorioId && DateOnly.FromDateTime(r.Fecha) == fecha
+                    && ReglasTraslape.HayTraslape(horario.HoraInicio, horario.HoraFin, r.HoraInicio, r.HoraFin)))
+                {
+                    limites.Add(reserva.HoraInicio > horario.HoraInicio ? reserva.HoraInicio : horario.HoraInicio);
+                    limites.Add(reserva.HoraFin < horario.HoraFin ? reserva.HoraFin : horario.HoraFin);
+                }
+                var puntos = limites.ToArray();
+                for (var i = 0; i < puntos.Length - 1; i++)
+                {
+                    yield return new Disponibilidad
+                    {
+                        Id = horario.Id, LaboratorioId = laboratorioId, Fecha = horario.Fecha,
+                        HoraInicio = puntos[i], HoraFin = puntos[i + 1],
+                        Estado = !habilitado || TieneConflicto(reservas, laboratorioId, fecha, puntos[i], puntos[i + 1])
+                            ? "No disponible" : horario.Estado
+                    };
+                }
+            }
+        }
+
+        public static bool TieneConflicto(
+            IEnumerable<Reserva> reservas, int laboratorioId, DateOnly fecha,
+            TimeSpan horaInicio, TimeSpan horaFin)
+        {
+            return reservas.Any(r => r.LaboratorioId == laboratorioId
+                && DateOnly.FromDateTime(r.Fecha) == fecha && r.Estado == "Activa"
+                && ReglasTraslape.HayTraslape(horaInicio, horaFin, r.HoraInicio, r.HoraFin));
         }
 
         // Muestra la hora como "08:00", igual que el frontend.

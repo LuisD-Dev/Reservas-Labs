@@ -3,6 +3,25 @@
     // Reglas de negocio compartidas por HU4 y HU5.
     public static class ReglasReserva
     {
+        public static Dictionary<string, string> ValidarSolicitud(
+            int? laboratorioId, DateOnly? fecha, TimeSpan? horaInicio,
+            TimeSpan? horaFin, DateOnly hoy, bool consulta = false)
+        {
+            var errores = ValidarCamposObligatorios(laboratorioId, fecha, horaInicio, horaFin);
+            if (consulta && fecha is null) errores["fecha"] = "Ingresa la fecha a consultar.";
+            if (fecha is not null && ValidarFechaReserva(fecha.Value, hoy) is { } errorFecha)
+                errores["fecha"] = errorFecha;
+            if (ValidarHoraFinalizacion(horaInicio, horaFin) is { } errorFin)
+                errores["horaFin"] = errorFin;
+            if (!errores.ContainsKey("horaInicio") && !errores.ContainsKey("horaFin"))
+            {
+                var error = ValidarHorarioFuncionamiento(horaInicio, horaFin)
+                    ?? ValidarDuracionMaxima(horaInicio, horaFin);
+                if (error is not null) errores["horaFin"] = error;
+            }
+            return errores;
+        }
+
         public const string MensajeFechaPasada =
             "La fecha no puede ser anterior a hoy.";
 

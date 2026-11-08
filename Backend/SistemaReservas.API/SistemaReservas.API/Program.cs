@@ -25,6 +25,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<LaboratorioService>();
 builder.Services.AddScoped<DisponibilidadService>();
+builder.Services.AddScoped<VerificacionDisponibilidadService>();
 builder.Services.AddScoped<ReservaService>();
 builder.Services.AddSingleton<TokenService>();
 
