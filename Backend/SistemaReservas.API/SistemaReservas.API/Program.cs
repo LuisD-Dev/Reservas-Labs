@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using SistemaReservas.API.Data;
 using SistemaReservas.API.Repositories;
 using SistemaReservas.API.Services;
+using SistemaReservas.Application.Abstractions.Security;
+using SistemaReservas.Infrastructure.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +27,10 @@ builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<ILaboratorioRepository, LaboratorioRepository>();
 builder.Services.AddScoped<IDisponibilidadRepository, DisponibilidadRepository>();
 builder.Services.AddScoped<IReservaRepository, ReservaRepository>();
+
+builder.Services.AddScoped<
+    IPasswordHashService,
+    PasswordHashService>();
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<LaboratorioService>();
@@ -77,13 +83,13 @@ if (app.Environment.IsDevelopment())
     {
         var context = scope.ServiceProvider.GetRequiredService<SistemaReservasDbContext>();
 
-        var authService =
-            scope.ServiceProvider.GetRequiredService<AuthService>();
+        var passwordHashService =
+            scope.ServiceProvider.GetRequiredService<IPasswordHashService>();
 
         var timeProvider =
             scope.ServiceProvider.GetRequiredService<TimeProvider>();
 
-        await EfDatabaseSeeder.SeedAsync(context, authService, timeProvider);
+        await EfDatabaseSeeder.SeedAsync(context, passwordHashService, timeProvider);
     }
 
     app.MapOpenApi();

@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Identity;
+using SistemaReservas.Application.Abstractions.Security;
 using SistemaReservas.API.DTOs;
 using SistemaReservas.API.Models;
 using SistemaReservas.API.Reglas;
@@ -10,14 +10,18 @@ namespace SistemaReservas.API.Services
     {
         private readonly IUsuarioRepository _usuarioRepository;
         private readonly TimeProvider _timeProvider;
-        private readonly PasswordHasher<Usuario> _passwordHasher = new();
+        private readonly IPasswordHashService _passwordHashService;
 
         // NFR2 - Separar acceso a datos: el acceso a Usuarios está en IUsuarioRepository.
         // NFR2 - Tiempo inyectable: la hora actual viene de TimeProvider.
-        public AuthService(IUsuarioRepository usuarioRepository, TimeProvider timeProvider)
+        public AuthService(
+            IUsuarioRepository usuarioRepository,
+            TimeProvider timeProvider,
+            IPasswordHashService passwordHashService)
         {
             _usuarioRepository = usuarioRepository;
             _timeProvider = timeProvider;
+            _passwordHashService = passwordHashService;
         }
 
         // HU1 - #19 Implementar autenticación: validar usuario/password
@@ -73,13 +77,16 @@ namespace SistemaReservas.API.Services
         // Genera el hash que se debe guardar en la columna PasswordHash.
         public string HashPassword(string password)
         {
-            return _passwordHasher.HashPassword(new Usuario(), password);
+            return _passwordHashService.HashPassword(password);
         }
 
-        private bool VerificarPassword(Usuario usuario, string password)
+        private bool VerificarPassword(
+            Usuario usuario,
+            string password)
         {
-            var resultado = _passwordHasher.VerifyHashedPassword(usuario, usuario.PasswordHash, password);
-            return resultado != PasswordVerificationResult.Failed;
+            return _passwordHashService.VerifyPassword(
+                usuario,
+                password);
         }
     }
 }

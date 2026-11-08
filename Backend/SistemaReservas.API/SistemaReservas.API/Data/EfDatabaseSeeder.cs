@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SistemaReservas.API.Models;
-using SistemaReservas.API.Services;
+using SistemaReservas.Application.Abstractions.Security;
 
 namespace SistemaReservas.API.Data
 {
@@ -8,7 +8,7 @@ namespace SistemaReservas.API.Data
     {
         public static async Task SeedAsync(
             SistemaReservasDbContext context,
-            AuthService authService,
+            IPasswordHashService passwordHashService,
             TimeProvider timeProvider)
         {
             // Solo agrega los datos de prueba que falten; no borra nada.
@@ -22,7 +22,7 @@ namespace SistemaReservas.API.Data
                 {
                     Nombre = "Administrador",
                     Username = "admin",
-                    PasswordHash = authService.HashPassword("1234"),
+                    PasswordHash = passwordHashService.HashPassword("1234"),
                     Rol = "Administrador",
                     IntentosFallidos = 0
                 };
@@ -36,7 +36,7 @@ namespace SistemaReservas.API.Data
                 {
                     Nombre = "Usuario de prueba",
                     Username = "usuario",
-                    PasswordHash = authService.HashPassword("1234"),
+                    PasswordHash = passwordHashService.HashPassword("1234"),
                     Rol = "Usuario",
                     IntentosFallidos = 0
                 };
