@@ -1,62 +1,15 @@
-using System.Security.Claims;
-using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using SistemaReservas.Application.Abstractions.Persistence;
 using SistemaReservas.Infrastructure;
 using SistemaReservas.Application;
+using SistemaReservas.API;
 
 var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddControllers();
-builder.Services.AddOpenApi();
 
 builder.Services.AddInfrastructure(
     builder.Configuration.GetConnectionString(
         "DefaultConnection"));
-
-// NFR2 - Tiempo inyectable: la hora actual se obtiene de TimeProvider
-// para poder reemplazarla en las pruebas.
-builder.Services.AddSingleton(TimeProvider.System);
-
 builder.Services.AddApplication();
-
-// NFR1 - #43 Autenticación con JWT
-var jwtSection = builder.Configuration.GetSection("Jwt");
-var jwtKey = jwtSection["Key"]
-    ?? throw new InvalidOperationException("Falta la configuración Jwt:Key.");
-
-builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSection["Issuer"],
-            ValidAudience = jwtSection["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-            NameClaimType = ClaimTypes.Name,
-            RoleClaimType = ClaimTypes.Role,
-            ClockSkew = TimeSpan.FromSeconds(30)
-        };
-    });
-
-builder.Services.AddAuthorization();
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("PermitirFrontend", policy =>
-    {
-        policy
-            .WithOrigins("http://localhost:5173")
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-    });
-});
+builder.Services.AddPresentation(builder.Configuration);
 
 var app = builder.Build();
 

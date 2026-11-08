@@ -1,11 +1,5 @@
 @SistemaReservas.API_HostAddress = http://localhost:5282
 
-### Ejemplo de la plantilla: sin token (esperado 401 desde NFR1 - #44)
-GET {{SistemaReservas.API_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
-
 ### HU1 - #22 Login: credenciales correctas (esperado 200)
 POST {{SistemaReservas.API_HostAddress}}/api/auth/login
 Content-Type: application/json
@@ -87,11 +81,11 @@ Content-Type: application/json
 }
 
 ### NFR1-07 Endpoint autenticado sin token (esperado 401)
-GET {{SistemaReservas.API_HostAddress}}/weatherforecast
+GET {{SistemaReservas.API_HostAddress}}/api/reservas/mias
 Accept: application/json
 
 ### NFR1-08 Endpoint autenticado con token de Usuario (esperado 200)
-GET {{SistemaReservas.API_HostAddress}}/weatherforecast
+GET {{SistemaReservas.API_HostAddress}}/api/reservas/mias
 Accept: application/json
 Authorization: Bearer {{loginUsuario.response.body.$.token}}
 

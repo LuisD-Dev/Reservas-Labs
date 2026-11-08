@@ -19,14 +19,10 @@
             **/Data/EfDatabaseSeeder.cs
               Carga de datos de desarrollo: necesita una base de datos real y solo
               se ejecuta en ambiente Development.
-            **/WeatherForecast.cs
-              Modelo de ejemplo de la plantilla de ASP.NET Core; no pertenece a ninguna HU.
-            **/Controllers/WeatherForecastController.cs
-              Controlador de ejemplo de la plantilla de ASP.NET Core; no pertenece a ninguna HU.
             **/obj/**/*.cs
               Código que generan los source generators al compilar (por ejemplo OpenAPI).
           -->
-          <ExcludeByFile>**/SistemaReservas.API/Program.cs,**/Migrations/*.cs,**/Data/EfDatabaseSeeder.cs,**/WeatherForecast.cs,**/Controllers/WeatherForecastController.cs,**/obj/**/*.cs</ExcludeByFile>
+          <ExcludeByFile>**/SistemaReservas.API/Program.cs,**/Migrations/*.cs,**/Data/EfDatabaseSeeder.cs,**/obj/**/*.cs</ExcludeByFile>
         </Configuration>
       </DataCollector>
     </DataCollectors>
