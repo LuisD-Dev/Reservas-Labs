@@ -1,19 +1,21 @@
+using Microsoft.Extensions.Configuration;
+using SistemaReservas.Application.Abstractions.Security;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 
-namespace SistemaReservas.API.Security
+namespace SistemaReservas.Infrastructure.Security
 {
     // NFR1 - #43 Genera el token JWT que identifica al usuario
     // y lleva su rol, para que el backend pueda autorizar por rol.
-    public class TokenService
+    public class JwtTokenService : ITokenService
     {
         private readonly IConfiguration _configuration;
         private readonly TimeProvider _timeProvider;
 
         // NFR2 - Tiempo inyectable: la expiración se calcula con la hora de TimeProvider.
-        public TokenService(IConfiguration configuration, TimeProvider timeProvider)
+        public JwtTokenService(IConfiguration configuration, TimeProvider timeProvider)
         {
             _configuration = configuration;
             _timeProvider = timeProvider;

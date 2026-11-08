@@ -31,6 +31,10 @@ namespace SistemaReservas.Infrastructure
             services.AddScoped<IReservaRepository, ReservaRepository>();
             services.AddScoped<IPasswordHashService, PasswordHashService>();
 
+            services.AddSingleton<ITokenService, JwtTokenService>();
+            services.AddScoped<IDatabaseInitializer, EfDatabaseInitializer>();
+            services.AddScoped<IDatabaseHealthCheck, EfDatabaseHealthCheck>();
+
             return services;
         }
     }

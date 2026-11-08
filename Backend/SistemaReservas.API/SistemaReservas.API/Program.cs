@@ -2,12 +2,9 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.EntityFrameworkCore;
-using SistemaReservas.Infrastructure.Data;
+using SistemaReservas.Application.Abstractions.Persistence;
 using SistemaReservas.Infrastructure;
-using SistemaReservas.API.Security;
 using SistemaReservas.Application;
-using SistemaReservas.Application.Abstractions.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,7 +20,6 @@ builder.Services.AddInfrastructure(
 builder.Services.AddSingleton(TimeProvider.System);
 
 builder.Services.AddApplication();
-builder.Services.AddSingleton<TokenService>();
 
 // NFR1 - #43 Autenticación con JWT
 var jwtSection = builder.Configuration.GetSection("Jwt");
@@ -68,15 +64,8 @@ if (app.Environment.IsDevelopment())
 {
     using (var scope = app.Services.CreateScope())
     {
-        var context = scope.ServiceProvider.GetRequiredService<SistemaReservasDbContext>();
-
-        var passwordHashService =
-            scope.ServiceProvider.GetRequiredService<IPasswordHashService>();
-
-        var timeProvider =
-            scope.ServiceProvider.GetRequiredService<TimeProvider>();
-
-        await EfDatabaseSeeder.SeedAsync(context, passwordHashService, timeProvider);
+        var initializer = scope.ServiceProvider.GetRequiredService<IDatabaseInitializer>();
+        await initializer.InitializeAsync();
     }
 
     app.MapOpenApi();
@@ -94,11 +83,11 @@ app.MapControllers();
 // error de conexion que no deben verse en otros ambientes.
 if (app.Environment.IsDevelopment())
 {
-    app.MapGet("/db-test", async (SistemaReservasDbContext context) =>
+    app.MapGet("/db-test", async (IDatabaseHealthCheck healthCheck) =>
     {
         try
         {
-            var canConnect = await context.Database.CanConnectAsync();
+            var canConnect = await healthCheck.CanConnectAsync();
             if (canConnect) return Results.Ok("Conexión con SQL Server exitosa.");
             return Results.Problem("No se pudo conectar a la base de datos.");
         }

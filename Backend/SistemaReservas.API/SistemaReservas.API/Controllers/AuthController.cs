@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SistemaReservas.Application.DTOs;
 using SistemaReservas.Domain.Rules;
-using SistemaReservas.API.Security;
+using SistemaReservas.Application.Abstractions.Security;
 using SistemaReservas.Application.Abstractions.Services;
 
 namespace SistemaReservas.API.Controllers
@@ -12,11 +12,11 @@ namespace SistemaReservas.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
-        private readonly TokenService _tokenService;
+        private readonly ITokenService _tokenService;
         private readonly TimeProvider _timeProvider;
 
         // NFR2 - Tiempo inyectable: los segundos restantes del bloqueo usan la hora de TimeProvider.
-        public AuthController(IAuthService authService, TokenService tokenService, TimeProvider timeProvider)
+        public AuthController(IAuthService authService, ITokenService tokenService, TimeProvider timeProvider)
         {
             _authService = authService;
             _tokenService = tokenService;

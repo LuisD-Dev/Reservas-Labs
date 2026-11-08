@@ -4,15 +4,15 @@ using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Time.Testing;
 using Microsoft.IdentityModel.Tokens;
-using SistemaReservas.API.Security;
+using SistemaReservas.Infrastructure.Security;
 
-namespace SistemaReservas.Tests.Services
+namespace SistemaReservas.Tests.Security
 {
-    // NFR2 - Pruebas unitarias de TokenService (NFR1 - #43): claims, firma y expiración.
+    // NFR2 - Pruebas unitarias de JwtTokenService (NFR1 - #43): claims, firma y expiración.
     // Usa una clave solo de prueba (no la de appsettings) y una hora fija con FakeTimeProvider.
     // Patrón AAA: la configuración en memoria la arma CrearServicio y el reloj fijo
     // es el campo _reloj; en los [Theory] los datos de entrada vienen de [InlineData].
-    public class TokenServiceTests
+    public class JwtTokenServiceTests
     {
         private const string ClavePrueba = "clave-solo-para-pruebas-unitarias-0123456789";
         private const string Issuer = "SistemaReservas.Pruebas";
@@ -21,7 +21,7 @@ namespace SistemaReservas.Tests.Services
 
         private readonly FakeTimeProvider _reloj = new(Inicio);
 
-        private TokenService CrearServicio(string? expiraHoras = "2", string? clave = ClavePrueba)
+        private JwtTokenService CrearServicio(string? expiraHoras = "2", string? clave = ClavePrueba)
         {
             var configuracion = new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string?>
@@ -33,7 +33,7 @@ namespace SistemaReservas.Tests.Services
                 })
                 .Build();
 
-            return new TokenService(configuracion, _reloj);
+            return new JwtTokenService(configuracion, _reloj);
         }
 
         private static TokenValidationParameters ParametrosValidacion(string clave)
@@ -178,7 +178,7 @@ namespace SistemaReservas.Tests.Services
         }
 
         // ---- Excepciones ----
-        // TokenService no usa repositorios: aquí la dependencia inválida es la configuración.
+        // JwtTokenService no usa repositorios: aquí la dependencia inválida es la configuración.
 
         [Fact]
         public void GenerarToken_ClaveDemasiadoCorta_LanzaExcepcion()

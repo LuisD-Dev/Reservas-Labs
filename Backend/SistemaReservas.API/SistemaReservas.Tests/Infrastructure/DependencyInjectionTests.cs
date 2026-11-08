@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SistemaReservas.Application.Abstractions.Persistence;
 using SistemaReservas.Application.Abstractions.Security;
@@ -15,6 +16,14 @@ namespace SistemaReservas.Tests.Infrastructure
         public void AddInfrastructure_RegistraPersistenciaYHashingConScopeSinConexion()
         {
             var services = new ServiceCollection();
+            services.AddSingleton<IConfiguration>(new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Jwt:Key"] = "clave-de-prueba-composicion-0123456789",
+                    ["Jwt:Issuer"] = "Pruebas",
+                    ["Jwt:Audience"] = "Pruebas.Frontend"
+                }).Build());
+            services.AddSingleton(TimeProvider.System);
             var resultado = services.AddInfrastructure(
                 "Server=localhost;Database=ReservasComposicionTests;Trusted_Connection=True;TrustServerCertificate=True;");
             Assert.Same(services, resultado);
@@ -55,6 +64,24 @@ namespace SistemaReservas.Tests.Infrastructure
             Assert.NotSame(
                 usuarioRepository,
                 segundoScope.ServiceProvider.GetRequiredService<IUsuarioRepository>());
+
+            var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+            Assert.IsType<JwtTokenService>(tokenService);
+            Assert.Same(tokenService, segundoScope.ServiceProvider.GetRequiredService<ITokenService>());
+            var initializer = scope.ServiceProvider.GetRequiredService<IDatabaseInitializer>();
+            Assert.IsType<EfDatabaseInitializer>(initializer);
+            Assert.Same(initializer, scope.ServiceProvider.GetRequiredService<IDatabaseInitializer>());
+            Assert.NotSame(initializer, segundoScope.ServiceProvider.GetRequiredService<IDatabaseInitializer>());
+            var healthCheck = scope.ServiceProvider.GetRequiredService<IDatabaseHealthCheck>();
+            Assert.IsType<EfDatabaseHealthCheck>(healthCheck);
+            Assert.Same(healthCheck, scope.ServiceProvider.GetRequiredService<IDatabaseHealthCheck>());
+            Assert.NotSame(healthCheck, segundoScope.ServiceProvider.GetRequiredService<IDatabaseHealthCheck>());
+            Assert.Equal(ServiceLifetime.Singleton,
+                Assert.Single(services, s => s.ServiceType == typeof(ITokenService)).Lifetime);
+            Assert.Equal(ServiceLifetime.Scoped,
+                Assert.Single(services, s => s.ServiceType == typeof(IDatabaseInitializer)).Lifetime);
+            Assert.Equal(ServiceLifetime.Scoped,
+                Assert.Single(services, s => s.ServiceType == typeof(IDatabaseHealthCheck)).Lifetime);
         }
     }
 }
