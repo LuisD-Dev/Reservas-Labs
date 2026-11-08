@@ -1,7 +1,7 @@
 <Solution>
-  <Project Path="SistemaReservas.API/SistemaReservas.API.csproj" />
-  <Project Path="SistemaReservas.Tests/SistemaReservas.Tests.csproj" />
-  <Project Path="SistemaReservas.Domain/SistemaReservas.Domain.csproj" />
-  <Project Path="SistemaReservas.Application/SistemaReservas.Application.csproj" />
-  <Project Path="SistemaReservas.Infrastructure/SistemaReservas.Infrastructure.csproj" />
+  <Project Path="src/SistemaReservas.API/SistemaReservas.API.csproj" />
+  <Project Path="tests/SistemaReservas.Tests/SistemaReservas.Tests.csproj" />
+  <Project Path="src/SistemaReservas.Domain/SistemaReservas.Domain.csproj" />
+  <Project Path="src/SistemaReservas.Application/SistemaReservas.Application.csproj" />
+  <Project Path="src/SistemaReservas.Infrastructure/SistemaReservas.Infrastructure.csproj" />
 </Solution>
