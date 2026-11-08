@@ -11,7 +11,7 @@ using SistemaReservas.API.Controllers;
 using SistemaReservas.Application.DTOs;
 using SistemaReservas.Domain.Entities;
 using SistemaReservas.Application.Abstractions.Persistence;
-using SistemaReservas.API.Services;
+using SistemaReservas.API.Security;
 using SistemaReservas.Application.Services;
 using SistemaReservas.Tests.Fakes;
 using SistemaReservas.Infrastructure.Security;

@@ -3,7 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 
-namespace SistemaReservas.API.Services
+namespace SistemaReservas.API.Security
 {
     // NFR1 - #43 Genera el token JWT que identifica al usuario
     // y lleva su rol, para que el backend pueda autorizar por rol.

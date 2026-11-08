@@ -34,15 +34,26 @@ El sistema permite administrar progresivamente la reserva de laboratorios, aplic
 ## Arquitectura
 
 ```text
-React + Vite
-localhost:5173
-      ↓
-ASP.NET Core Web API
-localhost:5282
-      ↓
-SQL Server
-LaboratorioOBLD
+Frontend → API
+
+API → Application
+API → Infrastructure
+
+Infrastructure → Application
+Infrastructure → Domain
+
+Application → Domain
+
+Domain → sin dependencias de otras capas
+
+Infrastructure → SQL Server
 ```
+
+- Domain: entidades y reglas de negocio.
+- Application: DTOs, contratos y casos de uso.
+- Infrastructure: EF Core, repositorios, hashing, migraciones y seeder.
+- API: controladores, JWT, configuración y composición.
+- Tests: pruebas unitarias e integración ligera.
 
 ## Requisitos
 

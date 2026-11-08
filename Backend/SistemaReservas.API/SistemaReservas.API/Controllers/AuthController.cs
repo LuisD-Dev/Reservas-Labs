@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SistemaReservas.Application.DTOs;
 using SistemaReservas.Domain.Rules;
-using SistemaReservas.API.Services;
+using SistemaReservas.API.Security;
 using SistemaReservas.Application.Services;
 
 namespace SistemaReservas.API.Controllers

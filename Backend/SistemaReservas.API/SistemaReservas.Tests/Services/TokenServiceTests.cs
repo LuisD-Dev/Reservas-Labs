@@ -4,7 +4,7 @@ using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Time.Testing;
 using Microsoft.IdentityModel.Tokens;
-using SistemaReservas.API.Services;
+using SistemaReservas.API.Security;
 
 namespace SistemaReservas.Tests.Services
 {

@@ -4,44 +4,23 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
 using SistemaReservas.Infrastructure.Data;
-using SistemaReservas.Application.Abstractions.Persistence;
-using SistemaReservas.Infrastructure.Repositories;
-using SistemaReservas.API.Services;
+using SistemaReservas.Infrastructure;
+using SistemaReservas.API.Security;
 using SistemaReservas.Application.Services;
 using SistemaReservas.Application.Abstractions.Security;
-using SistemaReservas.Infrastructure.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
-// EF Core DbContext
-builder.Services.AddDbContext<SistemaReservasDbContext>(
-    options =>
-        options.UseSqlServer(
-            builder.Configuration.GetConnectionString(
-                "DefaultConnection"),
-            sqlServerOptions =>
-                sqlServerOptions.MigrationsAssembly(
-                    typeof(SistemaReservasDbContext)
-                        .Assembly
-                        .GetName()
-                        .Name!)));
+builder.Services.AddInfrastructure(
+    builder.Configuration.GetConnectionString(
+        "DefaultConnection"));
 
 // NFR2 - Tiempo inyectable: la hora actual se obtiene de TimeProvider
 // para poder reemplazarla en las pruebas.
 builder.Services.AddSingleton(TimeProvider.System);
-
-// NFR2 - Separar acceso a datos: los servicios reciben los repositorios por interfaz.
-builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
-builder.Services.AddScoped<ILaboratorioRepository, LaboratorioRepository>();
-builder.Services.AddScoped<IDisponibilidadRepository, DisponibilidadRepository>();
-builder.Services.AddScoped<IReservaRepository, ReservaRepository>();
-
-builder.Services.AddScoped<
-    IPasswordHashService,
-    PasswordHashService>();
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<LaboratorioService>();
