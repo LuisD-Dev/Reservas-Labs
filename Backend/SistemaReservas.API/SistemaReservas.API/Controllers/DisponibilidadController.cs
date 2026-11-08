@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SistemaReservas.Application.DTOs;
 using Microsoft.AspNetCore.Authorization;
-using SistemaReservas.Application.Services;
+using SistemaReservas.Application.Abstractions.Services;
 
 namespace SistemaReservas.API.Controllers
 {
@@ -10,22 +10,24 @@ namespace SistemaReservas.API.Controllers
     [Authorize]
     public class DisponibilidadController : ControllerBase
     {
-        private readonly DisponibilidadService _disponibilidadService;
+        private readonly IDisponibilidadService _disponibilidadService;
+        private readonly IVerificacionDisponibilidadService _verificacionDisponibilidadService;
 
 
         public DisponibilidadController(
-            DisponibilidadService disponibilidadService)
+            IDisponibilidadService disponibilidadService,
+            IVerificacionDisponibilidadService verificacionDisponibilidadService)
         {
             _disponibilidadService = disponibilidadService;
+            _verificacionDisponibilidadService = verificacionDisponibilidadService;
         }
 
 
         [HttpPost("verificar")]
         public async Task<IActionResult> Verificar(
-            int laboratorioId, ConsultaDisponibilidadRequest request,
-            [FromServices] VerificacionDisponibilidadService servicio)
+            int laboratorioId, ConsultaDisponibilidadRequest request)
         {
-            var resultado = await servicio.VerificarAsync(laboratorioId, request);
+            var resultado = await _verificacionDisponibilidadService.VerificarAsync(laboratorioId, request);
             if (resultado.Errores.Count > 0) return BadRequest(new { errores = resultado.Errores });
             return Ok(resultado);
         }

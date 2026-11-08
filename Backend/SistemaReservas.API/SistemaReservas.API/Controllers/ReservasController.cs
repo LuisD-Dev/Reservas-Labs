@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SistemaReservas.Application.DTOs;
-using SistemaReservas.Application.Services;
+using SistemaReservas.Application.Abstractions.Services;
 using SistemaReservas.Domain.Rules;
 
 namespace SistemaReservas.API.Controllers
@@ -12,10 +12,10 @@ namespace SistemaReservas.API.Controllers
     [Authorize]
     public class ReservasController : ControllerBase
     {
-        private readonly ReservaService _reservaService;
+        private readonly IReservaService _reservaService;
 
         public ReservasController(
-            ReservaService reservaService)
+            IReservaService reservaService)
         {
             _reservaService = reservaService;
         }

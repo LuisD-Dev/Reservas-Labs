@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using SistemaReservas.Infrastructure.Data;
 using SistemaReservas.Infrastructure;
 using SistemaReservas.API.Security;
-using SistemaReservas.Application.Services;
+using SistemaReservas.Application;
 using SistemaReservas.Application.Abstractions.Security;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,11 +22,7 @@ builder.Services.AddInfrastructure(
 // para poder reemplazarla en las pruebas.
 builder.Services.AddSingleton(TimeProvider.System);
 
-builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<LaboratorioService>();
-builder.Services.AddScoped<DisponibilidadService>();
-builder.Services.AddScoped<VerificacionDisponibilidadService>();
-builder.Services.AddScoped<ReservaService>();
+builder.Services.AddApplication();
 builder.Services.AddSingleton<TokenService>();
 
 // NFR1 - #43 Autenticación con JWT

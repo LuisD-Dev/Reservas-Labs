@@ -1,3 +1,4 @@
+using SistemaReservas.Application.Abstractions.Services;
 using SistemaReservas.Application.Abstractions.Persistence;
 using SistemaReservas.Application.DTOs;
 using SistemaReservas.Domain.Rules;
@@ -8,7 +9,7 @@ namespace SistemaReservas.Application.Services
         IDisponibilidadRepository disponibilidades,
         IReservaRepository reservas,
         ILaboratorioRepository laboratorios,
-        TimeProvider reloj)
+        TimeProvider reloj) : IVerificacionDisponibilidadService
     {
         public async Task<VerificacionDisponibilidadResponse> VerificarAsync(
             int laboratorioId, ConsultaDisponibilidadRequest request)

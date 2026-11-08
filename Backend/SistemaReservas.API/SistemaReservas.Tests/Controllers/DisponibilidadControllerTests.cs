@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
+using SistemaReservas.Application.Abstractions.Services;
 using SistemaReservas.API.Controllers;
 using SistemaReservas.Domain.Entities;
 using SistemaReservas.Application.Abstractions.Persistence;
@@ -19,7 +20,9 @@ namespace SistemaReservas.Tests.Controllers
 
         public DisponibilidadControllerTests()
         {
-            _controller = new DisponibilidadController(new DisponibilidadService(_repositorio));
+            _controller = new DisponibilidadController(
+                new DisponibilidadService(_repositorio),
+                Substitute.For<IVerificacionDisponibilidadService>());
         }
 
         [Fact]

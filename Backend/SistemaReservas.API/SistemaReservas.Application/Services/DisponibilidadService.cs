@@ -1,9 +1,10 @@
-﻿using SistemaReservas.Domain.Entities;
+﻿using SistemaReservas.Application.Abstractions.Services;
+using SistemaReservas.Domain.Entities;
 using SistemaReservas.Application.Abstractions.Persistence;
 
 namespace SistemaReservas.Application.Services
 {
-    public class DisponibilidadService
+    public class DisponibilidadService : IDisponibilidadService
     {
         private readonly IDisponibilidadRepository _disponibilidadRepository;
 

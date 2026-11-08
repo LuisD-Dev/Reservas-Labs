@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using SistemaReservas.Application.Services;
+using SistemaReservas.Application.Abstractions.Services;
 
 namespace SistemaReservas.API.Controllers
 {
@@ -9,9 +9,9 @@ namespace SistemaReservas.API.Controllers
     [Authorize]
     public class LaboratoriosController : ControllerBase
     {
-        private readonly LaboratorioService _laboratorioService;
+        private readonly ILaboratorioService _laboratorioService;
 
-        public LaboratoriosController(LaboratorioService laboratorioService)
+        public LaboratoriosController(ILaboratorioService laboratorioService)
         {
             _laboratorioService = laboratorioService;
         }

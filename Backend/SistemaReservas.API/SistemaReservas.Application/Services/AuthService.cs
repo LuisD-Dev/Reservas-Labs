@@ -1,3 +1,4 @@
+using SistemaReservas.Application.Abstractions.Services;
 using SistemaReservas.Application.Abstractions.Security;
 using SistemaReservas.Application.DTOs;
 using SistemaReservas.Domain.Entities;
@@ -6,7 +7,7 @@ using SistemaReservas.Application.Abstractions.Persistence;
 
 namespace SistemaReservas.Application.Services
 {
-    public class AuthService
+    public class AuthService : IAuthService
     {
         private readonly IUsuarioRepository _usuarioRepository;
         private readonly TimeProvider _timeProvider;

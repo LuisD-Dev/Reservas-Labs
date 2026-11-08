@@ -1,9 +1,10 @@
-﻿using SistemaReservas.Domain.Entities;
+﻿using SistemaReservas.Application.Abstractions.Services;
+using SistemaReservas.Domain.Entities;
 using SistemaReservas.Application.Abstractions.Persistence;
 
 namespace SistemaReservas.Application.Services
 {
-    public class LaboratorioService
+    public class LaboratorioService : ILaboratorioService
     {
         private readonly ILaboratorioRepository _laboratorioRepository;
 

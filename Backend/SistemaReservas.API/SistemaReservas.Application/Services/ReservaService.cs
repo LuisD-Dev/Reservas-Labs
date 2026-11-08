@@ -1,11 +1,12 @@
-﻿using SistemaReservas.Application.DTOs;
+﻿using SistemaReservas.Application.Abstractions.Services;
+using SistemaReservas.Application.DTOs;
 using SistemaReservas.Domain.Entities;
 using SistemaReservas.Domain.Rules;
 using SistemaReservas.Application.Abstractions.Persistence;
 
 namespace SistemaReservas.Application.Services
 {
-    public class ReservaService
+    public class ReservaService : IReservaService
     {
         public const string MensajeConflicto =
             "El laboratorio ya tiene una reserva que se traslapa con ese horario.";
