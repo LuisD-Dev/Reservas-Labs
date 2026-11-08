@@ -47,3 +47,8 @@ export function resultadoCancelacion(status, datos) {
         mensaje: mensajeErrorCancelar(status, datos),
     };
 }
+
+export async function cancelarConConfirmacion(id, enviar, confirmar) {
+    if (!confirmar("¿Deseas cancelar esta reserva?")) return null;
+    return enviar(rutaCancelarReserva(id), { method: "POST" });
+}

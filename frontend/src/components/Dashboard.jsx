@@ -150,17 +150,15 @@ function Dashboard({ usuario, onCerrarSesion }) {
                                         key={modulo.id}
                                         type="button"
                                         className="dashboard-card"
-                                        onClick={() =>
-                                            ["laboratorios", "mis-reservas"].includes(modulo.id)
-                                                ? irA(modulo.id === "mis-reservas" ? "mis-reservas" : "laboratorios")
-                                                : alert(`Módulo: ${modulo.titulo}`)
-                                        }
+                                        disabled={!["laboratorios", "mis-reservas"].includes(modulo.id)}
+                                        onClick={() => irA(modulo.id)}
                                     >
                                         <div className="card-icon">
                                             <Icono nombre={modulo.id} />
                                         </div>
                                         <h3>{modulo.titulo}</h3>
                                         <p>{modulo.descripcion}</p>
+                                        {!["laboratorios", "mis-reservas"].includes(modulo.id) && <span>Próximamente</span>}
                                     </button>
                                 ))}
                             </div>

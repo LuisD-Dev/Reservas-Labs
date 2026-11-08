@@ -25,56 +25,9 @@ namespace SistemaReservas.Application.Services
             int usuarioId,
             CrearReservaRequest request)
         {
-            var errores =
-                ReglasReserva.ValidarCamposObligatorios(
-                    request.LaboratorioId,
-                    request.Fecha,
-                    request.HoraInicio,
-                    request.HoraFin);
-
-            var errorHoraFin =
-                ReglasReserva.ValidarHoraFinalizacion(
-                    request.HoraInicio,
-                    request.HoraFin);
-
-            if (errorHoraFin is not null)
-            {
-                errores["horaFin"] = errorHoraFin;
-            }
-
-            // HU5 - AB#69 y AB#70: horario de funcionamiento y duración máxima.
-            // Solo se evalúan si las horas ya son válidas, para no mezclar mensajes.
-            if (!errores.ContainsKey("horaInicio") &&
-                !errores.ContainsKey("horaFin"))
-            {
-                var errorHorario =
-                    ReglasReserva.ValidarHorarioFuncionamiento(
-                        request.HoraInicio,
-                        request.HoraFin)
-                    ?? ReglasReserva.ValidarDuracionMaxima(
-                        request.HoraInicio,
-                        request.HoraFin);
-
-                if (errorHorario is not null)
-                {
-                    errores["horaFin"] = errorHorario;
-                }
-            }
-
-            if (request.Fecha.HasValue)
-            {
-                var hoy = DateOnly.FromDateTime(
-                    _timeProvider.GetLocalNow().DateTime);
-
-                var errorFecha = ReglasReserva.ValidarFechaReserva(
-                    request.Fecha.Value,
-                    hoy);
-
-                if (errorFecha is not null)
-                {
-                    errores["fecha"] = errorFecha;
-                }
-            }
+            var errores = ReglasReserva.ValidarSolicitud(
+                request.LaboratorioId, request.Fecha, request.HoraInicio, request.HoraFin,
+                DateOnly.FromDateTime(_timeProvider.GetLocalNow().DateTime));
 
             if (errores.Count > 0)
             {

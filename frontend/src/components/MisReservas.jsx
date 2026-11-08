@@ -8,7 +8,7 @@ import {
     separarReservas,
     tipoEstado,
 } from "../utils/misReservas";
-import { puedeCancelarReserva, resultadoCancelacion, rutaCancelarReserva } from "../utils/cancelarReserva";
+import { puedeCancelarReserva, resultadoCancelacion, cancelarConConfirmacion } from "../utils/cancelarReserva";
 import "./MisReservas.css";
 
 // HU7 - AB#95: tabla de un grupo de reservas (activas o canceladas).
@@ -108,7 +108,11 @@ function MisReservas({ onNuevaReserva, onVolver }) {
 
         let resultado;
         try {
-            const respuesta = await apiFetch(rutaCancelarReserva(id), { method: "POST" });
+            const respuesta = await cancelarConConfirmacion(id, apiFetch, (mensaje) => window.confirm(mensaje));
+            if (!respuesta) {
+                setCancelandoId(null);
+                return;
+            }
             const cuerpo = await respuesta.json().catch(() => null);
             resultado = resultadoCancelacion(respuesta.status, cuerpo);
         } catch {
