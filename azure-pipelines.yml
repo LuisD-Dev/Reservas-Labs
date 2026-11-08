@@ -14,7 +14,7 @@ pool:
 variables:
   frontendDirectory: 'frontend'
   buildConfiguration: 'Release'
-  testProject: 'Backend/SistemaReservas.API/SistemaReservas.Tests/SistemaReservas.Tests.csproj'
+  testProject: 'Backend/SistemaReservas.API/tests/SistemaReservas.Tests/SistemaReservas.Tests.csproj'
 
 steps:
   # Obtener el código de la rama que se está ejecutando.
