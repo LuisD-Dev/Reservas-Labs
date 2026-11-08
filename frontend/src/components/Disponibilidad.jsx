@@ -1,4 +1,5 @@
 import { useState } from "react";
+import "./Formularios.css";
 import "./Disponibilidad.css";
 import { apiFetch } from "../services/api";
 import {
@@ -105,6 +106,8 @@ function Disponibilidad({ laboratorios = [], laboratorioInicialId, onVolver, onC
                     <label htmlFor="disp-laboratorio">Laboratorio</label>
                     <select
                         id="disp-laboratorio"
+                        aria-invalid={Boolean(errores.laboratorioId)}
+                        aria-describedby={errores.laboratorioId ? "disp-error-laboratorioId" : undefined}
                         value={laboratorioId}
                         disabled={cargando}
                         onChange={(e) => {
@@ -120,13 +123,15 @@ function Disponibilidad({ laboratorios = [], laboratorioInicialId, onVolver, onC
                             </option>
                         ))}
                     </select>
-                    {errores.laboratorioId && <span className="disp-error">{errores.laboratorioId}</span>}
+                    {errores.laboratorioId && <span id="disp-error-laboratorioId" className="disp-error" role="alert">{errores.laboratorioId}</span>}
                 </div>
 
                 <div className="disp-campo">
                     <label htmlFor="disp-fecha">Fecha</label>
                     <input
                         id="disp-fecha"
+                        aria-invalid={Boolean(errores.fecha)}
+                        aria-describedby={errores.fecha ? "disp-error-fecha" : undefined}
                         type="date"
                         min={hoyComoTexto()}
                         value={fecha}
@@ -137,13 +142,15 @@ function Disponibilidad({ laboratorios = [], laboratorioInicialId, onVolver, onC
                             limpiarResultado();
                         }}
                     />
-                    {errores.fecha && <span className="disp-error">{errores.fecha}</span>}
+                    {errores.fecha && <span id="disp-error-fecha" className="disp-error" role="alert">{errores.fecha}</span>}
                 </div>
 
                 <div className="disp-campo">
                     <label htmlFor="disp-inicio">Hora inicial</label>
                     <input
                         id="disp-inicio"
+                        aria-invalid={Boolean(errores.horaInicio)}
+                        aria-describedby={errores.horaInicio ? "disp-error-horaInicio" : undefined}
                         type="time"
                         value={horaInicio}
                         disabled={cargando}
@@ -157,13 +164,15 @@ function Disponibilidad({ laboratorios = [], laboratorioInicialId, onVolver, onC
                             limpiarResultado();
                         }}
                     />
-                    {errores.horaInicio && <span className="disp-error">{errores.horaInicio}</span>}
+                    {errores.horaInicio && <span id="disp-error-horaInicio" className="disp-error" role="alert">{errores.horaInicio}</span>}
                 </div>
 
                 <div className="disp-campo">
                     <label htmlFor="disp-fin">Hora final</label>
                     <input
                         id="disp-fin"
+                        aria-invalid={Boolean(errores.horaFin)}
+                        aria-describedby={errores.horaFin ? "disp-error-horaFin" : undefined}
                         type="time"
                         value={horaFin}
                         disabled={cargando}
@@ -173,7 +182,7 @@ function Disponibilidad({ laboratorios = [], laboratorioInicialId, onVolver, onC
                             limpiarResultado();
                         }}
                     />
-                    {errores.horaFin && <span className="disp-error">{errores.horaFin}</span>}
+                    {errores.horaFin && <span id="disp-error-horaFin" className="disp-error" role="alert">{errores.horaFin}</span>}
                 </div>
 
                 <button type="submit" className="disp-consultar" disabled={cargando}>

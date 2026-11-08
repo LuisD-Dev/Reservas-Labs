@@ -7,8 +7,6 @@ import {
     guardarSesion,
     obtenerSesion,
 } from './services/api';
-import './App.css';
-import './components/Dashboard.css';
 
 function App() {
     // NFR1 - #46 Solo se restaura una sesión con token vigente.

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { apiFetch } from "../services/api";
 import {
     formatearFechaReserva,
@@ -14,14 +14,15 @@ import "./MisReservas.css";
 // HU7 - AB#95: tabla de un grupo de reservas (activas o canceladas).
 // HU8 - AB#103: si recibe `onCancelar`, agrega la columna con el botón para cancelar.
 function TablaReservas({ titulo, reservas, vacio, onCancelar, cancelandoId }) {
+    const tituloId = useId();
     return (
         <div className="mis-reservas-grupo">
-            <h2>{titulo} ({reservas.length})</h2>
+            <h2 id={tituloId}>{titulo} ({reservas.length})</h2>
             {reservas.length === 0 ? (
                 <p role="status">{vacio}</p>
             ) : (
-                <div className="mis-reservas-tabla-contenedor">
-                    <table className="mis-reservas-tabla">
+                <div className="mis-reservas-tabla-contenedor" tabIndex={0} role="region" aria-labelledby={tituloId}>
+                    <table className="mis-reservas-tabla" aria-labelledby={tituloId}>
                         <thead>
                             <tr>
                                 <th scope="col">Laboratorio</th>

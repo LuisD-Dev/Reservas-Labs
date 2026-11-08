@@ -1,0 +1,80 @@
+/* Shared presentation for availability and registration; rules remain in JS. */
+.disp-section, .reserva-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+}
+
+.disp-form, .reserva-form {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: 24px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+    gap: 16px;
+    align-items: start;
+    min-width: 0;
+}
+
+.disp-campo, .reserva-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.disp-campo-ancho, .reserva-ancho { grid-column: 1 / -1; }
+.disp-campo label, .reserva-campo label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+:is(.disp-campo, .reserva-campo) :is(input, select) {
+    width: 100%;
+    min-width: 0;
+    background: var(--surface);
+    color: var(--text);
+    padding: 10px 12px;
+    border: 1px solid var(--border-control);
+    border-radius: var(--radius-control);
+    font-size: 16px;
+}
+
+:is(.disp-campo, .reserva-campo) [aria-invalid="true"] {
+    border: 2px solid var(--error);
+}
+
+:is(.disp-campo, .reserva-campo) :disabled {
+    background: var(--surface-muted);
+    color: var(--text-muted);
+    cursor: wait;
+}
+
+.disp-error, .reserva-error {
+    font-size: 14px;
+    color: var(--error);
+    overflow-wrap: anywhere;
+}
+
+.disp-consultar, .reserva-registrar {
+    align-self: end;
+    background: var(--brand);
+    color: var(--surface);
+    border: none;
+    border-radius: var(--radius-control);
+    padding: 11px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+:is(.disp-consultar, .reserva-registrar):hover:not(:disabled) { background: var(--brand-dark); }
+:is(.disp-consultar, .reserva-registrar):disabled { background: var(--disabled); cursor: not-allowed; }
+
+@media (max-width: 480px) {
+    .disp-form, .reserva-form { padding: 16px; }
+    .disp-consultar, .reserva-registrar { width: 100%; }
+}
