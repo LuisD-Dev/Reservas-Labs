@@ -4,10 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Time.Testing;
 using NSubstitute;
 using SistemaReservas.API.Controllers;
-using SistemaReservas.API.Models;
-using SistemaReservas.API.Reglas;
-using SistemaReservas.API.Repositories;
-using SistemaReservas.API.Services;
+using SistemaReservas.Domain.Entities;
+using SistemaReservas.Domain.Rules;
+using SistemaReservas.Application.Abstractions.Persistence;
+using SistemaReservas.Application.Services;
 
 namespace SistemaReservas.Tests.Controllers
 {

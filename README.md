@@ -34,15 +34,26 @@ El sistema permite administrar progresivamente la reserva de laboratorios, aplic
 ## Arquitectura
 
 ```text
-React + Vite
-localhost:5173
-      ↓
-ASP.NET Core Web API
-localhost:5282
-      ↓
-SQL Server
-LaboratorioOBLD
+Frontend → API
+
+API → Application
+API → Infrastructure
+
+Infrastructure → Application
+Infrastructure → Domain
+
+Application → Domain
+
+Domain → sin dependencias de otras capas
+
+Infrastructure → SQL Server
 ```
+
+- Domain: entidades y reglas de negocio.
+- Application: DTOs, contratos y casos de uso.
+- Infrastructure: EF Core, repositorios, hashing, migraciones y seeder.
+- API: controladores, JWT, configuración y composición.
+- Tests: pruebas unitarias e integración ligera.
 
 ## Requisitos
 
@@ -81,25 +92,24 @@ Configuración actual:
 
 > Si la instancia de SQL Server utiliza otro nombre, se debe modificar `Server` en la cadena de conexión.
 
-Las migraciones se aplican con la herramienta `dotnet-ef`, que debe ser de la versión 10 (la misma de EF Core en el proyecto). Para instalarla o actualizarla:
+Las migraciones se aplican con la herramienta `dotnet-ef`, que debe ser de la versión 10.0.12 (la misma de EF Core en el proyecto). Para instalarla o actualizarla:
 
 ```powershell
-dotnet tool install --global dotnet-ef
-dotnet tool update --global dotnet-ef
+dotnet tool install --global dotnet-ef --version 10.0.12
+dotnet tool update --global dotnet-ef --version 10.0.12
 ```
 
-Con SQL Server en ejecución, crear o actualizar la base de datos:
+Los comandos de EF se ejecutan desde la raíz del repositorio. Con SQL Server en ejecución, crear o actualizar la base de datos:
 
 ```powershell
-cd ".\Backend\SistemaReservas.API\SistemaReservas.API"
-dotnet ef database update
+dotnet ef database update --project .\Backend\SistemaReservas.API\SistemaReservas.Infrastructure\SistemaReservas.Infrastructure.csproj --startup-project .\Backend\SistemaReservas.API\SistemaReservas.API\SistemaReservas.API.csproj --context SistemaReservasDbContext
 ```
 
 > **Importante:** si la base de datos se creó antes con `database/database.sql`, se debe recrear con las migraciones. Esto borra los datos locales:
 >
 > ```powershell
-> dotnet ef database drop -f
-> dotnet ef database update
+> dotnet ef database drop -f --project .\Backend\SistemaReservas.API\SistemaReservas.Infrastructure\SistemaReservas.Infrastructure.csproj --startup-project .\Backend\SistemaReservas.API\SistemaReservas.API\SistemaReservas.API.csproj --context SistemaReservasDbContext
+> dotnet ef database update --project .\Backend\SistemaReservas.API\SistemaReservas.Infrastructure\SistemaReservas.Infrastructure.csproj --startup-project .\Backend\SistemaReservas.API\SistemaReservas.API\SistemaReservas.API.csproj --context SistemaReservasDbContext
 > ```
 
 Al ejecutar el backend en ambiente de desarrollo, `EfDatabaseSeeder` agrega los datos de prueba que falten (no borra nada):
@@ -111,13 +121,13 @@ Al ejecutar el backend en ambiente de desarrollo, `EfDatabaseSeeder` agrega los 
 Para revisiones o despliegues manuales, el script SQL generado a partir de las migraciones está en:
 
 ```text
-Backend/SistemaReservas.API/SistemaReservas.API/Migrations/InitialCreate.sql
+Backend/SistemaReservas.API/SistemaReservas.Infrastructure/Migrations/InitialCreate.sql
 ```
 
-Si se agrega una migración, el script se regenera desde la carpeta del backend con:
+Si se agrega una migración, el script se regenera desde la raíz del repositorio con:
 
 ```powershell
-dotnet ef migrations script -o Migrations/InitialCreate.sql
+dotnet ef migrations script --project .\Backend\SistemaReservas.API\SistemaReservas.Infrastructure\SistemaReservas.Infrastructure.csproj --startup-project .\Backend\SistemaReservas.API\SistemaReservas.API\SistemaReservas.API.csproj --context SistemaReservasDbContext --output .\Backend\SistemaReservas.API\SistemaReservas.Infrastructure\Migrations\InitialCreate.sql
 ```
 
 El archivo `database/database.sql` se conserva solo como referencia histórica; ya no se usa para crear la base de datos.

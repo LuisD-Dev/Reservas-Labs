@@ -1,9 +1,9 @@
 using Microsoft.Extensions.Time.Testing;
 using NSubstitute;
-using SistemaReservas.API.DTOs;
-using SistemaReservas.API.Models;
-using SistemaReservas.API.Repositories;
-using SistemaReservas.API.Services;
+using SistemaReservas.Application.DTOs;
+using SistemaReservas.Domain.Entities;
+using SistemaReservas.Application.Abstractions.Persistence;
+using SistemaReservas.Application.Services;
 
 namespace SistemaReservas.Tests.Services
 {

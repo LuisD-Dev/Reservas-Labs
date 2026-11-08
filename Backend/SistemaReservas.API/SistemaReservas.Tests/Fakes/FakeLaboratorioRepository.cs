@@ -1,5 +1,5 @@
-using SistemaReservas.API.Models;
-using SistemaReservas.API.Repositories;
+using SistemaReservas.Domain.Entities;
+using SistemaReservas.Application.Abstractions.Persistence;
 
 namespace SistemaReservas.Tests.Fakes
 {

@@ -3,28 +3,24 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
-using SistemaReservas.API.Data;
-using SistemaReservas.API.Repositories;
-using SistemaReservas.API.Services;
+using SistemaReservas.Infrastructure.Data;
+using SistemaReservas.Infrastructure;
+using SistemaReservas.API.Security;
+using SistemaReservas.Application.Services;
+using SistemaReservas.Application.Abstractions.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
-// EF Core DbContext
-builder.Services.AddDbContext<SistemaReservasDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddInfrastructure(
+    builder.Configuration.GetConnectionString(
+        "DefaultConnection"));
 
 // NFR2 - Tiempo inyectable: la hora actual se obtiene de TimeProvider
 // para poder reemplazarla en las pruebas.
 builder.Services.AddSingleton(TimeProvider.System);
-
-// NFR2 - Separar acceso a datos: los servicios reciben los repositorios por interfaz.
-builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
-builder.Services.AddScoped<ILaboratorioRepository, LaboratorioRepository>();
-builder.Services.AddScoped<IDisponibilidadRepository, DisponibilidadRepository>();
-builder.Services.AddScoped<IReservaRepository, ReservaRepository>();
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<LaboratorioService>();
@@ -77,13 +73,13 @@ if (app.Environment.IsDevelopment())
     {
         var context = scope.ServiceProvider.GetRequiredService<SistemaReservasDbContext>();
 
-        var authService =
-            scope.ServiceProvider.GetRequiredService<AuthService>();
+        var passwordHashService =
+            scope.ServiceProvider.GetRequiredService<IPasswordHashService>();
 
         var timeProvider =
             scope.ServiceProvider.GetRequiredService<TimeProvider>();
 
-        await EfDatabaseSeeder.SeedAsync(context, authService, timeProvider);
+        await EfDatabaseSeeder.SeedAsync(context, passwordHashService, timeProvider);
     }
 
     app.MapOpenApi();

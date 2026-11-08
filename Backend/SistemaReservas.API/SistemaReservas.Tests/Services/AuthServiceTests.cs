@@ -1,11 +1,12 @@
 using Microsoft.Extensions.Time.Testing;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
-using SistemaReservas.API.DTOs;
-using SistemaReservas.API.Models;
-using SistemaReservas.API.Repositories;
-using SistemaReservas.API.Services;
+using SistemaReservas.Application.DTOs;
+using SistemaReservas.Domain.Entities;
+using SistemaReservas.Application.Abstractions.Persistence;
+using SistemaReservas.Application.Services;
 using SistemaReservas.Tests.Fakes;
+using SistemaReservas.Infrastructure.Security;
 
 namespace SistemaReservas.Tests.Services
 {
@@ -22,11 +23,12 @@ namespace SistemaReservas.Tests.Services
 
         private readonly FakeUsuarioRepository _repositorio = new();
         private readonly FakeTimeProvider _reloj = new(Inicio);
+        private readonly PasswordHashService _passwordHashService = new();
         private readonly AuthService _authService;
 
         public AuthServiceTests()
         {
-            _authService = new AuthService(_repositorio, _reloj);
+            _authService = new AuthService(_repositorio, _reloj, _passwordHashService);
 
             _repositorio.Agregar(new Usuario
             {
@@ -235,7 +237,7 @@ namespace SistemaReservas.Tests.Services
             var excepcion = new InvalidOperationException("No se pudo conectar a la base de datos.");
             var repositorio = Substitute.For<IUsuarioRepository>();
             repositorio.ObtenerPorUsernameAsync(Username).ThrowsAsync(excepcion);
-            var authService = new AuthService(repositorio, _reloj);
+            var authService = new AuthService(repositorio, _reloj, _passwordHashService);
 
             // Act & Assert
             var lanzada = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -256,7 +258,7 @@ namespace SistemaReservas.Tests.Services
             var repositorio = Substitute.For<IUsuarioRepository>();
             repositorio.ObtenerPorUsernameAsync(Username).Returns(CrearUsuario());
             repositorio.RegistrarIntentoFallidoAsync(2).ThrowsAsync(excepcion);
-            var authService = new AuthService(repositorio, _reloj);
+            var authService = new AuthService(repositorio, _reloj, _passwordHashService);
 
             // Act & Assert
             var lanzada = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -277,7 +279,7 @@ namespace SistemaReservas.Tests.Services
             repositorio.ObtenerPorUsernameAsync(Username).Returns(CrearUsuario(intentosFallidos: 4));
             repositorio.RegistrarIntentoFallidoAsync(2).Returns(5);
             repositorio.BloquearAsync(2, Arg.Any<DateTime>()).ThrowsAsync(excepcion);
-            var authService = new AuthService(repositorio, _reloj);
+            var authService = new AuthService(repositorio, _reloj, _passwordHashService);
 
             // Act & Assert
             var lanzada = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -294,7 +296,7 @@ namespace SistemaReservas.Tests.Services
             // Arrange
             var repositorio = Substitute.For<IUsuarioRepository>();
             repositorio.ObtenerPorUsernameAsync("no-existe").Returns((Usuario?)null);
-            var authService = new AuthService(repositorio, _reloj);
+            var authService = new AuthService(repositorio, _reloj, _passwordHashService);
 
             // Act
             var resultado = await authService.LoginAsync(new LoginRequest("no-existe", PasswordCorrecta));

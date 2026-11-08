@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Time.Testing;
-using SistemaReservas.API.DTOs;
-using SistemaReservas.API.Models;
-using SistemaReservas.API.Repositories;
-using SistemaReservas.API.Services;
+using SistemaReservas.Application.DTOs;
+using SistemaReservas.Domain.Entities;
+using SistemaReservas.Infrastructure.Repositories;
+using SistemaReservas.Application.Services;
 using SistemaReservas.Tests.Infraestructura;
 using Xunit;
 

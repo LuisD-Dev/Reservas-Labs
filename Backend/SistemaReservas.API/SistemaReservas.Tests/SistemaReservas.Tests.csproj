@@ -22,6 +22,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SistemaReservas.API\SistemaReservas.API.csproj" />
+    <ProjectReference Include="..\SistemaReservas.Domain\SistemaReservas.Domain.csproj" />
+    <ProjectReference Include="..\SistemaReservas.Application\SistemaReservas.Application.csproj" />
+    <ProjectReference Include="..\SistemaReservas.Infrastructure\SistemaReservas.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

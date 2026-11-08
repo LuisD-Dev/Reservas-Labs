@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using SistemaReservas.API.Services;
+using SistemaReservas.Application.Services;
 
 namespace SistemaReservas.API.Controllers
 {

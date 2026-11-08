@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SistemaReservas.API.Models;
-using SistemaReservas.API.Repositories;
+using SistemaReservas.Domain.Entities;
+using SistemaReservas.Infrastructure.Repositories;
 using SistemaReservas.Tests.Infraestructura;
 using Xunit;
 

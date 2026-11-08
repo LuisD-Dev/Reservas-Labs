@@ -8,11 +8,13 @@ using Microsoft.IdentityModel.Tokens;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using SistemaReservas.API.Controllers;
-using SistemaReservas.API.DTOs;
-using SistemaReservas.API.Models;
-using SistemaReservas.API.Repositories;
-using SistemaReservas.API.Services;
+using SistemaReservas.Application.DTOs;
+using SistemaReservas.Domain.Entities;
+using SistemaReservas.Application.Abstractions.Persistence;
+using SistemaReservas.API.Security;
+using SistemaReservas.Application.Services;
 using SistemaReservas.Tests.Fakes;
+using SistemaReservas.Infrastructure.Security;
 
 namespace SistemaReservas.Tests.Controllers
 {
@@ -36,11 +38,12 @@ namespace SistemaReservas.Tests.Controllers
 
         private readonly FakeUsuarioRepository _repositorio = new();
         private readonly FakeTimeProvider _reloj = new(Inicio);
+        private readonly PasswordHashService _passwordHashService = new();
         private readonly AuthController _controller;
 
         public AuthControllerTests()
         {
-            var authService = new AuthService(_repositorio, _reloj);
+            var authService = new AuthService(_repositorio, _reloj, _passwordHashService);
             _controller = CrearController(_repositorio);
 
             _repositorio.Agregar(new Usuario
@@ -67,7 +70,7 @@ namespace SistemaReservas.Tests.Controllers
                 })
                 .Build();
 
-            var authService = new AuthService(repositorio, _reloj);
+            var authService = new AuthService(repositorio, _reloj, _passwordHashService);
             var tokenService = new TokenService(configuracion, _reloj);
             return new AuthController(authService, tokenService, _reloj);
         }

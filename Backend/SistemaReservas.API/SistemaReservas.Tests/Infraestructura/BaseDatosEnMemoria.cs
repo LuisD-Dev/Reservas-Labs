@@ -1,6 +1,6 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using SistemaReservas.API.Data;
+using SistemaReservas.Infrastructure.Data;
 
 namespace SistemaReservas.Tests.Infraestructura
 {
