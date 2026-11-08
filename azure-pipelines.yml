@@ -1,4 +1,5 @@
 # Laboratorio VII: Integración Continua de la API de reservas.
+# Laboratorio IX: análisis estático con SonarQube Cloud y cobertura de pruebas.
 
 # Ejecutar automáticamente después de cada push a main o develop.
 trigger:
@@ -15,6 +16,13 @@ variables:
   frontendDirectory: 'frontend'
   buildConfiguration: 'Release'
   testProject: 'Backend/SistemaReservas.API/SistemaReservas.Tests/SistemaReservas.Tests.csproj'
+  # Laboratorio IX: solución completa (API, Application, Domain, Infrastructure y Tests)
+  # para que SonarQube analice todas las capas del backend.
+  solution: 'Backend/SistemaReservas.API/SistemaReservas.API.slnx'
+  # Datos del proyecto en SonarQube Cloud (los mismos del Laboratorio VIII).
+  sonarOrganization: 'mazunigaal'
+  sonarProjectKey: 'mazunigaal_Laboratorio-OBLD'
+  sonarProjectName: 'Laboratorio OBLD'
 
 steps:
   # Obtener el código de la rama que se está ejecutando.
@@ -28,15 +36,39 @@ steps:
       packageType: 'sdk'
       version: '10.0.x'
 
-  # Restaurar los paquetes del proyecto de pruebas y de la API referenciada.
-  - script: dotnet restore "$(testProject)"
+  # Laboratorio IX - 1. Prepare Analysis Configuration.
+  # Debe ir ANTES de compilar: configura SonarScanner for .NET para que el build
+  # recolecte la información del análisis. Usa la conexión de servicio "SonarQubeCloud"
+  # (token de SonarQube Cloud con permisos Browse y Execute analysis).
+  - task: SonarCloudPrepare@3
+    displayName: 'SonarQube: preparar configuración del análisis'
+    inputs:
+      SonarCloud: 'SonarQubeCloud'
+      organization: '$(sonarOrganization)'
+      scannerMode: 'dotnet'
+      projectKey: '$(sonarProjectKey)'
+      projectName: '$(sonarProjectName)'
+      extraProperties: |
+        # Cobertura de pruebas generada por coverlet en formato OpenCover.
+        sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/TestResults/**/coverage.opencover.xml
+        # Resultados de las pruebas (reporte TRX) para mostrar el total de pruebas.
+        sonar.cs.vstest.reportsPaths=$(Agent.TempDirectory)/TestResults/*.trx
+        # Mismas exclusiones de cobertura justificadas en coverlet.runsettings (Taller V).
+        sonar.coverage.exclusions=**/Program.cs,**/Migrations/**,**/*Seeder.cs,**/WeatherForecast*.cs
+        # Código generado por EF Core: no se analiza.
+        sonar.exclusions=**/Migrations/**
+
+  # Restaurar los paquetes de toda la solución.
+  - script: dotnet restore "$(solution)"
     displayName: 'Restaurar dependencias'
 
-  # Compilar las pruebas y la API en Release.
-  - script: dotnet build "$(testProject)" --configuration "$(buildConfiguration)" --no-restore
+  # Compilar la solución completa en Release (aquí SonarScanner recolecta el análisis).
+  - script: dotnet build "$(solution)" --configuration "$(buildConfiguration)" --no-restore
     displayName: 'Compilar en Release'
 
-  # Ejecutar todas las pruebas del proyecto y generar el reporte TRX.
+  # Ejecutar todas las pruebas, generar el reporte TRX y la cobertura.
+  # coverlet.runsettings genera "cobertura" (para ReportGenerator local); aquí se cambia
+  # el formato a "opencover", que es el que lee SonarQube, sin modificar el archivo.
   - script: >
       dotnet test "$(testProject)"
       --configuration "$(buildConfiguration)"
@@ -44,7 +76,9 @@ steps:
       --no-restore
       --logger "trx;LogFileName=resultados.trx"
       --results-directory "$(Agent.TempDirectory)/TestResults"
-    displayName: 'Ejecutar pruebas unitarias e integración'
+      --collect "XPlat Code Coverage"
+      -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+    displayName: 'Ejecutar pruebas unitarias e integración con cobertura'
 
   # Publicar los resultados incluso si alguna prueba falla.
   - task: PublishTestResults@2
@@ -60,6 +94,18 @@ steps:
       failTaskOnFailureToPublishResults: true
       publishRunAttachments: true
       testRunTitle: 'Reservas-Labs - $(Build.BuildNumber)'
+
+  # Laboratorio IX - 2. Run Code Analysis.
+  # Procesa lo recolectado en el build y la cobertura, y envía el análisis a SonarQube Cloud.
+  - task: SonarCloudAnalyze@3
+    displayName: 'SonarQube: ejecutar análisis de código'
+
+  # Laboratorio IX - 3. Publish Quality Gate Result.
+  # Espera el resultado del Quality Gate y lo muestra en el resumen del pipeline.
+  - task: SonarCloudPublish@3
+    displayName: 'SonarQube: publicar resultado del Quality Gate'
+    inputs:
+      pollingTimeoutSec: '300'
 
   - task: NodeTool@0
     displayName: 'Instalar Node.js 22'
