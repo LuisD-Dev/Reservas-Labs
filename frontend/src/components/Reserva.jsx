@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "../services/api";
 import { hoyComoTexto } from "../utils/disponibilidad";
 import { crearCuerpoReserva, mensajeConfirmacionReserva, mensajeErrorReserva, validarReserva } from "../utils/reserva";
+import "./Formularios.css";
 import "./Reserva.css"; 
 
 function Reserva({ usuario, datosIniciales = {}, laboratoriosIniciales, onVolver }) {
