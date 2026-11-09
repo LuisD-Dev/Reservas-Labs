@@ -1,11 +1,11 @@
 import { useState } from "react";
 import "./Login.css";
+import { crearCredenciales } from "../utils/login.js";
 import { API_BASE_URL } from "../services/api";
 
 const API_URL = `${API_BASE_URL}/api/auth/login`;
 const USUARIO_MAX_LENGTH = 50;
 const CONTRASENA_MAX_LENGTH = 100;
-const USUARIO_REGEX = /^[a-zA-Z0-9._]*$/;
 
 function Login({ onLoginExitoso }) {
     const [usuario, setUsuario] = useState("");
@@ -15,11 +15,8 @@ function Login({ onLoginExitoso }) {
     const [cargando, setCargando] = useState(false);
 
     function handleUsuarioChange(e) {
-        const valor = e.target.value;
-        if (USUARIO_REGEX.test(valor)) {
-            setUsuario(valor);
-            setError("");
-        }
+        setUsuario(e.target.value);
+        setError("");
     }
 
     async function handleSubmit(e) {
@@ -37,7 +34,7 @@ function Login({ onLoginExitoso }) {
             const respuesta = await fetch(API_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ Username: usuario, Password: contrasena }),
+                body: JSON.stringify(crearCredenciales(usuario, contrasena)),
             });
 
             const datos = await respuesta.json().catch(() => ({}));
@@ -118,7 +115,6 @@ function Login({ onLoginExitoso }) {
                                 onClick={() => setMostrarContrasena((v) => !v)}
                                 disabled={cargando}
                                 aria-label={mostrarContrasena ? "Ocultar contraseña" : "Mostrar contraseña"}
-                                tabIndex={-1}
                             >
                                 {mostrarContrasena ? (
                                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

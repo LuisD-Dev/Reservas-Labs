@@ -34,15 +34,48 @@ El sistema permite administrar progresivamente la reserva de laboratorios, aplic
 ## Arquitectura
 
 ```text
-React + Vite
-localhost:5173
-      ↓
-ASP.NET Core Web API
-localhost:5282
-      ↓
-SQL Server
-LaboratorioOBLD
+Frontend → API
+
+API → Application
+API → Infrastructure
+
+Application → Infrastructure
+Infrastructure → Domain
+
+Application → Domain
+
+Domain → sin dependencias de otras capas
+
+Infrastructure → SQL Server
 ```
+
+- Domain: entidades, reglas de negocio, DTOs y resultados.
+- Application: interfaces de servicios, casos de uso, Mapster y DI.
+- Infrastructure: contratos de persistencia y seguridad, EF Core, repositorios, hashing, JWT, migraciones y seeders.
+- API: controladores, JWT, configuración y composición.
+- Tests: pruebas unitarias e integración ligera.
+
+Los proyectos conservan sus nombres de ensamblado y se organizan así:
+
+```text
+Backend/SistemaReservas.API/
+  SistemaReservas.API.slnx
+  src/
+    SistemaReservas.API/
+    SistemaReservas.Application/       Interfaces, Implementation, Mapper, DI
+    SistemaReservas.Domain/            DTO, Entities, Rules
+    SistemaReservas.Infrastructure/    Interfaces, Implementation, Data, DI
+  tests/
+    SistemaReservas.Tests/
+```
+
+Tests referencia los cuatro proyectos. Los contratos de persistencia, seguridad y
+base de datos pertenecen a Infrastructure; los contratos de casos de uso, a
+Application. Mapster se configura y compila en `AddApplication()`. Los servicios
+devuelven DTOs públicos de Domain, sin navegaciones ni datos privados de usuarios.
+`AppDbContext`, sus configuraciones, migraciones y seeders están en
+Infrastructure/Data. El orquestador ejecuta usuarios, laboratorios y disponibilidades
+en ese orden, conservando los datos existentes.
 
 ## Requisitos
 
@@ -70,7 +103,7 @@ LaboratorioOBLD
 La conexión se encuentra en:
 
 ```text
-Backend/SistemaReservas.API/SistemaReservas.API/appsettings.json
+Backend/SistemaReservas.API/src/SistemaReservas.API/appsettings.json
 ```
 
 Configuración actual:
@@ -81,25 +114,24 @@ Configuración actual:
 
 > Si la instancia de SQL Server utiliza otro nombre, se debe modificar `Server` en la cadena de conexión.
 
-Las migraciones se aplican con la herramienta `dotnet-ef`, que debe ser de la versión 10 (la misma de EF Core en el proyecto). Para instalarla o actualizarla:
+Las migraciones se aplican con la herramienta `dotnet-ef`, que debe ser de la versión 10.0.12 (la misma de EF Core en el proyecto). Para instalarla o actualizarla:
 
 ```powershell
-dotnet tool install --global dotnet-ef
-dotnet tool update --global dotnet-ef
+dotnet tool install --global dotnet-ef --version 10.0.12
+dotnet tool update --global dotnet-ef --version 10.0.12
 ```
 
-Con SQL Server en ejecución, crear o actualizar la base de datos:
+Los comandos de EF se ejecutan desde la raíz del repositorio. Con SQL Server en ejecución, crear o actualizar la base de datos:
 
 ```powershell
-cd ".\Backend\SistemaReservas.API\SistemaReservas.API"
-dotnet ef database update
+dotnet ef database update --project .\Backend\SistemaReservas.API\src\SistemaReservas.Infrastructure\SistemaReservas.Infrastructure.csproj --startup-project .\Backend\SistemaReservas.API\src\SistemaReservas.API\SistemaReservas.API.csproj --context AppDbContext
 ```
 
 > **Importante:** si la base de datos se creó antes con `database/database.sql`, se debe recrear con las migraciones. Esto borra los datos locales:
 >
 > ```powershell
-> dotnet ef database drop -f
-> dotnet ef database update
+> dotnet ef database drop -f --project .\Backend\SistemaReservas.API\src\SistemaReservas.Infrastructure\SistemaReservas.Infrastructure.csproj --startup-project .\Backend\SistemaReservas.API\src\SistemaReservas.API\SistemaReservas.API.csproj --context AppDbContext
+> dotnet ef database update --project .\Backend\SistemaReservas.API\src\SistemaReservas.Infrastructure\SistemaReservas.Infrastructure.csproj --startup-project .\Backend\SistemaReservas.API\src\SistemaReservas.API\SistemaReservas.API.csproj --context AppDbContext
 > ```
 
 Al ejecutar el backend en ambiente de desarrollo, `EfDatabaseSeeder` agrega los datos de prueba que falten (no borra nada):
@@ -111,13 +143,13 @@ Al ejecutar el backend en ambiente de desarrollo, `EfDatabaseSeeder` agrega los 
 Para revisiones o despliegues manuales, el script SQL generado a partir de las migraciones está en:
 
 ```text
-Backend/SistemaReservas.API/SistemaReservas.API/Migrations/InitialCreate.sql
+Backend/SistemaReservas.API/src/SistemaReservas.Infrastructure/Data/Migrations/InitialCreate.sql
 ```
 
-Si se agrega una migración, el script se regenera desde la carpeta del backend con:
+Si se agrega una migración, el script se regenera desde la raíz del repositorio con:
 
 ```powershell
-dotnet ef migrations script -o Migrations/InitialCreate.sql
+dotnet ef migrations script --project .\Backend\SistemaReservas.API\src\SistemaReservas.Infrastructure\SistemaReservas.Infrastructure.csproj --startup-project .\Backend\SistemaReservas.API\src\SistemaReservas.API\SistemaReservas.API.csproj --context AppDbContext --output .\Backend\SistemaReservas.API\src\SistemaReservas.Infrastructure\Data\Migrations\InitialCreate.sql
 ```
 
 El archivo `database/database.sql` se conserva solo como referencia histórica; ya no se usa para crear la base de datos.
@@ -129,7 +161,7 @@ El archivo `database/database.sql` se conserva solo como referencia histórica; 
 Desde la raíz del proyecto:
 
 ```powershell
-cd ".\Backend\SistemaReservas.API\SistemaReservas.API"
+cd ".\Backend\SistemaReservas.API\src\SistemaReservas.API"
 dotnet run
 ```
 
@@ -246,7 +278,7 @@ Una vez configurado el proyecto, normalmente solo se necesitan dos terminales:
 ### Terminal 1
 
 ```powershell
-cd ".\Backend\SistemaReservas.API\SistemaReservas.API"
+cd ".\Backend\SistemaReservas.API\src\SistemaReservas.API"
 dotnet run
 ```
 
@@ -268,6 +300,15 @@ http://localhost:5173
 ```powershell
 dotnet test Backend/SistemaReservas.API/SistemaReservas.API.slnx
 cd ".\frontend"; npm.cmd test
+```
+
+La configuración de cobertura está en
+`Backend/SistemaReservas.API/tests/SistemaReservas.Tests/coverlet.runsettings`.
+Para comprobar las migraciones y el modelo sin aplicar cambios a la base de datos:
+
+```powershell
+dotnet ef migrations list --project .\Backend\SistemaReservas.API\src\SistemaReservas.Infrastructure\SistemaReservas.Infrastructure.csproj --startup-project .\Backend\SistemaReservas.API\src\SistemaReservas.API\SistemaReservas.API.csproj --context AppDbContext --no-connect
+dotnet ef migrations has-pending-model-changes --project .\Backend\SistemaReservas.API\src\SistemaReservas.Infrastructure\SistemaReservas.Infrastructure.csproj --startup-project .\Backend\SistemaReservas.API\src\SistemaReservas.API\SistemaReservas.API.csproj --context AppDbContext
 ```
 
 Detalle de las pruebas y la cobertura: [Wiki – Pruebas de unidad – Taller V](https://dev.azure.com/mazunigaal/Laboratorio%20OBLD/_wiki/wikis/Laboratorio-OBLD.wiki/3/Pruebas-de-unidad-%E2%80%93-Taller-V)

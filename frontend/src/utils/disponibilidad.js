@@ -1,35 +1,8 @@
-// HU3 - Reglas de la consulta de disponibilidad, separadas de la interfaz
-// para poder probarlas sin levantar la pantalla.
+import { validarSolicitud } from "./validacionHorario.js";
+export { hoyComoTexto } from "./validacionHorario.js";
 
-export function hoyComoTexto() {
-    const hoy = new Date();
-    const mes = String(hoy.getMonth() + 1).padStart(2, "0");
-    const dia = String(hoy.getDate()).padStart(2, "0");
-    return `${hoy.getFullYear()}-${mes}-${dia}`;
-}
-
-export function validarConsulta({ laboratorioId, fecha, horaInicio, horaFin }) {
-    const errores = {};
-
-    if (!laboratorioId) {
-        errores.laboratorioId = "Selecciona un laboratorio.";
-    }
-    if (!fecha) {
-        errores.fecha = "Ingresa la fecha a consultar.";
-    } else if (fecha < hoyComoTexto()) {
-        errores.fecha = "La fecha no puede ser anterior a hoy.";
-    }
-    if (!horaInicio) {
-        errores.horaInicio = "Ingresa la hora inicial.";
-    }
-    if (!horaFin) {
-        errores.horaFin = "Ingresa la hora final.";
-    }
-    if (horaInicio && horaFin && horaFin <= horaInicio) {
-        errores.horaFin = "La hora final debe ser mayor que la hora inicial.";
-    }
-
-    return errores;
+export function validarConsulta(datos, hoy) {
+    return validarSolicitud(datos, hoy, "Ingresa la fecha a consultar.");
 }
 
 // HU3 - #39 Normaliza un horario tal como lo devuelve la API
@@ -85,5 +58,18 @@ export function evaluarDisponibilidad(horarios, { fecha, horaInicio, horaFin }, 
                 ? "No hay horarios disponibles para esa fecha."
                 : "Ningún horario disponible cubre todo el rango solicitado.",
         horariosDelDia,
+    };
+}
+
+// El veredicto procede del servidor; nunca se recalcula con horarios nominales.
+export function interpretarDisponibilidad(datos) {
+    if (typeof datos?.disponible !== "boolean" || typeof datos?.motivo !== "string"
+        || !Array.isArray(datos?.horariosDelDia)) {
+        throw new Error("Respuesta de disponibilidad inválida.");
+    }
+    return {
+        disponible: datos.disponible,
+        motivo: datos.motivo,
+        horariosDelDia: datos.horariosDelDia.map(normalizarHorario),
     };
 }

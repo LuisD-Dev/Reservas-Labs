@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { apiFetch } from "../services/api";
 import {
     formatearFechaReserva,
@@ -8,20 +8,21 @@ import {
     separarReservas,
     tipoEstado,
 } from "../utils/misReservas";
-import { puedeCancelarReserva, resultadoCancelacion, rutaCancelarReserva } from "../utils/cancelarReserva";
+import { puedeCancelarReserva, resultadoCancelacion, cancelarConConfirmacion } from "../utils/cancelarReserva";
 import "./MisReservas.css";
 
 // HU7 - AB#95: tabla de un grupo de reservas (activas o canceladas).
 // HU8 - AB#103: si recibe `onCancelar`, agrega la columna con el botón para cancelar.
 function TablaReservas({ titulo, reservas, vacio, onCancelar, cancelandoId }) {
+    const tituloId = useId();
     return (
         <div className="mis-reservas-grupo">
-            <h2>{titulo} ({reservas.length})</h2>
+            <h2 id={tituloId}>{titulo} ({reservas.length})</h2>
             {reservas.length === 0 ? (
                 <p role="status">{vacio}</p>
             ) : (
-                <div className="mis-reservas-tabla-contenedor">
-                    <table className="mis-reservas-tabla">
+                <div className="mis-reservas-tabla-contenedor" tabIndex={0} role="region" aria-labelledby={tituloId}>
+                    <table className="mis-reservas-tabla" aria-labelledby={tituloId}>
                         <thead>
                             <tr>
                                 <th scope="col">Laboratorio</th>
@@ -108,7 +109,11 @@ function MisReservas({ onNuevaReserva, onVolver }) {
 
         let resultado;
         try {
-            const respuesta = await apiFetch(rutaCancelarReserva(id), { method: "POST" });
+            const respuesta = await cancelarConConfirmacion(id, apiFetch, (mensaje) => window.confirm(mensaje));
+            if (!respuesta) {
+                setCancelandoId(null);
+                return;
+            }
             const cuerpo = await respuesta.json().catch(() => null);
             resultado = resultadoCancelacion(respuesta.status, cuerpo);
         } catch {

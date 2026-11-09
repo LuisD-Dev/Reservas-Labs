@@ -1,12 +1,14 @@
+import { filtrarLaboratoriosHabilitados } from "../utils/laboratorios";
 import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "../services/api";
 import { hoyComoTexto } from "../utils/disponibilidad";
 import { crearCuerpoReserva, mensajeConfirmacionReserva, mensajeErrorReserva, validarReserva } from "../utils/reserva";
+import "./Formularios.css";
 import "./Reserva.css"; 
 
 function Reserva({ usuario, datosIniciales = {}, laboratoriosIniciales, onVolver }) {
     const reutilizar = laboratoriosIniciales?.length > 0;
-    const [laboratorios, setLaboratorios] = useState(laboratoriosIniciales ?? []);
+    const [laboratorios, setLaboratorios] = useState(() => filtrarLaboratoriosHabilitados(laboratoriosIniciales));
     const [cargando, setCargando] = useState(!reutilizar);
     const [errorCarga, setErrorCarga] = useState("");
     const [datos, setDatos] = useState({
@@ -15,6 +17,11 @@ function Reserva({ usuario, datosIniciales = {}, laboratoriosIniciales, onVolver
         horaInicio: datosIniciales.horaInicio ?? "",
         horaFin: datosIniciales.horaFin ?? "",
     });
+    const habilitados = filtrarLaboratoriosHabilitados(reutilizar ? laboratoriosIniciales : laboratorios);
+    const datosSeleccionados = {
+        ...datos,
+        laboratorioId: habilitados.some(lab => String(lab.id) === datos.laboratorioId) ? datos.laboratorioId : "",
+    };
     const [errores, setErrores] = useState({});
     const [error, setError] = useState("");
     const [enviando, setEnviando] = useState(false);
@@ -26,11 +33,11 @@ function Reserva({ usuario, datosIniciales = {}, laboratoriosIniciales, onVolver
         setCargando(true);
         setErrorCarga("");
         try {
-            const respuesta = await apiFetch("/api/laboratorios", { signal });
+            const respuesta = await apiFetch("/api/laboratorios?soloHabilitados=true", { signal });
             if (signal?.aborted) return;
             if (respuesta.ok) {
                 const lista = await respuesta.json();
-                if (!signal?.aborted) setLaboratorios(lista);
+                if (!signal?.aborted) setLaboratorios(filtrarLaboratoriosHabilitados(lista));
             } else {
                 setErrorCarga(respuesta.status === 401 ? mensajeErrorReserva(401)
                     : respuesta.status === 403 ? "Tu usuario no tiene permiso para ver los laboratorios."
@@ -63,7 +70,7 @@ function Reserva({ usuario, datosIniciales = {}, laboratoriosIniciales, onVolver
     async function registrar(evento) {
         evento.preventDefault();
         if (solicitudEnCurso.current || cargando || errorCarga || exito) return;
-        const nuevosErrores = validarReserva(datos);
+        const nuevosErrores = validarReserva(datosSeleccionados);
         setErrores(nuevosErrores);
         setError("");
         if (Object.keys(nuevosErrores).length > 0) return;
@@ -73,11 +80,11 @@ function Reserva({ usuario, datosIniciales = {}, laboratoriosIniciales, onVolver
             const respuesta = await apiFetch("/api/reservas", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(crearCuerpoReserva(datos)),
+                body: JSON.stringify(crearCuerpoReserva(datosSeleccionados)),
             });
             if (respuesta.status === 201) {
                 const cuerpo = await respuesta.json().catch(() => null);
-                const laboratorio = laboratorios.find(
+                const laboratorio = habilitados.find(
                     (lab) => String(lab.id) === String(datos.laboratorioId));
                 setConfirmacion(mensajeConfirmacionReserva(cuerpo?.reserva, laboratorio?.nombre));
                 setExito(true);
@@ -130,13 +137,13 @@ function Reserva({ usuario, datosIniciales = {}, laboratoriosIniciales, onVolver
                 {/* Laboratorio */}
                 <div className="reserva-campo reserva-ancho">
                     <label htmlFor="reserva-laboratorioId">Laboratorio</label>
-                    <select id="reserva-laboratorioId" value={datos.laboratorioId}
+                    <select id="reserva-laboratorioId" value={datosSeleccionados.laboratorioId}
                         disabled={bloqueado} required
                         aria-invalid={Boolean(errores.laboratorioId)}
                         aria-describedby={errores.laboratorioId ? "error-laboratorioId" : undefined}
                         onChange={(e) => cambiar("laboratorioId", e.target.value)}>
                         <option value="">Selecciona un laboratorio</option>
-                        {laboratorios.map((lab) => <option key={lab.id} value={lab.id}>
+                        {habilitados.map((lab) => <option key={lab.id} value={lab.id}>
                             {lab.nombre} — {lab.ubicacion}
                         </option>)}
                     </select>

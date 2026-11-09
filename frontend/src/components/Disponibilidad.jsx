@@ -1,8 +1,10 @@
+import { filtrarLaboratoriosHabilitados } from "../utils/laboratorios";
 import { useState } from "react";
+import "./Formularios.css";
 import "./Disponibilidad.css";
 import { apiFetch } from "../services/api";
 import {
-    evaluarDisponibilidad,
+    interpretarDisponibilidad,
     formatearFecha,
     hoyComoTexto,
     validarConsulta,
@@ -13,8 +15,9 @@ import {
 // pantalla de Laboratorios y el laboratorio desde el que se abrió.
 
 function Disponibilidad({ laboratorios = [], laboratorioInicialId, onVolver, onContinuarReserva }) {
-    const [laboratorioId, setLaboratorioId] = useState(
-        laboratorioInicialId ? String(laboratorioInicialId) : ""
+    const habilitados = filtrarLaboratoriosHabilitados(laboratorios);
+    const [seleccionId, setLaboratorioId] = useState(
+        habilitados.some(lab => String(lab.id) === String(laboratorioInicialId)) ? String(laboratorioInicialId) : ""
     );
     const [fecha, setFecha] = useState("");
     const [horaInicio, setHoraInicio] = useState("");
@@ -25,7 +28,8 @@ function Disponibilidad({ laboratorios = [], laboratorioInicialId, onVolver, onC
     const [cargando, setCargando] = useState(false);
     const [errorServidor, setErrorServidor] = useState("");
 
-    const laboratorio = laboratorios.find((lab) => String(lab.id) === laboratorioId);
+    const laboratorio = habilitados.find((lab) => String(lab.id) === seleccionId);
+    const laboratorioId = laboratorio ? seleccionId : "";
 
     function limpiarResultado() {
         setConsulta(null);
@@ -43,22 +47,30 @@ function Disponibilidad({ laboratorios = [], laboratorioInicialId, onVolver, onC
 
     // HU3 - #39 Consulta los horarios del laboratorio en la API y evalúa el rango.
     async function consultar(datos) {
+        if (!habilitados.some(lab => String(lab.id) === String(datos.laboratorioId))) return;
         setCargando(true);
         setErrorServidor("");
         setResultado(null);
 
         try {
-            const respuesta = await apiFetch(`/api/laboratorios/${datos.laboratorioId}/disponibilidad`);
+            const respuesta = await apiFetch(`/api/laboratorios/${datos.laboratorioId}/disponibilidad/verificar`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ fecha: datos.fecha, horaInicio: `${datos.horaInicio}:00`, horaFin: `${datos.horaFin}:00` }),
+            });
 
             if (respuesta.status === 401) {
                 setErrorServidor("Tu sesión venció. Inicia sesión de nuevo.");
             } else if (respuesta.status === 403) {
                 setErrorServidor("Tu usuario no tiene permiso para consultar la disponibilidad.");
+            } else if (respuesta.status === 400) {
+                const cuerpo = await respuesta.json();
+                setErrores(cuerpo.errores ?? cuerpo.errors ?? {});
             } else if (!respuesta.ok) {
                 setErrorServidor("No se pudo consultar la disponibilidad. Intenta de nuevo.");
             } else {
-                const horarios = await respuesta.json();
-                setResultado(evaluarDisponibilidad(horarios, datos, laboratorio));
+                const datosServidor = await respuesta.json();
+                setResultado(interpretarDisponibilidad(datosServidor));
             }
         } catch {
             setErrorServidor("No se pudo conectar con el servidor. Verifica que la API esté en ejecución.");
@@ -98,6 +110,8 @@ function Disponibilidad({ laboratorios = [], laboratorioInicialId, onVolver, onC
                     <label htmlFor="disp-laboratorio">Laboratorio</label>
                     <select
                         id="disp-laboratorio"
+                        aria-invalid={Boolean(errores.laboratorioId)}
+                        aria-describedby={errores.laboratorioId ? "disp-error-laboratorioId" : undefined}
                         value={laboratorioId}
                         disabled={cargando}
                         onChange={(e) => {
@@ -107,19 +121,21 @@ function Disponibilidad({ laboratorios = [], laboratorioInicialId, onVolver, onC
                         }}
                     >
                         <option value="">Selecciona un laboratorio</option>
-                        {laboratorios.map((lab) => (
+                        {habilitados.map((lab) => (
                             <option key={lab.id} value={lab.id}>
                                 {lab.nombre} — {lab.ubicacion}
                             </option>
                         ))}
                     </select>
-                    {errores.laboratorioId && <span className="disp-error">{errores.laboratorioId}</span>}
+                    {errores.laboratorioId && <span id="disp-error-laboratorioId" className="disp-error" role="alert">{errores.laboratorioId}</span>}
                 </div>
 
                 <div className="disp-campo">
                     <label htmlFor="disp-fecha">Fecha</label>
                     <input
                         id="disp-fecha"
+                        aria-invalid={Boolean(errores.fecha)}
+                        aria-describedby={errores.fecha ? "disp-error-fecha" : undefined}
                         type="date"
                         min={hoyComoTexto()}
                         value={fecha}
@@ -130,13 +146,15 @@ function Disponibilidad({ laboratorios = [], laboratorioInicialId, onVolver, onC
                             limpiarResultado();
                         }}
                     />
-                    {errores.fecha && <span className="disp-error">{errores.fecha}</span>}
+                    {errores.fecha && <span id="disp-error-fecha" className="disp-error" role="alert">{errores.fecha}</span>}
                 </div>
 
                 <div className="disp-campo">
                     <label htmlFor="disp-inicio">Hora inicial</label>
                     <input
                         id="disp-inicio"
+                        aria-invalid={Boolean(errores.horaInicio)}
+                        aria-describedby={errores.horaInicio ? "disp-error-horaInicio" : undefined}
                         type="time"
                         value={horaInicio}
                         disabled={cargando}
@@ -150,13 +168,15 @@ function Disponibilidad({ laboratorios = [], laboratorioInicialId, onVolver, onC
                             limpiarResultado();
                         }}
                     />
-                    {errores.horaInicio && <span className="disp-error">{errores.horaInicio}</span>}
+                    {errores.horaInicio && <span id="disp-error-horaInicio" className="disp-error" role="alert">{errores.horaInicio}</span>}
                 </div>
 
                 <div className="disp-campo">
                     <label htmlFor="disp-fin">Hora final</label>
                     <input
                         id="disp-fin"
+                        aria-invalid={Boolean(errores.horaFin)}
+                        aria-describedby={errores.horaFin ? "disp-error-horaFin" : undefined}
                         type="time"
                         value={horaFin}
                         disabled={cargando}
@@ -166,7 +186,7 @@ function Disponibilidad({ laboratorios = [], laboratorioInicialId, onVolver, onC
                             limpiarResultado();
                         }}
                     />
-                    {errores.horaFin && <span className="disp-error">{errores.horaFin}</span>}
+                    {errores.horaFin && <span id="disp-error-horaFin" className="disp-error" role="alert">{errores.horaFin}</span>}
                 </div>
 
                 <button type="submit" className="disp-consultar" disabled={cargando}>
@@ -183,7 +203,7 @@ function Disponibilidad({ laboratorios = [], laboratorioInicialId, onVolver, onC
                 </div>
             )}
 
-            {errorServidor && consulta && (
+            {errorServidor && consulta && laboratorio && (
                 <div className="labs-error" role="alert">
                     <p>{errorServidor}</p>
                     <button onClick={() => consultar(consulta)} disabled={cargando}>
@@ -192,7 +212,7 @@ function Disponibilidad({ laboratorios = [], laboratorioInicialId, onVolver, onC
                 </div>
             )}
 
-            {consulta && resultado && (
+            {consulta && resultado && laboratorio && (
                 <div className="disp-resultado" aria-live="polite">
                     <div className={`disp-veredicto ${resultado.disponible ? "disp-si" : "disp-no"}`}>
                         {resultado.disponible ? "Disponible" : "No disponible"}
@@ -219,7 +239,7 @@ function Disponibilidad({ laboratorios = [], laboratorioInicialId, onVolver, onC
                     ) : (
                         <ul className="disp-horarios">
                             {resultado.horariosDelDia.map((h) => (
-                                <li key={h.id}>
+                                <li key={`${h.id}-${h.horaInicio}-${h.horaFin}`}>
                                     <span>{h.horaInicio} – {h.horaFin}</span>
                                     <span className={h.estado === "Disponible" ? "disp-chip-si" : "disp-chip-no"}>
                                         {h.estado}
