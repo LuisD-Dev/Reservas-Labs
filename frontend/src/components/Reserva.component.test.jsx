@@ -14,6 +14,33 @@ async function completar(user) {
     await user.type(screen.getByLabelText('Hora final'), '10:00');
 }
 
+test('carga directa usa query filtrada y mantiene el POST de solo cuatro campos', async () => {
+    const user = userEvent.setup();
+    apiFetch.mockResolvedValueOnce(respuesta(laboratorios)).mockResolvedValueOnce(respuesta({ reserva: null }, 201));
+    render(<Reserva usuario={usuario} />);
+    expect(await screen.findByRole('option', { name: /Software/ })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: /Redes/ })).not.toBeInTheDocument();
+    expect(apiFetch).toHaveBeenNthCalledWith(1, '/api/laboratorios?soloHabilitados=true', expect.objectContaining({ signal: expect.any(AbortSignal) }));
+    await completar(user);
+    await user.click(screen.getByRole('button', { name: 'Registrar reserva' }));
+    await waitFor(() => expect(apiFetch).toHaveBeenCalledTimes(2));
+    const [ruta, opciones] = apiFetch.mock.calls[1];
+    expect(ruta).toBe('/api/reservas');
+    expect(opciones.method).toBe('POST');
+    expect(JSON.parse(opciones.body)).toEqual({ laboratorioId: 7, fecha: fechaFutura(), horaInicio: '09:00:00', horaFin: '10:00:00' });
+});
+
+test('props iniciales excluyen fuera de servicio y no permiten enviar su id precargado', async () => {
+    const user = userEvent.setup();
+    render(<Reserva usuario={usuario} laboratoriosIniciales={laboratorios}
+        datosIniciales={{ laboratorioId: 9, fecha: fechaFutura(), horaInicio: '09:00', horaFin: '10:00' }} />);
+    expect(screen.getByLabelText('Laboratorio')).toHaveValue('');
+    expect(screen.queryByRole('option', { name: /Redes/ })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Registrar reserva' }));
+    expect(screen.getByLabelText('Laboratorio')).toHaveAttribute('aria-invalid', 'true');
+    expect(apiFetch).not.toHaveBeenCalled();
+});
+
 test('responsable es solo lectura y envío vacío anuncia errores sin peticiones', async () => {
     const user = userEvent.setup();
     render(<Reserva usuario={usuario} laboratoriosIniciales={laboratorios} />);

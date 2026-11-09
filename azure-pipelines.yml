@@ -15,7 +15,7 @@ pool:
 variables:
   frontendDirectory: 'frontend'
   buildConfiguration: 'Release'
-  testProject: 'Backend/SistemaReservas.API/SistemaReservas.Tests/SistemaReservas.Tests.csproj'
+  testProject: 'Backend/SistemaReservas.API/tests/SistemaReservas.Tests/SistemaReservas.Tests.csproj'
   # Laboratorio IX: solución completa (API, Application, Domain, Infrastructure y Tests)
   # para que SonarQube analice todas las capas del backend.
   solution: 'Backend/SistemaReservas.API/SistemaReservas.API.slnx'

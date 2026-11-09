@@ -1,3 +1,13 @@
+import {
+    cuerpoCambioEstado,
+    esLaboratorioHabilitado,
+    estadoOpuesto,
+    etiquetaCambioEstado,
+    filtrarLaboratoriosHabilitados,
+    mensajeErrorCambioEstado,
+    reemplazarLaboratorio,
+    rutaEstadoLaboratorio,
+} from "../utils/laboratorios";
 import { useEffect, useState } from "react";
 import { apiFetch } from "../services/api";
 import "./Laboratorios.css";
@@ -11,11 +21,15 @@ function claseEstado(estado) {
     return "estado-otro";
 }
 
-function Laboratorios({ onVolver, onConsultarDisponibilidad }) {
+function Laboratorios({ onVolver, onConsultarDisponibilidad, esAdministrador = false }) {
     const [laboratorios, setLaboratorios] = useState([]);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState("");
     const [busqueda, setBusqueda] = useState("");
+    // HU9 - AB#111 y AB#112: cambio de estado por el administrador.
+    const [cambiandoId, setCambiandoId] = useState(null);
+    const [mensajeEstado, setMensajeEstado] = useState("");
+    const [errorEstado, setErrorEstado] = useState("");
 
     async function cargar(signal) {
         setCargando(true);
@@ -58,6 +72,35 @@ function Laboratorios({ onVolver, onConsultarDisponibilidad }) {
         };
     }, []);
 
+    // HU9 - AB#111 y AB#112: alterna el estado y muestra el valor que devuelve el servidor.
+    async function cambiarEstado(lab) {
+        if (cambiandoId !== null) return;
+        const nuevoEstado = estadoOpuesto(lab.estado);
+        setCambiandoId(lab.id);
+        setMensajeEstado("");
+        setErrorEstado("");
+
+        try {
+            const respuesta = await apiFetch(rutaEstadoLaboratorio(lab.id), {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(cuerpoCambioEstado(nuevoEstado)),
+            });
+            const datos = await respuesta.json().catch(() => null);
+
+            if (respuesta.ok && datos?.laboratorio) {
+                setLaboratorios((actuales) => reemplazarLaboratorio(actuales, datos.laboratorio));
+                setMensajeEstado(`El laboratorio ${datos.laboratorio.nombre} ahora está: ${datos.laboratorio.estado}.`);
+            } else {
+                setErrorEstado(mensajeErrorCambioEstado(respuesta.status, datos));
+            }
+        } catch {
+            setErrorEstado(mensajeErrorCambioEstado());
+        } finally {
+            setCambiandoId(null);
+        }
+    }
+
     const texto = busqueda.trim().toLowerCase();
     const visibles = laboratorios.filter(
         (lab) =>
@@ -94,6 +137,9 @@ function Laboratorios({ onVolver, onConsultarDisponibilidad }) {
                 </div>
             )}
 
+            {mensajeEstado && <p className="labs-exito" role="status">{mensajeEstado}</p>}
+            {errorEstado && <p className="labs-error" role="alert">{errorEstado}</p>}
+
             {!cargando && !error && visibles.length === 0 && (
                 <p className="labs-mensaje">
                     {laboratorios.length === 0
@@ -122,12 +168,23 @@ function Laboratorios({ onVolver, onConsultarDisponibilidad }) {
                                     <dd>{lab.capacidad} personas</dd>
                                 </div>
                             </dl>
-                            {onConsultarDisponibilidad && (
+                            {onConsultarDisponibilidad && esLaboratorioHabilitado(lab) && (
                                 <button
                                     className="labs-consultar"
-                                    onClick={() => onConsultarDisponibilidad(lab.id, laboratorios)}
+                                    onClick={() => onConsultarDisponibilidad(lab.id, filtrarLaboratoriosHabilitados(laboratorios))}
                                 >
                                     Consultar disponibilidad
+                                </button>
+                            )}
+                            {esAdministrador && (
+                                <button
+                                    type="button"
+                                    className="labs-cambiar-estado"
+                                    disabled={cambiandoId !== null}
+                                    aria-label={`${etiquetaCambioEstado(lab.estado)}: ${lab.nombre}`}
+                                    onClick={() => cambiarEstado(lab)}
+                                >
+                                    {cambiandoId === lab.id ? "Guardando..." : etiquetaCambioEstado(lab.estado)}
                                 </button>
                             )}
                         </article>
