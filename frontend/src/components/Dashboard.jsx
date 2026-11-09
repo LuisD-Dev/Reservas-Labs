@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Laboratorios from "./Laboratorios";
 import Disponibilidad from "./Disponibilidad";
 import Reserva from "./Reserva";
+import MisReservas from "./MisReservas";
 import Icono from "./Iconos";
 
 // Cada módulo indica qué roles lo pueden ver. El backend sigue
@@ -108,7 +109,11 @@ function Dashboard({ usuario, onCerrarSesion }) {
 
             {/* Contenido principal */}
             <main className="dashboard-main">
-                {vista === "reserva" ? (
+                {vista === "mis-reservas" ? (
+                    <MisReservas
+                        onNuevaReserva={() => irA("reserva")}
+                        onVolver={() => window.history.back()} />
+                ) : vista === "reserva" ? (
                     <Reserva usuario={usuario} datosIniciales={reserva ?? undefined}
                         laboratoriosIniciales={disponibilidad?.laboratorios}
                         onVolver={() => window.history.back()} />
@@ -147,7 +152,7 @@ function Dashboard({ usuario, onCerrarSesion }) {
                                         className="dashboard-card"
                                         onClick={() =>
                                             ["laboratorios", "mis-reservas"].includes(modulo.id)
-                                                ? irA(modulo.id === "mis-reservas" ? "reserva" : "laboratorios")
+                                                ? irA(modulo.id === "mis-reservas" ? "mis-reservas" : "laboratorios")
                                                 : alert(`Módulo: ${modulo.titulo}`)
                                         }
                                     >

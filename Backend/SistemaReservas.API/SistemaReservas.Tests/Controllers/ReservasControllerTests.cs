@@ -437,5 +437,154 @@ namespace SistemaReservas.Tests.Controllers
                 ReglasRoles.Administrador,
                 atributo.Roles);
         }
+
+        // HU7 - AB#96: devuelve 200 con las reservas del usuario y los nombres JSON del contrato.
+        [Fact]
+        public async Task ObtenerMisReservas_UsuarioAutenticado_Devuelve200ConSusReservas()
+        {
+            // Arrange
+            AutenticarUsuario(27, "Ana Responsable");
+
+            _repositorio
+                .ObtenerPorUsuarioAsync(27)
+                .Returns(new List<Reserva>
+                {
+                    new Reserva
+                    {
+                        Id = 15,
+                        LaboratorioId = 3,
+                        UsuarioId = 27,
+                        Fecha = new DateTime(2026, 11, 10),
+                        HoraInicio = new TimeSpan(9, 0, 0),
+                        HoraFin = new TimeSpan(11, 0, 0),
+                        Estado = "Cancelada",
+                        Laboratorio = new Laboratorio
+                        {
+                            Id = 3,
+                            Nombre = "Laboratorio de Software",
+                            Ubicacion = "Edificio A",
+                            Capacidad = 30,
+                            Estado = "Habilitado"
+                        }
+                    }
+                });
+
+            // Act
+            var respuesta = await _controller.ObtenerMisReservas();
+
+            // Assert
+            Assert.IsType<OkObjectResult>(respuesta);
+
+            var cuerpo = Cuerpo(respuesta);
+            Assert.Equal(JsonValueKind.Array, cuerpo.ValueKind);
+
+            var reserva = Assert.Single(cuerpo.EnumerateArray());
+            Assert.Equal(15, reserva.GetProperty("id").GetInt32());
+            Assert.Equal(3, reserva.GetProperty("laboratorioId").GetInt32());
+            Assert.Equal(
+                "Laboratorio de Software",
+                reserva.GetProperty("nombreLaboratorio").GetString());
+            Assert.Equal("2026-11-10", reserva.GetProperty("fecha").GetString());
+            Assert.Equal("09:00:00", reserva.GetProperty("horaInicio").GetString());
+            Assert.Equal("11:00:00", reserva.GetProperty("horaFin").GetString());
+            Assert.Equal("Cancelada", reserva.GetProperty("estado").GetString());
+        }
+
+        // HU7 - AB#96: aislamiento, el usuario consultado es el del token.
+        [Fact]
+        public async Task ObtenerMisReservas_UsuarioAutenticado_ConsultaConIdDelToken()
+        {
+            // Arrange
+            AutenticarUsuario(27, "Ana Responsable");
+
+            _repositorio
+                .ObtenerPorUsuarioAsync(Arg.Any<int>())
+                .Returns(new List<Reserva>());
+
+            // Act
+            await _controller.ObtenerMisReservas();
+
+            // Assert
+            await _repositorio.Received(1).ObtenerPorUsuarioAsync(27);
+        }
+
+        // HU7 - AB#96: usuario sin reservas recibe 200 con una lista vacía.
+        [Fact]
+        public async Task ObtenerMisReservas_SinReservas_Devuelve200ConListaVacia()
+        {
+            // Arrange
+            AutenticarUsuario(27, "Ana Responsable");
+
+            _repositorio
+                .ObtenerPorUsuarioAsync(27)
+                .Returns(new List<Reserva>());
+
+            // Act
+            var respuesta = await _controller.ObtenerMisReservas();
+
+            // Assert
+            Assert.IsType<OkObjectResult>(respuesta);
+            Assert.Equal(0, Cuerpo(respuesta).GetArrayLength());
+        }
+
+        // HU7 - AB#96: sin claim de usuario responde 401 y no consulta.
+        [Fact]
+        public async Task ObtenerMisReservas_SinIdentificador_Devuelve401()
+        {
+            // Act
+            var respuesta = await _controller.ObtenerMisReservas();
+
+            // Assert
+            Assert.IsType<UnauthorizedObjectResult>(respuesta);
+            Assert.Equal(
+                "No fue posible identificar al usuario autenticado.",
+                Cuerpo(respuesta).GetProperty("mensaje").GetString());
+
+            await _repositorio
+                .DidNotReceive()
+                .ObtenerPorUsuarioAsync(Arg.Any<int>());
+        }
+
+        // HU7 - AB#96: claim vacío, no numérico, cero o negativo responde 401 y no consulta.
+        [Theory]
+        [InlineData("")]
+        [InlineData("abc")]
+        [InlineData("0")]
+        [InlineData("-5")]
+        public async Task ObtenerMisReservas_IdentificadorInvalido_Devuelve401(
+            string identificador)
+        {
+            // Arrange
+            AutenticarUsuario(identificador, "Ana Responsable");
+
+            // Act
+            var respuesta = await _controller.ObtenerMisReservas();
+
+            // Assert
+            Assert.IsType<UnauthorizedObjectResult>(respuesta);
+
+            await _repositorio
+                .DidNotReceive()
+                .ObtenerPorUsuarioAsync(Arg.Any<int>());
+        }
+
+        // HU7 - AB#96: el endpoint es GET api/reservas/mias.
+        [Fact]
+        public void ObtenerMisReservas_EsGetEnRutaMias()
+        {
+            // Arrange
+            var metodo =
+                typeof(ReservasController)
+                    .GetMethod(nameof(ReservasController.ObtenerMisReservas));
+
+            Assert.NotNull(metodo);
+
+            // Act
+            var atributo = metodo.GetCustomAttribute<HttpGetAttribute>();
+
+            // Assert
+            Assert.NotNull(atributo);
+            Assert.Equal("mias", atributo.Template);
+        }
     }
 }

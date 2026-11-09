@@ -106,3 +106,6 @@ Content-Type: application/json
 }
 
 ###
+### HU8 - Cancelar reserva (esperado 200 u OK)
+POST {{SistemaReservas.API_HostAddress}}/api/reservas/1/cancelar
+Authorization: Bearer {{loginUsuario.response.body.$.token}}
