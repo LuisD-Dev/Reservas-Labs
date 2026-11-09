@@ -429,3 +429,6 @@ FodyWeavers.xsd
 *.msp
 # Generated HTML coverage reports
 /coveragereport/
+
+# Laboratorio IX - Carpetas temporales que crea SonarScanner for .NET al analizar localmente
+.sonarqube/

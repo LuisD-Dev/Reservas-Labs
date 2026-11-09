@@ -126,6 +126,7 @@ function Dashboard({ usuario, onCerrarSesion }) {
                     />
                 ) : vista === "laboratorios" ? (
                     <Laboratorios
+                        esAdministrador={esAdministrador}
                         onVolver={() => window.history.back()}
                         onConsultarDisponibilidad={(laboratorioId, laboratorios) =>
                             irA("disponibilidad", { laboratorioId, laboratorios })
