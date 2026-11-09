@@ -189,3 +189,41 @@
         outline: 3px solid var(--focus);
         outline-offset: 2px;
     }
+
+/* HU9 - AB#111: controles del administrador */
+.labs-cambiar-estado {
+    margin-top: 12px;
+    background-color: #ffffff;
+    color: #003b71;
+    border: 1px solid #003b71;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.labs-cambiar-estado:hover:not(:disabled) {
+    background-color: #eff6ff;
+}
+
+.labs-cambiar-estado:focus-visible {
+    outline: 2px solid #003b71;
+    outline-offset: 2px;
+}
+
+.labs-cambiar-estado:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.labs-exito {
+    color: #166534;
+    padding: 8px 12px;
+    background-color: #f0fdf4;
+    border-left: 3px solid #16a34a;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+}
