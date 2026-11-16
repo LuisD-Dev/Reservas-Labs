@@ -15,7 +15,8 @@ namespace SistemaReservas.Tests.Fakes
     {
         // Horario habilitado por defecto para las pruebas previas de reservas.
         // La verificacion real conserva las comprobaciones de conflictos sobre su repositorio.
-        public static ReservaService Crear(IReservaRepository repository, TimeProvider reloj, IMapper mapper)
+        public static ReservaService Crear(IReservaRepository repository, TimeProvider reloj, IMapper mapper,
+            IUsuarioRepository? usuarios = null)
         {
             var verificacion = Substitute.For<IVerificacionDisponibilidadService>();
             verificacion.VerificarAsync(Arg.Any<int>(), Arg.Any<ConsultaDisponibilidadRequest>())
@@ -36,17 +37,20 @@ namespace SistemaReservas.Tests.Fakes
                     return new VerificacionDisponibilidadService(horarios, repository, laboratorios, reloj, mapper)
                         .VerificarAsync(id, request);
                 });
-            return Crear(repository, reloj, mapper, verificacion);
+            return Crear(repository, reloj, mapper, verificacion, usuarios);
         }
 
+        // Los usuarios solo se consultan al registrar reservas a nombre de otro usuario (Gestión de Reservas).
         public static ReservaService Crear(IReservaRepository repository, TimeProvider reloj, IMapper mapper,
-            IVerificacionDisponibilidadService verificacion) => new(repository, reloj, mapper, verificacion);
+            IVerificacionDisponibilidadService verificacion, IUsuarioRepository? usuarios = null) =>
+            new(repository, reloj, mapper, verificacion, usuarios ?? Substitute.For<IUsuarioRepository>());
 
         public static ReservaService Crear(AppDbContext context, TimeProvider reloj, IMapper mapper)
         {
             var reservas = new ReservaRepository(context);
             return Crear(reservas, reloj, mapper, new VerificacionDisponibilidadService(
-                new DisponibilidadRepository(context), reservas, new LaboratorioRepository(context), reloj, mapper));
+                new DisponibilidadRepository(context), reservas, new LaboratorioRepository(context), reloj, mapper),
+                new UsuarioRepository(context));
         }
     }
 }

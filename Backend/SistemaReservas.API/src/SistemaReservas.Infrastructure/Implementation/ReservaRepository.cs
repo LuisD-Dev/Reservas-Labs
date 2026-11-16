@@ -67,5 +67,18 @@ namespace SistemaReservas.Infrastructure.Implementation
                 .ThenBy(reserva => reserva.Id)
                 .ToListAsync();
         }
+
+        // Gestión de Reservas: todas las reservas, de la más próxima a la más lejana.
+        public async Task<IReadOnlyList<Reserva>> ObtenerTodasAsync()
+        {
+            return await _context.Reservas
+                .AsNoTracking()
+                .Include(reserva => reserva.Laboratorio)
+                .Include(reserva => reserva.Usuario)
+                .OrderBy(reserva => reserva.Fecha)
+                .ThenBy(reserva => reserva.HoraInicio)
+                .ThenBy(reserva => reserva.Id)
+                .ToListAsync();
+        }
     }
 }

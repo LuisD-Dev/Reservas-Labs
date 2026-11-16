@@ -271,6 +271,25 @@ No se permite reservar un laboratorio que ya tiene una reserva activa en ese hor
 - Traslape: parcial por el inicio o por el final, contenida, contenedora e idéntica (hay conflicto); consecutivas y separadas (no hay conflicto).
 - Servicio: rechaza la reserva traslapada con el mensaje de conflicto, acepta la consecutiva y no consulta conflictos si los datos son inválidos.
 
+# Gestión de Reservas (Administrador)
+
+El Administrador consulta las reservas de todos los usuarios, registra una a nombre de otro usuario y cancela cualquiera. Se abre desde la tarjeta **Gestión de Reservas** del inicio, visible solo para ese rol. Por ahora no incluye aprobación de solicitudes: las reservas se confirman al registrarse (estados `Activa` y `Cancelada`).
+
+| Endpoint | Rol | Descripción |
+|---|---|---|
+| `GET /api/reservas` | Administrador | Todas las reservas, con laboratorio y responsable. |
+| `POST /api/reservas/gestion` | Administrador | Registra una reserva para el usuario indicado en `username`. Aplica las mismas reglas de horario, disponibilidad y conflictos que `POST /api/reservas`. |
+| `POST /api/reservas/{id}/cancelar` | Administrador o propietario | Cancela la reserva (ya existente, HU8). |
+
+En pantalla se puede filtrar por texto (responsable, usuario o laboratorio), estado, laboratorio y fecha.
+
+## Pruebas principales
+
+- Servicio: lista todas las reservas, registra con el usuario indicado, rechaza usuario vacío o inexistente y conserva las validaciones de fecha, horario y conflicto.
+- Controlador: acciones exclusivas del rol Administrador, `200` con los nombres JSON del contrato, `201` al registrar y `400` con los errores.
+- Repositorio: trae las reservas de todos los usuarios con laboratorio y usuario, ordenadas por fecha y hora.
+- Frontend: filtros, cancelación con confirmación, formulario de nueva reserva y navegación desde el inicio.
+
 # Ejecución rápida
 
 Una vez configurado el proyecto, normalmente solo se necesitan dos terminales:

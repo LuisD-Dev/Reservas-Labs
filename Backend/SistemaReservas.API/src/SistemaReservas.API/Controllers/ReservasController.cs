@@ -159,6 +159,65 @@ namespace SistemaReservas.API.Controllers
             return Ok(reservas);
         }
 
+        // Gestión de Reservas: el Administrador consulta las reservas de todos los usuarios.
+        [HttpGet]
+        [Authorize(Roles = ReglasRoles.Administrador)]
+        public async Task<IActionResult> ObtenerTodasLasReservas()
+        {
+            var reservas =
+                await _reservaService.ObtenerTodasAsync();
+
+            return Ok(reservas);
+        }
+
+        // Gestión de Reservas: el Administrador registra una reserva a nombre de otro usuario.
+        [HttpPost("gestion")]
+        [Authorize(Roles = ReglasRoles.Administrador)]
+        public async Task<IActionResult> CrearReservaParaUsuario(
+            [FromBody] CrearReservaParaUsuarioRequest request)
+        {
+            var resultado =
+                await _reservaService.CrearParaUsuarioAsync(request);
+
+            if (!resultado.Exitoso)
+            {
+                return BadRequest(new
+                {
+                    mensaje =
+                        "Revisa los datos de la reserva.",
+
+                    errores = resultado.Errores
+                });
+            }
+
+            var reserva = resultado.Reserva!;
+
+            return StatusCode(
+                StatusCodes.Status201Created,
+                new
+                {
+                    mensaje =
+                        "Reserva registrada correctamente.",
+
+                    reserva = new
+                    {
+                        reserva.Id,
+                        reserva.LaboratorioId,
+
+                        fecha =
+                            reserva.Fecha,
+
+                        reserva.HoraInicio,
+                        reserva.HoraFin,
+
+                        responsable =
+                            request.Username?.Trim(),
+
+                        reserva.Estado
+                    }
+                });
+        }
+
         // NFR1 - #44 Conserva la comprobación de acceso
         // exclusivo para el rol Administrador.
         [HttpPost("prueba-administrador")]

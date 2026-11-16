@@ -48,6 +48,19 @@ namespace SistemaReservas.Tests.Application
         }
 
         [Fact]
+        public void ReservaGestion_MapeaLaboratorioUsuarioYFecha_SinDatosPrivados()
+        {
+            var respuesta = _mapper.Map<ReservaGestionResponse>(Reserva());
+
+            Assert.Equal(new ReservaGestionResponse(5, 7, "Redes", "", "privado", DateOnly.FromDateTime(Fecha),
+                TimeSpan.FromHours(8), TimeSpan.FromHours(10), "Activa"), respuesta);
+
+            var json = JsonSerializer.Serialize(respuesta, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            Assert.DoesNotContain("hash-privado", json);
+            Assert.DoesNotContain("passwordHash", json);
+        }
+
+        [Fact]
         public void JsonDeSalida_NoExponeNavegacionesNiDatosPrivados()
         {
             var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);

@@ -15,17 +15,20 @@ namespace SistemaReservas.Application.Implementation
         private readonly IMapper _mapper;
         private readonly IVerificacionDisponibilidadService _verificacion;
         private readonly IReservaRepository _reservaRepository;
+        private readonly IUsuarioRepository _usuarioRepository;
         private readonly TimeProvider _timeProvider;
 
         public ReservaService(
             IReservaRepository reservaRepository,
             TimeProvider timeProvider, IMapper mapper,
-            IVerificacionDisponibilidadService verificacion)
+            IVerificacionDisponibilidadService verificacion,
+            IUsuarioRepository usuarioRepository)
         {
             _reservaRepository = reservaRepository;
             _timeProvider = timeProvider;
             _mapper = mapper;
             _verificacion = verificacion;
+            _usuarioRepository = usuarioRepository;
         }
 
         public async Task<ResultadoCrearReserva> CrearAsync(
@@ -139,6 +142,48 @@ namespace SistemaReservas.Application.Implementation
                 await _reservaRepository.ObtenerPorUsuarioAsync(usuarioId);
 
             return _mapper.Map<List<MiReservaResponse>>(reservas);
+        }
+
+        // Gestión de Reservas: el Administrador ve las reservas de todos los usuarios.
+        public async Task<IReadOnlyList<ReservaGestionResponse>> ObtenerTodasAsync()
+        {
+            var reservas = await _reservaRepository.ObtenerTodasAsync();
+
+            return _mapper.Map<List<ReservaGestionResponse>>(reservas);
+        }
+
+        // Gestión de Reservas: el Administrador registra una reserva a nombre de otro usuario.
+        // Se aplican las mismas validaciones, disponibilidad y conflictos que en CrearAsync.
+        public async Task<ResultadoCrearReserva> CrearParaUsuarioAsync(
+            CrearReservaParaUsuarioRequest request)
+        {
+            var username = request.Username?.Trim();
+
+            if (string.IsNullOrEmpty(username))
+            {
+                return ResultadoCrearReserva.Fallido(new Dictionary<string, string>
+                {
+                    ["username"] = "Indica el usuario responsable de la reserva."
+                });
+            }
+
+            var usuario = await _usuarioRepository.ObtenerPorUsernameAsync(username);
+
+            if (usuario is null)
+            {
+                return ResultadoCrearReserva.Fallido(new Dictionary<string, string>
+                {
+                    ["username"] = "No existe un usuario con ese nombre de usuario."
+                });
+            }
+
+            return await CrearAsync(
+                usuario.Id,
+                new CrearReservaRequest(
+                    request.LaboratorioId,
+                    request.Fecha,
+                    request.HoraInicio,
+                    request.HoraFin));
         }
     }
 }

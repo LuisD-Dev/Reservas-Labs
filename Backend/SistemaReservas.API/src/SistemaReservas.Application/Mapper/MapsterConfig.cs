@@ -16,6 +16,11 @@ namespace SistemaReservas.Application.Mapper
             config.NewConfig<Reserva, MiReservaResponse>()
                 .Map(d => d.NombreLaboratorio, s => s.Laboratorio.Nombre)
                 .Map(d => d.Fecha, s => DateOnly.FromDateTime(s.Fecha));
+            config.NewConfig<Reserva, ReservaGestionResponse>()
+                .Map(d => d.NombreLaboratorio, s => s.Laboratorio.Nombre)
+                .Map(d => d.NombreUsuario, s => s.Usuario.Nombre)
+                .Map(d => d.Username, s => s.Usuario.Username)
+                .Map(d => d.Fecha, s => DateOnly.FromDateTime(s.Fecha));
             config.NewConfig<Disponibilidad, HorarioDisponibilidadResponse>()
                 .Map(d => d.Fecha, s => DateOnly.FromDateTime(s.Fecha));
             config.Compile();

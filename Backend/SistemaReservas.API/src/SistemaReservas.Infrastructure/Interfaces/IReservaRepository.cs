@@ -19,5 +19,8 @@ namespace SistemaReservas.Infrastructure.Interfaces
 
         // HU7: reservas de un usuario, con el nombre del laboratorio.
         Task<IReadOnlyList<Reserva>> ObtenerPorUsuarioAsync(int usuarioId);
+
+        // Gestión de Reservas: todas las reservas, con laboratorio y usuario.
+        Task<IReadOnlyList<Reserva>> ObtenerTodasAsync();
     }
 }

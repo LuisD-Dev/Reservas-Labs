@@ -19,3 +19,11 @@ export function reservas() {
         { id: 12, laboratorioId: 9, nombreLaboratorio: 'Redes', fecha: fechaFutura(), horaInicio: '11:00:00', horaFin: '12:00:00', estado: 'Cancelada' },
     ];
 }
+
+// Gestión de Reservas: reservas de todos los usuarios, como las devuelve GET /api/reservas.
+export function reservasGestion() {
+    return [
+        { id: 11, laboratorioId: 7, nombreLaboratorio: 'Software', nombreUsuario: 'Ana Responsable', username: 'ana', fecha: fechaFutura(), horaInicio: '09:00:00', horaFin: '10:00:00', estado: 'Activa' },
+        { id: 12, laboratorioId: 9, nombreLaboratorio: 'Redes', nombreUsuario: 'Luis Docente', username: 'luis', fecha: fechaFutura(), horaInicio: '11:00:00', horaFin: '12:00:00', estado: 'Cancelada' },
+    ];
+}

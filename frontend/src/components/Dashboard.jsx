@@ -4,6 +4,7 @@ import Laboratorios from "./Laboratorios";
 import Disponibilidad from "./Disponibilidad";
 import Reserva from "./Reserva";
 import MisReservas from "./MisReservas";
+import GestionReservas from "./GestionReservas";
 import Icono from "./Iconos";
 
 // Cada módulo indica qué roles lo pueden ver. El backend sigue
@@ -35,6 +36,9 @@ const MODULOS = [
         roles: ["Administrador"],
     },
 ];
+
+// Módulos que ya tienen pantalla; el resto se muestra como "Próximamente".
+const MODULOS_DISPONIBLES = ["laboratorios", "mis-reservas", "gestion-reservas"];
 
 function modulosPorRol(rol) {
     return MODULOS.filter((modulo) => modulo.roles.includes(rol));
@@ -113,6 +117,8 @@ function Dashboard({ usuario, onCerrarSesion }) {
                     <MisReservas
                         onNuevaReserva={() => irA("reserva")}
                         onVolver={() => window.history.back()} />
+                ) : vista === "gestion-reservas" && esAdministrador ? (
+                    <GestionReservas onVolver={() => window.history.back()} />
                 ) : vista === "reserva" ? (
                     <Reserva usuario={usuario} datosIniciales={reserva ?? undefined}
                         laboratoriosIniciales={disponibilidad?.laboratorios}
@@ -151,7 +157,7 @@ function Dashboard({ usuario, onCerrarSesion }) {
                                         key={modulo.id}
                                         type="button"
                                         className="dashboard-card"
-                                        disabled={!["laboratorios", "mis-reservas"].includes(modulo.id)}
+                                        disabled={!MODULOS_DISPONIBLES.includes(modulo.id)}
                                         onClick={() => irA(modulo.id)}
                                     >
                                         <div className="card-icon">
@@ -159,7 +165,7 @@ function Dashboard({ usuario, onCerrarSesion }) {
                                         </div>
                                         <h3>{modulo.titulo}</h3>
                                         <p>{modulo.descripcion}</p>
-                                        {!["laboratorios", "mis-reservas"].includes(modulo.id) && <span>Próximamente</span>}
+                                        {!MODULOS_DISPONIBLES.includes(modulo.id) && <span>Próximamente</span>}
                                     </button>
                                 ))}
                             </div>

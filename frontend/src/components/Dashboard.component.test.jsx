@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
 import Dashboard from './Dashboard';
 import { apiFetch } from '../services/api';
-import { laboratorios, respuesta } from '../test/fixtures';
+import { laboratorios, reservasGestion, respuesta } from '../test/fixtures';
 
 test('Usuario ve sus módulos y puede cerrar sesión', async () => {
     const user = userEvent.setup();
@@ -17,15 +17,31 @@ test('Usuario ve sus módulos y puede cerrar sesión', async () => {
     expect(onCerrarSesion).toHaveBeenCalledTimes(1);
 });
 
-test('Administrador ve módulos pendientes deshabilitados con Próximamente', () => {
+test('Administrador ve Gestión de Reservas habilitada y Reportes como Próximamente', () => {
     render(<Dashboard usuario={{ nombre: 'Admin', rol: 'Administrador' }} />);
     expect(screen.getByRole('button', { name: /^Laboratorios/ })).toBeEnabled();
     expect(screen.queryByRole('button', { name: /^Mis Reservas/ })).not.toBeInTheDocument();
-    for (const nombre of [/^Gestión de Reservas/, /^Reportes y Estadísticas/]) {
-        const modulo = screen.getByRole('button', { name: nombre });
-        expect(modulo).toBeDisabled();
-        expect(within(modulo).getByText('Próximamente')).toBeInTheDocument();
-    }
+
+    const gestion = screen.getByRole('button', { name: /^Gestión de Reservas/ });
+    expect(gestion).toBeEnabled();
+    expect(within(gestion).queryByText('Próximamente')).not.toBeInTheDocument();
+
+    const reportes = screen.getByRole('button', { name: /^Reportes y Estadísticas/ });
+    expect(reportes).toBeDisabled();
+    expect(within(reportes).getByText('Próximamente')).toBeInTheDocument();
+});
+
+test('Administrador abre Gestión de Reservas y vuelve al inicio', async () => {
+    const user = userEvent.setup();
+    apiFetch.mockResolvedValue(respuesta(reservasGestion()));
+    render(<Dashboard usuario={{ nombre: 'Admin', rol: 'Administrador' }} />);
+    await user.click(screen.getByRole('button', { name: /^Gestión de Reservas/ }));
+    expect(await screen.findByRole('heading', { name: 'Gestión de reservas' })).toBeInTheDocument();
+    expect(window.history.state.vista).toBe('gestion-reservas');
+    expect(await screen.findByRole('table', { name: 'Reservas' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Volver' }));
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Bienvenido, Admin' })).toBeInTheDocument());
+    expect(window.history.state.vista).toBeNull();
 });
 
 test('navega a laboratorios y restaura el inicio mediante popstate', async () => {
